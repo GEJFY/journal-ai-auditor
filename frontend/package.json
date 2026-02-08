@@ -4,7 +4,7 @@
   "description": "Journal entry AI Analyzer - Desktop Application",
   "main": "dist/main/index.js",
   "author": "JAIA Team",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",

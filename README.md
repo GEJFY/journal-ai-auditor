@@ -4,7 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
 ---
 
@@ -233,7 +233,7 @@ python -m mypy app/
 
 ## ライセンス
 
-MIT License - 詳細は [LICENSE](LICENSE) を参照
+Proprietary License - Copyright (c) 2026 Go Yoshizawa. All rights reserved. 詳細は [LICENSE](LICENSE) を参照
 
 ---
 
