@@ -77,7 +77,8 @@ yarn-error.log*
 .env.local
 .env.*.local
 
-# Database files
+# Database files & data directory
+data/
 *.db
 *.duckdb
 *.duckdb.wal

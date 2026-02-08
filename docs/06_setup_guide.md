@@ -347,7 +347,7 @@ AZURE_FOUNDRY_API_VERSION=2026-01-01
 ```bash
 # backend/.env
 LLM_PROVIDER=vertex_ai
-LLM_MODEL=gemini-3.0-flash-preview
+LLM_MODEL=gemini-2.5-flash-lite
 GCP_PROJECT_ID=your-project-id
 GCP_LOCATION=us-central1
 GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
