@@ -7,82 +7,104 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# Available LLM Models (2026 Latest)
+# Available LLM Models (2026-02 Latest)
 LLM_MODELS = {
-    # Anthropic Direct API - High accuracy, best for complex analysis
+    # Anthropic Direct API
     "anthropic": {
-        "claude-opus-4": {"name": "Claude Opus 4", "tier": "premium", "cost": "high"},
-        "claude-sonnet-4": {"name": "Claude Sonnet 4", "tier": "balanced", "cost": "medium"},
-        "claude-haiku-3.5": {"name": "Claude Haiku 3.5", "tier": "fast", "cost": "low"},
+        "claude-opus-4-6": {"name": "Claude Opus 4.6", "tier": "premium", "cost": "very_high"},
+        "claude-sonnet-4-5": {"name": "Claude Sonnet 4.5", "tier": "balanced", "cost": "medium"},
+        "claude-haiku-4-5": {"name": "Claude Haiku 4.5", "tier": "fast", "cost": "low"},
     },
     # OpenAI Direct API
     "openai": {
-        "gpt-4o": {"name": "GPT-4o", "tier": "premium", "cost": "high"},
-        "gpt-4o-mini": {"name": "GPT-4o Mini", "tier": "balanced", "cost": "low"},
-        "o1": {"name": "o1", "tier": "reasoning", "cost": "very_high"},
-        "o3-mini": {"name": "o3-mini", "tier": "reasoning", "cost": "medium"},
+        "gpt-5.2": {"name": "GPT-5.2", "tier": "premium", "cost": "very_high"},
+        "gpt-5": {"name": "GPT-5", "tier": "premium", "cost": "high"},
+        "gpt-5-mini": {"name": "GPT-5 Mini", "tier": "balanced", "cost": "medium"},
+        "gpt-5-nano": {"name": "GPT-5 Nano", "tier": "fast", "cost": "low"},
+        "gpt-5-codex": {"name": "GPT-5 Codex", "tier": "premium", "cost": "very_high"},
+        "o3-pro": {"name": "o3-pro", "tier": "reasoning", "cost": "very_high"},
+        "o3": {"name": "o3", "tier": "reasoning", "cost": "high"},
+        "o4-mini": {"name": "o4-mini", "tier": "reasoning", "cost": "medium"},
     },
-    # Google AI Studio
+    # Google AI Studio (google-genai SDK)
     "google": {
-        "gemini-2.0-flash": {"name": "Gemini 2.0 Flash", "tier": "fast", "cost": "very_low"},
-        "gemini-2.0-pro": {"name": "Gemini 2.0 Pro", "tier": "balanced", "cost": "medium"},
+        "gemini-3-flash-preview": {"name": "Gemini 3 Flash Preview", "tier": "fast", "cost": "low"},
+        "gemini-2.5-pro": {"name": "Gemini 2.5 Pro", "tier": "premium", "cost": "high"},
+        "gemini-2.5-flash-lite": {"name": "Gemini 2.5 Flash-Lite", "tier": "fast", "cost": "very_low"},
     },
-    # AWS Bedrock (2026 Latest)
+    # AWS Bedrock (2026-02 Latest)
     "bedrock": {
-        "anthropic.claude-sonnet-4-6-opus-20260115-v1:0": {"name": "Claude Sonnet 4.6 Opus", "tier": "premium", "cost": "high"},
-        "anthropic.claude-sonnet-4-20251022-v1:0": {"name": "Claude Sonnet 4", "tier": "balanced", "cost": "medium"},
-        "anthropic.claude-haiku-3-5-20251022-v1:0": {"name": "Claude Haiku 3.5", "tier": "fast", "cost": "low"},
+        "us.anthropic.claude-opus-4-6-20260201-v1:0": {"name": "Claude Opus 4.6", "tier": "premium", "cost": "very_high"},
+        "us.anthropic.claude-sonnet-4-5-20250929-v1:0": {"name": "Claude Sonnet 4.5", "tier": "balanced", "cost": "medium"},
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0": {"name": "Claude Haiku 4.5", "tier": "fast", "cost": "low"},
+        "amazon.nova-premier-v1:0": {"name": "Amazon Nova Premier", "tier": "premium", "cost": "high"},
         "amazon.nova-pro-v1:0": {"name": "Amazon Nova Pro", "tier": "balanced", "cost": "medium"},
         "amazon.nova-lite-v1:0": {"name": "Amazon Nova Lite", "tier": "fast", "cost": "low"},
+        "amazon.nova-micro-v1:0": {"name": "Amazon Nova Micro", "tier": "fast", "cost": "very_low"},
+        "us.deepseek.r1-v1:0": {"name": "DeepSeek R1", "tier": "reasoning", "cost": "medium"},
     },
-    # Azure Foundry (2026 Latest - GPT-5 series + Claude)
+    # Azure AI Foundry (GPT-5 series + Claude)
     "azure_foundry": {
         "gpt-5.2": {"name": "GPT-5.2", "tier": "premium", "cost": "very_high"},
+        "gpt-5": {"name": "GPT-5", "tier": "premium", "cost": "high"},
         "gpt-5-nano": {"name": "GPT-5 Nano", "tier": "fast", "cost": "low"},
-        "gpt-4o": {"name": "GPT-4o", "tier": "balanced", "cost": "medium"},
-        "claude-sonnet-4": {"name": "Claude Sonnet 4", "tier": "balanced", "cost": "medium"},
-        "claude-haiku-3.5": {"name": "Claude Haiku 3.5", "tier": "fast", "cost": "low"},
+        "claude-opus-4-6": {"name": "Claude Opus 4.6", "tier": "premium", "cost": "very_high"},
+        "claude-sonnet-4-5": {"name": "Claude Sonnet 4.5", "tier": "balanced", "cost": "medium"},
+        "claude-haiku-4-5": {"name": "Claude Haiku 4.5", "tier": "fast", "cost": "low"},
     },
-    # GCP Vertex AI (2026 Latest - Gemini 3.0 series)
+    # GCP Vertex AI (Gemini 3 series, Global Region)
     "vertex_ai": {
-        "gemini-3.0-flash-preview": {"name": "Gemini 3.0 Flash Preview", "tier": "fast", "cost": "low"},
-        "gemini-3.0-pro-preview": {"name": "Gemini 3.0 Pro Preview", "tier": "premium", "cost": "high"},
-        "gemini-2.0-flash": {"name": "Gemini 2.0 Flash", "tier": "fast", "cost": "very_low"},
-        "gemini-2.0-pro": {"name": "Gemini 2.0 Pro", "tier": "balanced", "cost": "medium"},
+        "gemini-3-pro": {"name": "Gemini 3 Pro", "tier": "premium", "cost": "high"},
+        "gemini-3-flash-preview": {"name": "Gemini 3 Flash Preview", "tier": "balanced", "cost": "medium"},
+        "gemini-2.5-pro": {"name": "Gemini 2.5 Pro", "tier": "balanced", "cost": "medium"},
+        "gemini-2.5-flash-lite": {"name": "Gemini 2.5 Flash-Lite", "tier": "fast", "cost": "very_low"},
     },
     # Azure OpenAI (Legacy)
     "azure": {
         "gpt-4o": {"name": "GPT-4o", "tier": "premium", "cost": "high"},
         "gpt-4o-mini": {"name": "GPT-4o Mini", "tier": "balanced", "cost": "low"},
     },
+    # Local LLM (Ollama)
+    "ollama": {
+        "phi4": {"name": "Phi-4 (14B)", "tier": "balanced", "cost": "very_low"},
+        "qwen2.5-coder:14b": {"name": "Qwen 2.5 Coder 14B", "tier": "balanced", "cost": "very_low"},
+        "deepseek-r1:14b": {"name": "DeepSeek R1 14B", "tier": "reasoning", "cost": "very_low"},
+        "llama3.3:8b": {"name": "Llama 3.3 8B", "tier": "fast", "cost": "very_low"},
+        "gemma3:27b": {"name": "Gemma 3 27B", "tier": "premium", "cost": "very_low"},
+    },
 }
 
-# Recommended models by use case (2026 Latest)
+# Recommended models by use case (2026-02 Latest)
 RECOMMENDED_MODELS = {
     "highest_accuracy": {
         "provider": "azure_foundry",
         "model": "gpt-5.2",
-        "description": "最高精度 - GPT-5.2による最先端分析",
+        "description": "最高精度 - GPT-5.2 (ARC-AGI 90%+)",
     },
     "high_accuracy": {
         "provider": "bedrock",
-        "model": "anthropic.claude-sonnet-4-6-opus-20260115-v1:0",
-        "description": "高精度 - Claude Sonnet 4.6 Opus、複雑な調査向け",
+        "model": "us.anthropic.claude-opus-4-6-20260201-v1:0",
+        "description": "高精度 - Claude Opus 4.6、エージェント・複雑な調査向け",
     },
     "balanced": {
         "provider": "vertex_ai",
-        "model": "gemini-3.0-pro-preview",
-        "description": "バランス - Gemini 3.0 Pro、日常分析向け",
+        "model": "gemini-3-pro",
+        "description": "バランス - Gemini 3 Pro、日常分析向け",
     },
     "cost_effective": {
         "provider": "vertex_ai",
-        "model": "gemini-3.0-flash-preview",
-        "description": "コスト重視 - Gemini 3.0 Flash、大量処理向け",
+        "model": "gemini-3-flash-preview",
+        "description": "コスト重視 - Gemini 3 Flash、大量処理向け ($0.50/1M入力)",
     },
     "ultra_fast": {
         "provider": "azure_foundry",
         "model": "gpt-5-nano",
-        "description": "超高速 - GPT-5 Nano、リアルタイム処理向け",
+        "description": "超高速 - GPT-5 Nano ($0.05/1M入力)",
+    },
+    "local_dev": {
+        "provider": "ollama",
+        "model": "phi4",
+        "description": "ローカル開発 - Phi-4 14B、クラウド不要・無料",
     },
 }
 
@@ -112,12 +134,13 @@ class Settings(BaseSettings):
     duckdb_path: Path = Field(default_factory=lambda: Path("./data/jaia.duckdb"))
     sqlite_path: Path = Field(default_factory=lambda: Path("./data/jaia_meta.db"))
 
-    # LLM Providers - Extended for 2026 (Cloud-first)
+    # LLM Providers - Multi-cloud + Local (2026-02)
     llm_provider: Literal[
         "anthropic", "openai", "google",
-        "bedrock", "azure_foundry", "vertex_ai", "azure"
+        "bedrock", "azure_foundry", "vertex_ai", "azure",
+        "ollama",
     ] = "bedrock"
-    llm_model: str = "anthropic.claude-sonnet-4-6-opus-20260115-v1:0"  # Default: Latest Bedrock model
+    llm_model: str = "us.anthropic.claude-opus-4-6-20260201-v1:0"
 
     # Anthropic Direct API
     anthropic_api_key: str | None = None
@@ -150,6 +173,10 @@ class Settings(BaseSettings):
     azure_openai_api_key: str | None = None
     azure_openai_deployment: str | None = None
     azure_openai_api_version: str = "2024-10-21"
+
+    # Local LLM (Ollama)
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "phi4"
 
     # Performance
     batch_size: int = 10000

@@ -11,8 +11,6 @@ from typing import Any, Optional, TypedDict
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.language_models import BaseChatModel
-from langchain_openai import AzureChatOpenAI, ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 from langgraph.graph import StateGraph, END
 
 from app.core.config import settings
@@ -63,8 +61,8 @@ class AgentConfig:
     """Configuration for an agent."""
 
     agent_type: AgentType
-    model_provider: str = "openai"  # openai, azure, anthropic
-    model_name: str = "gpt-4o"
+    model_provider: str = "anthropic"
+    model_name: str = "claude-sonnet-4-5"
     temperature: float = 0.0
     max_tokens: int = 4096
     max_steps: int = 10
@@ -112,35 +110,102 @@ class AgentResult:
 def create_llm(config: AgentConfig) -> BaseChatModel:
     """Create LLM instance based on configuration.
 
+    Supports 8 providers: anthropic, openai, azure, azure_foundry,
+    bedrock, vertex_ai, google, ollama.
+
     Args:
         config: Agent configuration.
 
     Returns:
         LLM instance.
+
+    Raises:
+        ValueError: If provider is unknown.
     """
-    if config.model_provider == "azure":
-        return AzureChatOpenAI(
-            azure_deployment=settings.azure_deployment_name,
-            azure_endpoint=settings.azure_openai_endpoint,
-            api_key=settings.azure_openai_api_key,
-            api_version=settings.azure_openai_api_version,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-        )
-    elif config.model_provider == "anthropic":
+    provider = config.model_provider
+
+    if provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic
         return ChatAnthropic(
             model=config.model_name,
             api_key=settings.anthropic_api_key,
             temperature=config.temperature,
             max_tokens=config.max_tokens,
         )
-    else:
-        # Default to OpenAI
+
+    elif provider == "openai":
+        from langchain_openai import ChatOpenAI
         return ChatOpenAI(
             model=config.model_name,
             api_key=settings.openai_api_key,
             temperature=config.temperature,
             max_tokens=config.max_tokens,
+        )
+
+    elif provider == "azure":
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment=settings.azure_openai_deployment,
+            azure_endpoint=settings.azure_openai_endpoint,
+            api_key=settings.azure_openai_api_key,
+            api_version=settings.azure_openai_api_version,
+            temperature=config.temperature,
+            max_tokens=config.max_tokens,
+        )
+
+    elif provider == "azure_foundry":
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment=settings.azure_foundry_deployment or config.model_name,
+            azure_endpoint=settings.azure_foundry_endpoint,
+            api_key=settings.azure_foundry_api_key,
+            api_version=settings.azure_foundry_api_version,
+            temperature=config.temperature,
+            max_tokens=config.max_tokens,
+        )
+
+    elif provider == "bedrock":
+        from langchain_aws import ChatBedrockConverse
+        return ChatBedrockConverse(
+            model=config.model_name,
+            region_name=settings.aws_region,
+            temperature=config.temperature,
+            max_tokens=config.max_tokens,
+        )
+
+    elif provider == "vertex_ai":
+        from langchain_google_vertexai import ChatVertexAI
+        return ChatVertexAI(
+            model_name=config.model_name,
+            project=settings.gcp_project_id,
+            location=settings.gcp_location,
+            temperature=config.temperature,
+            max_output_tokens=config.max_tokens,
+        )
+
+    elif provider == "google":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=config.model_name,
+            google_api_key=settings.google_api_key,
+            temperature=config.temperature,
+            max_output_tokens=config.max_tokens,
+        )
+
+    elif provider == "ollama":
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=config.model_name,
+            base_url=settings.ollama_base_url,
+            temperature=config.temperature,
+            num_predict=config.max_tokens,
+        )
+
+    else:
+        raise ValueError(
+            f"Unknown LLM provider: {provider}. "
+            f"Supported: anthropic, openai, azure, azure_foundry, "
+            f"bedrock, vertex_ai, google, ollama"
         )
 
 

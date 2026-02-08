@@ -1,13 +1,14 @@
-"""LLM Service - Multi-provider LLM integration (2026 Cloud Edition).
+"""LLM Service - Multi-provider LLM integration (2026-02).
 
 Supports:
-- Anthropic Direct API (Claude Opus 4, Sonnet 4, Haiku 3.5)
-- OpenAI Direct API (GPT-4o, o1, o3-mini)
-- Google AI Studio (Gemini 2.0)
-- AWS Bedrock (Claude Sonnet 4.6 Opus, Nova) - Enterprise Recommended
-- Azure Foundry (GPT-5.2, GPT-5-nano, Claude) - Latest Models
-- GCP Vertex AI (Gemini 3.0 Flash/Pro Preview) - Cost Effective
+- Anthropic Direct API (Claude Opus 4.6, Sonnet 4.5, Haiku 4.5)
+- OpenAI Direct API (GPT-5.2, GPT-5, o3-pro, o3, o4-mini)
+- Google AI Studio (Gemini 3 Flash, Gemini 2.5 Pro)
+- AWS Bedrock (Claude Opus 4.6, Nova Premier/Pro/Lite) - Enterprise
+- Azure AI Foundry (GPT-5.2, Claude Opus 4.6) - Latest Models
+- GCP Vertex AI (Gemini 3 Pro/Flash) - Cost Effective
 - Azure OpenAI (Legacy GPT-4o)
+- Ollama (Phi-4, Llama 3.3, DeepSeek R1) - Local Development
 """
 
 import time
@@ -85,6 +86,13 @@ class LLMService:
             )
             self._client = {"vertexai": vertexai, "GenerativeModel": GenerativeModel}
 
+        elif provider == "ollama":
+            import httpx
+            self._client = httpx.Client(
+                base_url=settings.ollama_base_url,
+                timeout=self.config.timeout,
+            )
+
         return self._client
 
     def generate(
@@ -123,6 +131,8 @@ class LLMService:
             response = self._generate_azure_foundry(client, prompt, system, **kwargs)
         elif provider == "vertex_ai":
             response = self._generate_vertex_ai(client, prompt, system, **kwargs)
+        elif provider == "ollama":
+            response = self._generate_ollama(client, prompt, system, **kwargs)
         else:
             raise ValueError(f"Unknown provider: {provider}")
 
@@ -359,6 +369,43 @@ class LLMService:
                 "output_tokens": response.usage_metadata.candidates_token_count,
             },
             raw_response=response,
+        )
+
+    def _generate_ollama(
+        self, client, prompt: str, system: Optional[str], **kwargs
+    ) -> LLMResponse:
+        """Generate using Ollama (local LLM)."""
+        import json
+
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        response = client.post(
+            "/api/chat",
+            json={
+                "model": self.config.model,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": self.config.temperature,
+                    "num_predict": self.config.max_tokens,
+                },
+            },
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        return LLMResponse(
+            content=result["message"]["content"],
+            model=self.config.model,
+            provider="ollama",
+            usage={
+                "input_tokens": result.get("prompt_eval_count", 0),
+                "output_tokens": result.get("eval_count", 0),
+            },
+            raw_response=result,
         )
 
     @staticmethod
