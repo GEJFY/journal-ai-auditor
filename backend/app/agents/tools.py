@@ -475,6 +475,106 @@ def search_journal_description(
     return result.write_json()
 
 
+@tool
+def save_audit_finding(
+    workflow_id: str,
+    agent_type: str,
+    fiscal_year: int,
+    finding_title: str,
+    finding_description: str,
+    severity: str = "MEDIUM",
+    category: str = "",
+    affected_amount: float = 0.0,
+    affected_count: int = 0,
+    recommendation: str = "",
+) -> str:
+    """Save an audit finding to the database for persistence.
+
+    Args:
+        workflow_id: ID of the workflow that produced this finding.
+        agent_type: Type of agent (analysis, investigation, review).
+        fiscal_year: Fiscal year of the finding.
+        finding_title: Short title of the finding.
+        finding_description: Detailed description.
+        severity: Severity level (LOW, MEDIUM, HIGH, CRITICAL).
+        category: Finding category.
+        affected_amount: Financial amount affected.
+        affected_count: Number of entries affected.
+        recommendation: Recommended action.
+
+    Returns:
+        JSON string with the saved finding ID.
+    """
+    import uuid
+    import json
+
+    db = get_db()
+    finding_id = f"AF-{uuid.uuid4().hex[:8].upper()}"
+
+    try:
+        db.execute(
+            """INSERT INTO audit_findings
+               (finding_id, workflow_id, agent_type, fiscal_year,
+                finding_title, finding_description, severity, category,
+                affected_amount, affected_count, recommendation)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            [finding_id, workflow_id, agent_type, fiscal_year,
+             finding_title, finding_description, severity.upper(), category,
+             affected_amount, affected_count, recommendation]
+        )
+        return json.dumps({"finding_id": finding_id, "status": "saved"})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+@tool
+def get_saved_findings(
+    fiscal_year: Optional[int] = None,
+    workflow_id: Optional[str] = None,
+    severity: Optional[str] = None,
+) -> str:
+    """Get previously saved audit findings from the database.
+
+    Args:
+        fiscal_year: Filter by fiscal year.
+        workflow_id: Filter by workflow ID.
+        severity: Filter by severity (LOW, MEDIUM, HIGH, CRITICAL).
+
+    Returns:
+        JSON string of saved findings.
+    """
+    db = get_db()
+    conditions = []
+
+    if fiscal_year:
+        conditions.append(f"fiscal_year = {fiscal_year}")
+    if workflow_id:
+        conditions.append(f"workflow_id = '{workflow_id}'")
+    if severity:
+        conditions.append(f"severity = '{severity.upper()}'")
+
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+
+    try:
+        result = db.execute_df(f"""
+            SELECT finding_id, workflow_id, agent_type, fiscal_year,
+                   finding_title, finding_description, severity, category,
+                   affected_amount, affected_count, recommendation, status,
+                   created_at
+            FROM audit_findings
+            WHERE {where_clause}
+            ORDER BY
+                CASE severity
+                    WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2
+                    WHEN 'MEDIUM' THEN 3 ELSE 4
+                END,
+                created_at DESC
+        """)
+        return result.write_json()
+    except Exception:
+        return '{"findings": [], "note": "audit_findings table not yet initialized"}'
+
+
 # Tool collections for different agent types
 ANALYSIS_TOOLS = [
     query_journal_entries,
@@ -484,6 +584,7 @@ ANALYSIS_TOOLS = [
     get_anomaly_patterns,
     get_benford_analysis,
     get_dashboard_kpi,
+    save_audit_finding,
 ]
 
 INVESTIGATION_TOOLS = [
@@ -493,6 +594,8 @@ INVESTIGATION_TOOLS = [
     get_user_activity,
     get_account_summary,
     search_journal_description,
+    save_audit_finding,
+    get_saved_findings,
 ]
 
 QA_TOOLS = [
@@ -502,6 +605,7 @@ QA_TOOLS = [
     get_period_comparison,
     get_dashboard_kpi,
     search_journal_description,
+    get_saved_findings,
 ]
 
 REVIEW_TOOLS = [
@@ -509,4 +613,18 @@ REVIEW_TOOLS = [
     get_rule_violations,
     get_anomaly_patterns,
     get_dashboard_kpi,
+    save_audit_finding,
+    get_saved_findings,
+]
+
+DOCUMENTATION_TOOLS = [
+    query_journal_entries,
+    get_high_risk_entries,
+    get_account_summary,
+    get_period_comparison,
+    get_anomaly_patterns,
+    get_benford_analysis,
+    get_dashboard_kpi,
+    get_rule_violations,
+    get_saved_findings,
 ]

@@ -49,9 +49,9 @@ class LLMService:
             self._client = OpenAI(api_key=settings.openai_api_key)
 
         elif provider == "google":
-            import google.generativeai as genai
-            genai.configure(api_key=settings.google_api_key)
-            self._client = genai
+            from google import genai
+            client = genai.Client(api_key=settings.google_api_key)
+            self._client = client
 
         elif provider == "bedrock":
             import boto3
@@ -184,18 +184,19 @@ class LLMService:
     def _generate_google(
         self, client, prompt: str, system: Optional[str], **kwargs
     ) -> LLMResponse:
-        """Generate using Google Generative AI."""
-        model = client.GenerativeModel(
-            self.config.model,
+        """Generate using Google GenAI SDK (google-genai)."""
+        from google.genai import types
+
+        config = types.GenerateContentConfig(
+            temperature=self.config.temperature,
+            max_output_tokens=self.config.max_tokens,
             system_instruction=system,
         )
 
-        response = model.generate_content(
-            prompt,
-            generation_config={
-                "temperature": self.config.temperature,
-                "max_output_tokens": self.config.max_tokens,
-            },
+        response = client.models.generate_content(
+            model=self.config.model,
+            contents=prompt,
+            config=config,
         )
 
         return LLMResponse(

@@ -13,7 +13,7 @@ from langchain_core.messages import ToolMessage
 from langgraph.graph import StateGraph, END
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
-from app.agents.tools import ANALYSIS_TOOLS
+from app.agents.tools import DOCUMENTATION_TOOLS
 
 
 DOCUMENTATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の文書化エージェントです。
@@ -59,7 +59,7 @@ class DocumentationAgent(BaseAgent):
             config: Agent configuration.
         """
         super().__init__(config)
-        self.register_tools(ANALYSIS_TOOLS)
+        self.register_tools(DOCUMENTATION_TOOLS)
 
     @property
     def agent_type(self) -> AgentType:

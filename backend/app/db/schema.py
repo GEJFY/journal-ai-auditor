@@ -262,6 +262,33 @@ CREATE TABLE IF NOT EXISTS agg_account_flow (
 );
 
 -- =========================================
+-- Agent Audit Findings (Persistence)
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS audit_findings (
+    finding_id VARCHAR PRIMARY KEY,
+    workflow_id VARCHAR NOT NULL,
+    agent_type VARCHAR(20) NOT NULL,
+    fiscal_year INTEGER NOT NULL,
+    finding_title VARCHAR(500) NOT NULL,
+    finding_description TEXT,
+    severity VARCHAR(10) DEFAULT 'MEDIUM',
+    category VARCHAR(50),
+    affected_amount DECIMAL(18, 2) DEFAULT 0,
+    affected_count INTEGER DEFAULT 0,
+    evidence TEXT,
+    recommendation TEXT,
+    status VARCHAR(20) DEFAULT 'open',
+    reviewed_by VARCHAR(50),
+    reviewed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_af_workflow ON audit_findings(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_af_fiscal_year ON audit_findings(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_af_severity ON audit_findings(severity);
+
+-- =========================================
 -- Indexes
 -- =========================================
 

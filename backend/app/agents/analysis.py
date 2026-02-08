@@ -9,7 +9,7 @@ This agent specializes in:
 
 from typing import Any, Optional
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.graph import StateGraph, END
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
@@ -144,40 +144,91 @@ class AnalysisAgent(BaseAgent):
         }
 
     def _summarize_node(self, state: AgentState) -> AgentState:
-        """Summarize findings and generate final output.
+        """Summarize findings and generate final structured output.
+
+        Uses the LLM to extract structured findings from the conversation.
 
         Args:
             state: Current state.
 
         Returns:
-            Updated state with summary.
+            Updated state with structured findings, insights, recommendations.
         """
-        # Extract findings from messages
-        findings = []
-        insights = []
-        recommendations = []
+        from datetime import datetime
 
+        # Collect all AI messages as analysis context
+        ai_contents = []
         for msg in state["messages"]:
             if isinstance(msg, AIMessage) and msg.content:
-                content = msg.content
+                ai_contents.append(msg.content)
 
-                # Parse structured output
-                if "### 発見事項" in content or "### Findings" in content:
-                    # Extract findings section
-                    pass  # Content is in the message
+        combined_analysis = "\n---\n".join(ai_contents)
 
-                if "### 洞察" in content or "### Insights" in content:
-                    pass
+        # Use LLM to extract structured output from the analysis
+        extraction_prompt = f"""以下の分析結果から、構造化された監査所見を抽出してください。
 
-                if "### 推奨事項" in content or "### Recommendations" in content:
-                    pass
+分析結果:
+{combined_analysis}
+
+以下のJSON形式で回答してください（JSON以外は出力しないでください）：
+{{
+  "findings": [
+    {{"id": "F-001", "title": "タイトル", "description": "説明", "severity": "high/medium/low", "affected_amount": 0, "affected_count": 0}}
+  ],
+  "insights": ["洞察1", "洞察2"],
+  "recommendations": ["推奨事項1", "推奨事項2"]
+}}"""
+
+        try:
+            response = self.llm.invoke([
+                SystemMessage(content="あなたは監査所見を構造化するアシスタントです。必ず有効なJSONで回答してください。"),
+                HumanMessage(content=extraction_prompt),
+            ])
+
+            import json
+            content = response.content.strip()
+            # Extract JSON from markdown code block if present
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+
+            parsed = json.loads(content)
+            findings = parsed.get("findings", [])
+            insights = parsed.get("insights", [])
+            recommendations = parsed.get("recommendations", [])
+        except Exception:
+            # Fallback: extract sections from text using simple parsing
+            findings = state.get("findings", [])
+            insights = state.get("insights", [])
+            recommendations = state.get("recommendations", [])
+
+            for content in ai_contents:
+                lines = content.split("\n")
+                current_section = None
+                for line in lines:
+                    stripped = line.strip()
+                    if "発見事項" in stripped or "Findings" in stripped:
+                        current_section = "findings"
+                    elif "洞察" in stripped or "Insights" in stripped:
+                        current_section = "insights"
+                    elif "推奨事項" in stripped or "Recommendations" in stripped:
+                        current_section = "recommendations"
+                    elif stripped.startswith("- ") and current_section:
+                        item = stripped[2:].strip()
+                        if current_section == "findings":
+                            findings.append({"title": item, "description": item, "severity": "medium"})
+                        elif current_section == "insights":
+                            insights.append(item)
+                        elif current_section == "recommendations":
+                            recommendations.append(item)
 
         return {
             **state,
-            "findings": findings if findings else state.get("findings", []),
-            "insights": insights if insights else state.get("insights", []),
-            "recommendations": recommendations if recommendations else state.get("recommendations", []),
-            "completed_at": state.get("completed_at"),
+            "findings": findings,
+            "insights": insights,
+            "recommendations": recommendations,
+            "completed_at": datetime.now().isoformat(),
         }
 
     async def analyze_risk_distribution(
