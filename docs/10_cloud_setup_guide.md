@@ -49,8 +49,8 @@ AI分析機能に使用するLLMプロバイダーの設定方法を説明しま
 |------|-------------|--------|------|
 | **最高精度** | Azure Foundry | gpt-5.2 | GPT-5.2による最先端分析 |
 | **高精度** | AWS Bedrock | Claude Opus 4.6 | 複雑な調査、レポート生成 |
-| **バランス** | GCP Vertex AI | gemini-3-pro | 日常的な分析 |
-| **コスト重視** | GCP Vertex AI | gemini-2.5-flash-lite | 大量データ処理 |
+| **バランス** | GCP Vertex AI | gemini-3-pro | 日常的な分析（global リージョン） |
+| **コスト重視** | GCP Vertex AI | gemini-2.5-flash-lite | 大量データ処理（リージョナル可） |
 | **超高速** | Azure Foundry | gpt-5-nano | リアルタイム処理 |
 | **ローカル開発** | Ollama | phi4 | GPU不要、即座に開始 |
 
@@ -169,12 +169,15 @@ print('Azure Foundry connection: OK')
 
 ### 利用可能モデル（2026年最新）
 
-| モデル | 特徴 | 推奨用途 |
-|--------|------|---------|
-| gemini-3-pro | Gemini 3最高精度 | 高精度分析 |
-| gemini-3-flash-preview | Gemini 3高速 | 高速分析 |
-| gemini-2.5-pro | Gemini 2.5バランス | 通常分析 |
-| gemini-2.5-flash-lite | Gemini 2.5超低コスト | **コスト重視** |
+| モデル | 特徴 | リージョン | 推奨用途 |
+|--------|------|-----------|---------|
+| gemini-3-pro | Gemini 3最高精度 | **global のみ** | 高精度分析 |
+| gemini-3-flash-preview | Gemini 3高速 | **global のみ** | 高速分析 |
+| gemini-2.5-pro | Gemini 2.5バランス | global / リージョナル | 通常分析 |
+| gemini-2.5-flash-lite | Gemini 2.5超低コスト | global / リージョナル | **コスト重視** |
+
+> **重要**: Gemini 3.0シリーズは `GCP_LOCATION=global` でのみ利用可能です。
+> Gemini 2.5は `us-central1`、`asia-northeast1` 等のリージョナルエンドポイントでも利用できます。
 
 ### セットアップ
 
@@ -184,12 +187,16 @@ print('Azure Foundry connection: OK')
 4. 環境設定：
 
 ```bash
-# backend/.env
+# backend/.env（Gemini 3.0を使用する場合）
 LLM_PROVIDER=vertex_ai
-LLM_MODEL=gemini-2.5-flash-lite
+LLM_MODEL=gemini-3-flash-preview
 GCP_PROJECT_ID=your-project-id
-GCP_LOCATION=us-central1
+GCP_LOCATION=global
 GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
+
+# Gemini 2.5を使用する場合はリージョナルも可
+# LLM_MODEL=gemini-2.5-flash-lite
+# GCP_LOCATION=us-central1
 ```
 
 ### サービスアカウント権限
@@ -203,7 +210,7 @@ roles/aiplatform.user
 ```powershell
 python -c "
 from app.services.llm import LLMService, LLMConfig
-config = LLMConfig(provider='vertex_ai', model='gemini-3.0-flash-preview')
+config = LLMConfig(provider='vertex_ai', model='gemini-3-flash-preview')
 service = LLMService(config)
 print('Vertex AI connection: OK')
 "
@@ -427,9 +434,9 @@ docker-compose up -d
 ```bash
 # .env
 LLM_PROVIDER=vertex_ai
-LLM_MODEL=gemini-2.5-flash-lite
+LLM_MODEL=gemini-3-flash-preview
 GCP_PROJECT_ID=your-project-id
-GCP_LOCATION=us-central1
+GCP_LOCATION=global
 GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
 
 # 起動
@@ -554,7 +561,8 @@ for use_case, info in recommended.items():
 
 - Vertex AI APIを有効化必須
 - サービスアカウントに `roles/aiplatform.user` 権限付与
-- Gemini 3.0はプレビュー版のため、利用可能リージョンを確認
+- **Gemini 3.0は `GCP_LOCATION=global` のみ対応**（リージョナルエンドポイント不可）
+- Gemini 2.5は `us-central1` 等リージョナルでも利用可
 
 ---
 

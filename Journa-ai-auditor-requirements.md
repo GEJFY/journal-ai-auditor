@@ -1274,7 +1274,7 @@ class AnalysisState:
 |---------|---|------|
 | provider | ENUM | bedrock / azure_foundry / vertex_ai / anthropic / openai / google / azure / ollama |
 | model_id | STRING | 使用するモデルID（例: claude-opus-4-6, gemini-3-pro, phi4） |
-| region | STRING | リージョン（例: us-east-1, us-central1） |
+| region | STRING | リージョン（例: us-east-1, global）※Gemini 3.0はglobalのみ |
 | api_key / credentials | SECRET | 認証情報（環境変数または設定ファイル） |
 | max_tokens | INTEGER | 最大出力トークン数（デフォルト: 4096） |
 | temperature | FLOAT | 生成の多様性（デフォルト: 0.3） |
@@ -1308,8 +1308,8 @@ class AnalysisState:
 ```json
 {
   "provider": "vertex_ai",
-  "model_id": "gemini-2.5-flash-lite",
-  "region": "us-central1",
+  "model_id": "gemini-3-flash-preview",
+  "region": "global",
   "project_id": "your-project-id",
   "credentials": "SERVICE_ACCOUNT_JSON"
 }

@@ -164,8 +164,10 @@ class Settings(BaseSettings):
     azure_foundry_api_version: str = "2026-01-01"
 
     # GCP Vertex AI (Gemini 3.0 series)
+    # Gemini 3.0: "global" リージョンのみ対応
+    # Gemini 2.5: "us-central1" 等リージョナルエンドポイント利用可
     gcp_project_id: str | None = None
-    gcp_location: str = "us-central1"
+    gcp_location: str = "global"
     gcp_credentials_path: str | None = None  # Path to service account JSON
 
     # Azure OpenAI (Legacy)

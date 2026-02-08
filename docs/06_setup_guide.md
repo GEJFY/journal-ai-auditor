@@ -312,7 +312,7 @@ ufw enable
 | ------------- | ---------- | ------ |
 | **AWS Bedrock** | Claude Opus 4.6 | エンタープライズ推奨 |
 | **Azure Foundry** | GPT-5.2 | 最高精度 |
-| **GCP Vertex AI** | Gemini 2.5 Flash Lite | コスト重視 |
+| **GCP Vertex AI** | Gemini 3 Pro | 最新 (Global リージョン) |
 | **Anthropic** | Claude Sonnet 4.5 | バランス良好 |
 | **OpenAI** | GPT-5 | 汎用 |
 | **Google AI** | Gemini 2.5 Flash Lite | 開発向け |
@@ -342,15 +342,21 @@ AZURE_FOUNDRY_DEPLOYMENT=gpt-5-2-deployment
 AZURE_FOUNDRY_API_VERSION=2026-01-01
 ```
 
-### 4.4 GCP Vertex AI（コスト重視）
+### 4.4 GCP Vertex AI（最新Gemini 3.0）
+
+> Gemini 3.0は **Globalリージョンのみ** 対応。Gemini 2.5はリージョナル（us-central1等）も利用可。
 
 ```bash
 # backend/.env
 LLM_PROVIDER=vertex_ai
-LLM_MODEL=gemini-2.5-flash-lite
+LLM_MODEL=gemini-3-flash-preview
 GCP_PROJECT_ID=your-project-id
-GCP_LOCATION=us-central1
+GCP_LOCATION=global
 GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
+
+# コスト重視の場合（Gemini 2.5、リージョナル利用可）
+# LLM_MODEL=gemini-2.5-flash-lite
+# GCP_LOCATION=us-central1
 ```
 
 ### 4.5 Anthropic Claude（直接API）

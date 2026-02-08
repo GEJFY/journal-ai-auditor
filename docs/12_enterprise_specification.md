@@ -1369,11 +1369,11 @@ from google.cloud import aiplatform
 
 aiplatform.init(
     project="your-project-id",
-    location="asia-northeast1"  # 東京リージョン
+    location="global"  # Gemini 3.0はglobalリージョンのみ対応
 )
 
 # Gemini 3.0 Flash で仕訳分析
-model = aiplatform.GenerativeModel("gemini-3.0-flash-preview")
+model = aiplatform.GenerativeModel("gemini-3-flash-preview")
 response = model.generate_content(
     "この仕訳にリスクはありますか？\n" + journal_entry
 )
