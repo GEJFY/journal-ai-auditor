@@ -4,7 +4,7 @@
  * Application settings and configuration.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, Database, Bot, Palette } from 'lucide-react';
 
 interface Settings {
@@ -15,19 +15,40 @@ interface Settings {
   theme: string;
 }
 
-export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({
-    fiscalYearStart: '04',
-    llmProvider: 'anthropic',
-    llmModel: 'claude-3-opus',
-    apiKey: '',
-    theme: 'system',
-  });
+const SETTINGS_STORAGE_KEY = 'jaia-settings';
 
+const defaultSettings: Settings = {
+  fiscalYearStart: '04',
+  llmProvider: 'anthropic',
+  llmModel: 'claude-3-opus',
+  apiKey: '',
+  theme: 'system',
+};
+
+export default function SettingsPage() {
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Partial<Settings>;
+        setSettings({ ...defaultSettings, ...parsed });
+      } catch {
+        // 破損データは無視
+      }
+    }
+  }, []);
+
   const handleSave = () => {
-    // TODO: Save settings to backend
+    const { apiKey, ...safeSettings } = settings;
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings));
+
+    if (apiKey) {
+      localStorage.setItem('jaia-api-key', btoa(apiKey));
+    }
+
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

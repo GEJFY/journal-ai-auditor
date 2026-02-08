@@ -90,6 +90,7 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+nul
 
 # Temporary files
 tmp/

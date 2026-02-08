@@ -49,15 +49,57 @@ export default function ImportPage() {
   );
 
   const handleFile = async (file: File) => {
+    const allowedExtensions = ['.csv', '.xlsx', '.xls'];
+    const maxFileSize = 500 * 1024 * 1024; // 500MB
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+    if (!allowedExtensions.includes(ext)) {
+      setStatus({
+        step: 'error',
+        message: `対応していないファイル形式です: ${ext}（CSV, XLSX, XLS のみ対応）`,
+      });
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      setStatus({
+        step: 'error',
+        message: `ファイルサイズが大きすぎます: ${(file.size / 1024 / 1024).toFixed(1)}MB（上限: 500MB）`,
+      });
+      return;
+    }
+
+    if (file.size === 0) {
+      setStatus({ step: 'error', message: 'ファイルが空です' });
+      return;
+    }
+
     setStatus({ step: 'validating', message: 'ファイルを検証中...' });
 
-    // TODO: Implement actual file validation
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://localhost:8000/api/v1/import/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || `インポートエラー: ${response.status}`);
+      }
+
+      const result = await response.json();
       setStatus({
         step: 'complete',
-        message: `${file.name} の読み込みが完了しました`,
+        message: `${file.name} の読み込みが完了しました（${result.imported_count ?? 0} 件）`,
       });
-    }, 2000);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'インポート中にエラーが発生しました';
+      setStatus({ step: 'error', message });
+    }
   };
 
   return (
