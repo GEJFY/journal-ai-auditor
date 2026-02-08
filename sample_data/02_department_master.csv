@@ -1,0 +1,82 @@
+dept_code,dept_name,dept_name_en,segment,parent_dept,level,cost_center,is_active
+1000,本社,Head Office,JAPAN,,1,Y,1
+1100,経営企画部,Corporate Planning,JAPAN,1000,2,N,1
+1110,経営企画課,Corporate Planning Section,JAPAN,1100,3,Y,1
+1120,IR課,Investor Relations Section,JAPAN,1100,3,Y,1
+1200,経理財務部,Accounting & Finance,JAPAN,1000,2,N,1
+1210,経理課,Accounting Section,JAPAN,1200,3,Y,1
+1220,財務課,Treasury Section,JAPAN,1200,3,Y,1
+1230,税務課,Tax Section,JAPAN,1200,3,Y,1
+1300,人事総務部,HR & General Affairs,JAPAN,1000,2,N,1
+1310,人事課,HR Section,JAPAN,1300,3,Y,1
+1320,総務課,General Affairs Section,JAPAN,1300,3,Y,1
+1330,法務課,Legal Section,JAPAN,1300,3,Y,1
+1400,情報システム部,Information Systems,JAPAN,1000,2,N,1
+1410,システム開発課,System Development,JAPAN,1400,3,Y,1
+1420,インフラ運用課,Infrastructure Operations,JAPAN,1400,3,Y,1
+1500,内部監査室,Internal Audit,JAPAN,1000,2,Y,1
+2000,営業本部,Sales Division,JAPAN,,1,N,1
+2100,自動車塗料営業部,Automotive Sales Dept,JAPAN,2000,2,N,1
+2110,OEM営業課,OEM Sales Section,JAPAN,2100,3,Y,1
+2120,補修塗料営業課,Refinish Sales Section,JAPAN,2100,3,Y,1
+2200,工業用塗料営業部,Industrial Sales Dept,JAPAN,2000,2,N,1
+2210,建材塗料営業課,Building Materials Sales,JAPAN,2200,3,Y,1
+2220,重防食塗料営業課,Heavy-duty Coatings Sales,JAPAN,2200,3,Y,1
+2300,建築用塗料営業部,Architectural Sales Dept,JAPAN,2000,2,N,1
+2310,内装塗料営業課,Interior Coatings Sales,JAPAN,2300,3,Y,1
+2320,外装塗料営業課,Exterior Coatings Sales,JAPAN,2300,3,Y,1
+2330,防水塗料営業課,Waterproofing Sales,JAPAN,2300,3,Y,1
+2400,船舶用塗料営業部,Marine Sales Dept,JAPAN,2000,2,N,1
+2410,新造船営業課,Newbuilding Sales,JAPAN,2400,3,Y,1
+2420,修繕船営業課,Repair Sales,JAPAN,2400,3,Y,1
+2500,海外営業部,International Sales Dept,JAPAN,2000,2,N,1
+2510,アジア営業課,Asia Sales Section,JAPAN,2500,3,Y,1
+2520,欧米営業課,Americas/Europe Sales,JAPAN,2500,3,Y,1
+3000,技術本部,Technical Division,JAPAN,,1,N,1
+3100,研究開発部,R&D Department,JAPAN,3000,2,N,1
+3110,基盤技術研究課,Fundamental Research,JAPAN,3100,3,Y,1
+3120,自動車塗料開発課,Automotive Coating Dev,JAPAN,3100,3,Y,1
+3130,工業塗料開発課,Industrial Coating Dev,JAPAN,3100,3,Y,1
+3140,建築塗料開発課,Architectural Coating Dev,JAPAN,3100,3,Y,1
+3200,生産技術部,Production Engineering,JAPAN,3000,2,N,1
+3210,プロセス開発課,Process Development,JAPAN,3200,3,Y,1
+3220,設備技術課,Equipment Engineering,JAPAN,3200,3,Y,1
+3300,品質保証部,Quality Assurance,JAPAN,3000,2,N,1
+3310,品質管理課,Quality Control,JAPAN,3300,3,Y,1
+3320,環境安全課,Environment & Safety,JAPAN,3300,3,Y,1
+4000,生産本部,Manufacturing Division,JAPAN,,1,N,1
+4100,尼崎工場,Amagasaki Plant,JAPAN,4000,2,N,1
+4110,製造1課,Manufacturing Section 1,JAPAN,4100,3,Y,1
+4120,製造2課,Manufacturing Section 2,JAPAN,4100,3,Y,1
+4130,工場管理課,Plant Administration,JAPAN,4100,3,Y,1
+4200,名古屋工場,Nagoya Plant,JAPAN,4000,2,N,1
+4210,製造課,Manufacturing Section,JAPAN,4200,3,Y,1
+4220,工場管理課,Plant Administration,JAPAN,4200,3,Y,1
+4300,東京工場,Tokyo Plant,JAPAN,4000,2,N,1
+4310,製造課,Manufacturing Section,JAPAN,4300,3,Y,1
+4320,工場管理課,Plant Administration,JAPAN,4300,3,Y,1
+4400,購買部,Procurement,JAPAN,4000,2,N,1
+4410,原材料購買課,Raw Materials Procurement,JAPAN,4400,3,Y,1
+4420,設備購買課,Equipment Procurement,JAPAN,4400,3,Y,1
+4500,物流部,Logistics,JAPAN,4000,2,N,1
+4510,物流管理課,Logistics Management,JAPAN,4500,3,Y,1
+4520,倉庫管理課,Warehouse Management,JAPAN,4500,3,Y,1
+5000,インド事業本部,India Business Division,INDIA,,1,N,1
+5100,インド営業部,India Sales Dept,INDIA,5000,2,Y,1
+5200,インド生産部,India Manufacturing Dept,INDIA,5000,2,Y,1
+5300,インド管理部,India Admin Dept,INDIA,5000,2,Y,1
+6000,欧州事業本部,Europe Business Division,EUROPE,,1,N,1
+6100,欧州営業部,Europe Sales Dept,EUROPE,6000,2,Y,1
+6200,欧州生産部,Europe Manufacturing Dept,EUROPE,6000,2,Y,1
+6300,欧州管理部,Europe Admin Dept,EUROPE,6000,2,Y,1
+7000,アジア事業本部,Asia Business Division,ASIA,,1,N,1
+7100,アジア営業部,Asia Sales Dept,ASIA,7000,2,Y,1
+7200,アジア生産部,Asia Manufacturing Dept,ASIA,7000,2,Y,1
+7300,アジア管理部,Asia Admin Dept,ASIA,7000,2,Y,1
+8000,アフリカ事業本部,Africa Business Division,AFRICA,,1,N,1
+8100,アフリカ営業部,Africa Sales Dept,AFRICA,8000,2,Y,1
+8200,アフリカ生産部,Africa Manufacturing Dept,AFRICA,8000,2,Y,1
+8300,アフリカ管理部,Africa Admin Dept,AFRICA,8000,2,Y,1
+9000,北米事業本部,North America Division,NAMERICA,,1,N,1
+9100,北米営業部,NA Sales Dept,NAMERICA,9000,2,Y,1
+9200,北米管理部,NA Admin Dept,NAMERICA,9000,2,Y,1

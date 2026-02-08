@@ -1,0 +1,118 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Build outputs
+/frontend/dist/
+/frontend/out/
+*.dmg
+*.exe
+*.msi
+
+# Electron
+/frontend/release/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database files
+*.db
+*.duckdb
+*.duckdb.wal
+*.parquet
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+
+# Coverage
+coverage/
+
+# Secrets
+secrets/
+credentials/
+*.pem
+*.key
+
+# Sample data (large files)
+sample_data/*.csv
+sample_data/*.parquet
+!sample_data/01_chart_of_accounts.csv
+!sample_data/02_department_master.csv
+!sample_data/03_vendor_master.csv
+!sample_data/04_user_master.csv

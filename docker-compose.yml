@@ -1,0 +1,109 @@
+# JAIA Docker Compose Configuration
+# Production-ready deployment with optional frontend
+
+version: '3.9'
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jaia-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
+    environment:
+      - APP_NAME=JAIA
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - PORT=8001
+      - HOST=0.0.0.0
+      # Database
+      - DATA_DIR=/app/data
+      - DUCKDB_PATH=/app/data/jaia.duckdb
+      - SQLITE_PATH=/app/data/jaia_meta.db
+      # LLM Configuration (2026 Cloud Edition)
+      - LLM_PROVIDER=${LLM_PROVIDER:-bedrock}
+      - LLM_MODEL=${LLM_MODEL:-anthropic.claude-sonnet-4-6-opus-20260115-v1:0}
+      # Anthropic Direct
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # OpenAI Direct
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Google AI Studio
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      # AWS Bedrock (Recommended for Enterprise)
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_BEDROCK_ENDPOINT=${AWS_BEDROCK_ENDPOINT:-}
+      # Azure Foundry (GPT-5.2, GPT-5-nano, Claude)
+      - AZURE_FOUNDRY_ENDPOINT=${AZURE_FOUNDRY_ENDPOINT:-}
+      - AZURE_FOUNDRY_API_KEY=${AZURE_FOUNDRY_API_KEY:-}
+      - AZURE_FOUNDRY_DEPLOYMENT=${AZURE_FOUNDRY_DEPLOYMENT:-}
+      - AZURE_FOUNDRY_API_VERSION=${AZURE_FOUNDRY_API_VERSION:-2026-01-01}
+      # GCP Vertex AI (Gemini 3.0 series)
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-}
+      - GCP_LOCATION=${GCP_LOCATION:-us-central1}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcp-credentials.json
+      # Azure OpenAI (Legacy)
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
+      # Performance
+      - BATCH_SIZE=${BATCH_SIZE:-10000}
+      - MAX_WORKERS=${MAX_WORKERS:-4}
+      - CACHE_TTL_SECONDS=${CACHE_TTL_SECONDS:-300}
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - jaia-data:/app/data
+      - ${GCP_CREDENTIALS_PATH:-./credentials}:/app/credentials:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - jaia-network
+
+  # Frontend Web Server (Nginx serving static files)
+  frontend:
+    image: nginx:alpine
+    container_name: jaia-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    volumes:
+      - ./frontend/dist/renderer:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - jaia-network
+
+  # Redis Cache (Optional - for production scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: jaia-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - jaia-network
+    profiles:
+      - production
+
+volumes:
+  jaia-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  jaia-network:
+    driver: bridge

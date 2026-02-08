@@ -1,0 +1,147 @@
+# Sample Data Generation Configuration
+# グローバル塗料株式会社 - サンプルデータ設定
+
+company:
+  name: "グローバル塗料株式会社"
+  name_en: "Global Paint Corporation"
+  code: "GP001"
+
+fiscal:
+  year: 2024
+  start_date: "2023-04-01"
+  end_date: "2024-03-31"
+
+scale:
+  # 売上高 5,888億円
+  annual_revenue: 588800000000
+  # 総資産 7,507億円
+  total_assets: 750700000000
+  # 年間仕訳件数
+  journal_count: 450000
+
+segment_weights:
+  JAPAN: 0.278
+  INDIA: 0.242
+  EUROPE: 0.266
+  ASIA: 0.117
+  AFRICA: 0.080
+  NAMERICA: 0.017
+
+business_weights:
+  automotive: 0.35
+  industrial: 0.25
+  architectural: 0.30
+  marine: 0.10
+
+# 月次仕訳係数
+monthly_factors:
+  4: 1.0   # 期首
+  5: 0.9   # GW
+  6: 1.0
+  7: 1.0
+  8: 0.9   # 夏季
+  9: 1.1   # 中間
+  10: 1.0
+  11: 1.0
+  12: 1.1  # 年末
+  1: 0.9   # 正月
+  2: 1.0
+  3: 1.3   # 期末
+
+# 金額分布
+amount_distribution:
+  - range: [1, 100000]
+    weight: 0.45
+  - range: [100001, 1000000]
+    weight: 0.35
+  - range: [1000001, 10000000]
+    weight: 0.15
+  - range: [10000001, 100000000]
+    weight: 0.04
+  - range: [100000001, 1000000000]
+    weight: 0.01
+
+# 不正パターン設定
+fraud_patterns:
+  enabled: true
+  patterns:
+    F01_self_approval:
+      count: 150
+      description: "自己承認仕訳"
+      min_amount: 5000000
+    F02_fictitious_sales:
+      count: 30
+      description: "架空売上計上"
+      vendor_codes: ["V9001", "V9002"]
+    F03_circular_trading:
+      count: 45
+      description: "循環取引"
+      pattern: "A→B→C→A"
+    F04_period_end_sales:
+      count: 80
+      description: "期末偏重売上"
+      target_days: 5  # 3月最終5日間
+    F05_related_party:
+      count: 25
+      description: "関連当事者操作"
+      vendor_codes: ["V2001", "V2002", "V2003", "V2004", "V2005"]
+    F06_suspense_aged:
+      count: 60
+      description: "仮勘定長期滞留"
+      aging_months: 12
+    F07_expense_splitting:
+      count: 120
+      description: "経費分割"
+      split_threshold: 5000000
+    F08_weekend_high_value:
+      count: 40
+      description: "休日高額仕訳"
+      min_amount: 5000000
+    F09_missing_description:
+      count: 200
+      description: "摘要欠損"
+      min_amount: 1000000
+    F10_benford_violation:
+      count: 350
+      description: "ベンフォード違反"
+
+# 異常パターン設定
+anomaly_patterns:
+  enabled: true
+  patterns:
+    A01_round_amounts:
+      count: 500
+      description: "金額の切り上げ"
+    A02_frequent_reversals:
+      count: 180
+      description: "逆仕訳多発"
+    A03_late_night_entry:
+      count: 75
+      description: "深夜入力"
+      after_hour: 22
+    A04_month_end_concentration:
+      count: 2500
+      description: "月末集中"
+      last_days: 3
+    A05_revenue_ar_mismatch:
+      count: 40
+      description: "売上債権逆相関"
+    A06_single_user_dominance:
+      count: 300
+      description: "特定担当者偏り"
+      user_ids: ["U900", "U901"]
+    A07_seasonality_deviation:
+      count: 150
+      description: "季節性逸脱"
+    A08_new_vendor_large:
+      count: 90
+      description: "取引先急増"
+    A09_fx_anomaly:
+      count: 45
+      description: "為替差損益異常"
+    A10_allowance_shortage:
+      count: 20
+      description: "引当金不足"
+
+# 乱数シード（再現性確保）
+random_seed: 42

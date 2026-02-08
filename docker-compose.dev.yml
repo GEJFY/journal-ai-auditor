@@ -1,0 +1,39 @@
+# JAIA Docker Compose - Development Configuration
+# Hot-reload enabled for rapid development
+
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: jaia-backend-dev
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - APP_NAME=JAIA
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - PORT=8001
+      - HOST=0.0.0.0
+      - DATA_DIR=/app/data
+      - DUCKDB_PATH=/app/data/jaia.duckdb
+      - SQLITE_PATH=/app/data/jaia_meta.db
+      - LLM_PROVIDER=${LLM_PROVIDER:-anthropic}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./backend:/app
+      - jaia-data-dev:/app/data
+    networks:
+      - jaia-network-dev
+
+volumes:
+  jaia-data-dev:
+    driver: local
+
+networks:
+  jaia-network-dev:
+    driver: bridge

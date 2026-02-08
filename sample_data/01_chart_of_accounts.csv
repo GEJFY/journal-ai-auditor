@@ -1,0 +1,216 @@
+account_code,account_name,account_name_en,account_category,account_type,normal_balance,level,parent_code,is_posting,is_active
+1000,資産,Assets,BS,asset,debit,1,,0,1
+1100,流動資産,Current Assets,BS,asset,debit,2,1000,0,1
+1110,現金及び預金,Cash and Deposits,BS,asset,debit,3,1100,0,1
+1111,現金,Cash,BS,asset,debit,4,1110,1,1
+1112,普通預金,Ordinary Deposits,BS,asset,debit,4,1110,1,1
+1113,当座預金,Checking Accounts,BS,asset,debit,4,1110,1,1
+1114,定期預金,Time Deposits,BS,asset,debit,4,1110,1,1
+1115,外貨預金,Foreign Currency Deposits,BS,asset,debit,4,1110,1,1
+1120,受取手形,Notes Receivable,BS,asset,debit,3,1100,1,1
+1130,売掛金,Accounts Receivable,BS,asset,debit,3,1100,0,1
+1131,売掛金-国内,AR - Domestic,BS,asset,debit,4,1130,1,1
+1132,売掛金-輸出,AR - Export,BS,asset,debit,4,1130,1,1
+1133,売掛金-グループ間,AR - Intercompany,BS,asset,debit,4,1130,1,1
+1140,貸倒引当金,Allowance for Doubtful Accounts,BS,asset,credit,3,1100,1,1
+1150,棚卸資産,Inventories,BS,asset,debit,3,1100,0,1
+1151,製品,Finished Goods,BS,asset,debit,4,1150,1,1
+1152,半製品,Semi-finished Goods,BS,asset,debit,4,1150,1,1
+1153,仕掛品,Work in Process,BS,asset,debit,4,1150,1,1
+1154,原材料,Raw Materials,BS,asset,debit,4,1150,1,1
+1155,貯蔵品,Supplies,BS,asset,debit,4,1150,1,1
+1160,前渡金,Advance Payments,BS,asset,debit,3,1100,1,1
+1170,前払費用,Prepaid Expenses,BS,asset,debit,3,1100,1,1
+1180,短期貸付金,Short-term Loans,BS,asset,debit,3,1100,0,1
+1181,短期貸付金-従業員,ST Loans - Employees,BS,asset,debit,4,1180,1,1
+1182,短期貸付金-関係会社,ST Loans - Affiliates,BS,asset,debit,4,1180,1,1
+1190,未収入金,Accrued Revenue,BS,asset,debit,3,1100,1,1
+1191,未収消費税,Accrued Consumption Tax,BS,asset,debit,4,1190,1,1
+1195,仮払金,Suspense Payments,BS,asset,debit,3,1100,1,1
+1196,仮払消費税,Suspense Consumption Tax,BS,asset,debit,3,1100,1,1
+1197,立替金,Advance on Behalf,BS,asset,debit,3,1100,1,1
+1200,固定資産,Fixed Assets,BS,asset,debit,2,1000,0,1
+1210,有形固定資産,Tangible Fixed Assets,BS,asset,debit,3,1200,0,1
+1211,建物,Buildings,BS,asset,debit,4,1210,1,1
+1212,建物附属設備,Building Equipment,BS,asset,debit,4,1210,1,1
+1213,構築物,Structures,BS,asset,debit,4,1210,1,1
+1214,機械装置,Machinery and Equipment,BS,asset,debit,4,1210,1,1
+1215,車両運搬具,Vehicles,BS,asset,debit,4,1210,1,1
+1216,工具器具備品,Tools and Fixtures,BS,asset,debit,4,1210,1,1
+1217,土地,Land,BS,asset,debit,4,1210,1,1
+1218,建設仮勘定,Construction in Progress,BS,asset,debit,4,1210,1,1
+1219,リース資産,Lease Assets,BS,asset,debit,4,1210,1,1
+1220,減価償却累計額,Accumulated Depreciation,BS,asset,credit,3,1200,0,1
+1221,建物減価償却累計額,Accum Depr - Buildings,BS,asset,credit,4,1220,1,1
+1222,建物附属設備減価償却累計額,Accum Depr - Bldg Equipment,BS,asset,credit,4,1220,1,1
+1223,構築物減価償却累計額,Accum Depr - Structures,BS,asset,credit,4,1220,1,1
+1224,機械装置減価償却累計額,Accum Depr - Machinery,BS,asset,credit,4,1220,1,1
+1225,車両運搬具減価償却累計額,Accum Depr - Vehicles,BS,asset,credit,4,1220,1,1
+1226,工具器具備品減価償却累計額,Accum Depr - Tools,BS,asset,credit,4,1220,1,1
+1230,無形固定資産,Intangible Fixed Assets,BS,asset,debit,3,1200,0,1
+1231,特許権,Patents,BS,asset,debit,4,1230,1,1
+1232,商標権,Trademarks,BS,asset,debit,4,1230,1,1
+1233,ソフトウェア,Software,BS,asset,debit,4,1230,1,1
+1234,のれん,Goodwill,BS,asset,debit,4,1230,1,1
+1235,リース資産-無形,Lease Assets - Intangible,BS,asset,debit,4,1230,1,1
+1240,投資その他の資産,Investments and Other,BS,asset,debit,3,1200,0,1
+1241,投資有価証券,Investment Securities,BS,asset,debit,4,1240,1,1
+1242,関係会社株式,Shares of Affiliates,BS,asset,debit,4,1240,1,1
+1243,出資金,Investments in Capital,BS,asset,debit,4,1240,1,1
+1244,長期貸付金,Long-term Loans,BS,asset,debit,4,1240,1,1
+1245,長期前払費用,Long-term Prepaid Expenses,BS,asset,debit,4,1240,1,1
+1246,敷金保証金,Deposits and Guarantees,BS,asset,debit,4,1240,1,1
+1247,繰延税金資産,Deferred Tax Assets,BS,asset,debit,4,1240,1,1
+1248,投資損失引当金,Allowance for Investment Loss,BS,asset,credit,4,1240,1,1
+1300,繰延資産,Deferred Assets,BS,asset,debit,2,1000,0,1
+1310,開業費,Startup Costs,BS,asset,debit,3,1300,1,1
+1320,社債発行費,Bond Issue Costs,BS,asset,debit,3,1300,1,1
+2000,負債,Liabilities,BS,liability,credit,1,,0,1
+2100,流動負債,Current Liabilities,BS,liability,credit,2,2000,0,1
+2110,支払手形,Notes Payable,BS,liability,credit,3,2100,1,1
+2120,買掛金,Accounts Payable,BS,liability,credit,3,2100,0,1
+2121,買掛金-原材料,AP - Raw Materials,BS,liability,credit,4,2120,1,1
+2122,買掛金-外注費,AP - Subcontracting,BS,liability,credit,4,2120,1,1
+2123,買掛金-グループ間,AP - Intercompany,BS,liability,credit,4,2120,1,1
+2130,短期借入金,Short-term Borrowings,BS,liability,credit,3,2100,0,1
+2131,短期借入金-銀行,ST Borrowings - Banks,BS,liability,credit,4,2130,1,1
+2132,短期借入金-グループ,ST Borrowings - Group,BS,liability,credit,4,2130,1,1
+2140,未払金,Accounts Payable - Other,BS,liability,credit,3,2100,1,1
+2141,未払費用,Accrued Expenses,BS,liability,credit,4,2140,1,1
+2150,未払法人税等,Income Taxes Payable,BS,liability,credit,3,2100,1,1
+2151,未払消費税,Consumption Tax Payable,BS,liability,credit,3,2100,1,1
+2160,前受金,Advances Received,BS,liability,credit,3,2100,1,1
+2170,預り金,Deposits Received,BS,liability,credit,3,2100,1,1
+2171,源泉所得税預り金,Withholding Tax,BS,liability,credit,4,2170,1,1
+2172,社会保険料預り金,Social Insurance Payable,BS,liability,credit,4,2170,1,1
+2180,賞与引当金,Provision for Bonuses,BS,liability,credit,3,2100,1,1
+2181,役員賞与引当金,Provision for Directors Bonuses,BS,liability,credit,3,2100,1,1
+2190,仮受金,Suspense Receipts,BS,liability,credit,3,2100,1,1
+2191,仮受消費税,Suspense Consumption Tax Rcvd,BS,liability,credit,3,2100,1,1
+2195,1年内返済長期借入金,Current Portion LT Debt,BS,liability,credit,3,2100,1,1
+2196,1年内償還社債,Current Portion Bonds,BS,liability,credit,3,2100,1,1
+2197,リース債務-短期,Lease Obligations - Current,BS,liability,credit,3,2100,1,1
+2200,固定負債,Long-term Liabilities,BS,liability,credit,2,2000,0,1
+2210,社債,Bonds Payable,BS,liability,credit,3,2200,1,1
+2220,長期借入金,Long-term Borrowings,BS,liability,credit,3,2200,0,1
+2221,長期借入金-銀行,LT Borrowings - Banks,BS,liability,credit,4,2220,1,1
+2222,長期借入金-グループ,LT Borrowings - Group,BS,liability,credit,4,2220,1,1
+2230,リース債務-長期,Lease Obligations - LT,BS,liability,credit,3,2200,1,1
+2240,退職給付引当金,Provision for Retirement Benefits,BS,liability,credit,3,2200,1,1
+2241,役員退職慰労引当金,Provision for Directors Retirement,BS,liability,credit,3,2200,1,1
+2250,製品保証引当金,Provision for Product Warranties,BS,liability,credit,3,2200,1,1
+2260,環境対策引当金,Provision for Environmental,BS,liability,credit,3,2200,1,1
+2270,資産除去債務,Asset Retirement Obligations,BS,liability,credit,3,2200,1,1
+2280,繰延税金負債,Deferred Tax Liabilities,BS,liability,credit,3,2200,1,1
+3000,純資産,Net Assets,BS,equity,credit,1,,0,1
+3100,株主資本,Shareholders Equity,BS,equity,credit,2,3000,0,1
+3110,資本金,Capital Stock,BS,equity,credit,3,3100,1,1
+3120,資本剰余金,Capital Surplus,BS,equity,credit,3,3100,0,1
+3121,資本準備金,Legal Capital Surplus,BS,equity,credit,4,3120,1,1
+3122,その他資本剰余金,Other Capital Surplus,BS,equity,credit,4,3120,1,1
+3130,利益剰余金,Retained Earnings,BS,equity,credit,3,3100,0,1
+3131,利益準備金,Legal Retained Earnings,BS,equity,credit,4,3130,1,1
+3132,別途積立金,General Reserve,BS,equity,credit,4,3130,1,1
+3133,繰越利益剰余金,Retained Earnings BF,BS,equity,credit,4,3130,1,1
+3140,自己株式,Treasury Stock,BS,equity,debit,3,3100,1,1
+3200,評価換算差額等,Valuation and Translation Adjustments,BS,equity,credit,2,3000,0,1
+3210,有価証券評価差額金,Unrealized Gains on Securities,BS,equity,credit,3,3200,1,1
+3220,為替換算調整勘定,Foreign Currency Translation,BS,equity,credit,3,3200,1,1
+3230,退職給付調整累計額,Remeasurements of Defined Benefits,BS,equity,credit,3,3200,1,1
+3300,新株予約権,Stock Acquisition Rights,BS,equity,credit,2,3000,1,1
+3400,非支配株主持分,Non-controlling Interests,BS,equity,credit,2,3000,1,1
+4000,収益,Revenues,PL,revenue,credit,1,,0,1
+4100,売上高,Net Sales,PL,revenue,credit,2,4000,0,1
+4110,製品売上高,Product Sales,PL,revenue,credit,3,4100,0,1
+4111,自動車用塗料売上,Automotive Coatings Sales,PL,revenue,credit,4,4110,1,1
+4112,工業用塗料売上,Industrial Coatings Sales,PL,revenue,credit,4,4110,1,1
+4113,建築用塗料売上,Architectural Coatings Sales,PL,revenue,credit,4,4110,1,1
+4114,船舶用塗料売上,Marine Coatings Sales,PL,revenue,credit,4,4110,1,1
+4115,その他製品売上,Other Product Sales,PL,revenue,credit,4,4110,1,1
+4120,商品売上高,Merchandise Sales,PL,revenue,credit,3,4100,1,1
+4130,輸出売上高,Export Sales,PL,revenue,credit,3,4100,1,1
+4140,グループ間売上高,Intercompany Sales,PL,revenue,credit,3,4100,1,1
+4200,売上値引返品,Sales Discounts and Returns,PL,revenue,debit,2,4000,1,1
+4300,営業外収益,Non-operating Income,PL,revenue,credit,2,4000,0,1
+4310,受取利息,Interest Income,PL,revenue,credit,3,4300,1,1
+4320,受取配当金,Dividend Income,PL,revenue,credit,3,4300,1,1
+4330,為替差益,Foreign Exchange Gains,PL,revenue,credit,3,4300,1,1
+4340,持分法投資利益,Equity in Earnings of Affiliates,PL,revenue,credit,3,4300,1,1
+4350,雑収入,Miscellaneous Income,PL,revenue,credit,3,4300,1,1
+4400,特別利益,Extraordinary Income,PL,revenue,credit,2,4000,0,1
+4410,固定資産売却益,Gain on Sale of Fixed Assets,PL,revenue,credit,3,4400,1,1
+4420,投資有価証券売却益,Gain on Sale of Securities,PL,revenue,credit,3,4400,1,1
+4430,関係会社株式売却益,Gain on Sale of Subsidiary Shares,PL,revenue,credit,3,4400,1,1
+4440,負ののれん発生益,Negative Goodwill,PL,revenue,credit,3,4400,1,1
+4450,過年度損益修正益,Prior Period Adjustments - Gain,PL,revenue,credit,3,4400,1,1
+5000,費用,Expenses,PL,expense,debit,1,,0,1
+5100,売上原価,Cost of Sales,PL,expense,debit,2,5000,0,1
+5110,期首製品棚卸高,Beginning Finished Goods,PL,expense,debit,3,5100,1,1
+5120,当期製品製造原価,Cost of Goods Manufactured,PL,expense,debit,3,5100,0,1
+5121,材料費,Materials Cost,PL,expense,debit,4,5120,1,1
+5122,労務費,Labor Cost,PL,expense,debit,4,5120,1,1
+5123,外注加工費,Subcontracting Cost,PL,expense,debit,4,5120,1,1
+5124,製造経費,Manufacturing Overhead,PL,expense,debit,4,5120,1,1
+5125,減価償却費-製造,Depreciation - Manufacturing,PL,expense,debit,4,5120,1,1
+5130,期末製品棚卸高,Ending Finished Goods,PL,expense,credit,3,5100,1,1
+5140,商品売上原価,Cost of Merchandise,PL,expense,debit,3,5100,1,1
+5150,他勘定振替高,Transfer to Other Accounts,PL,expense,credit,3,5100,1,1
+5200,販売費及び一般管理費,SG&A Expenses,PL,expense,debit,2,5000,0,1
+5210,役員報酬,Directors Compensation,PL,expense,debit,3,5200,1,1
+5211,給与手当,Salaries and Wages,PL,expense,debit,3,5200,1,1
+5212,賞与,Bonuses,PL,expense,debit,3,5200,1,1
+5213,賞与引当金繰入額,Provision for Bonuses,PL,expense,debit,3,5200,1,1
+5214,退職給付費用,Retirement Benefit Expenses,PL,expense,debit,3,5200,1,1
+5215,法定福利費,Statutory Welfare,PL,expense,debit,3,5200,1,1
+5216,福利厚生費,Employee Benefits,PL,expense,debit,3,5200,1,1
+5220,荷造運搬費,Packing and Shipping,PL,expense,debit,3,5200,1,1
+5221,販売手数料,Sales Commission,PL,expense,debit,3,5200,1,1
+5222,広告宣伝費,Advertising,PL,expense,debit,3,5200,1,1
+5223,販売促進費,Sales Promotion,PL,expense,debit,3,5200,1,1
+5230,旅費交通費,Travel Expenses,PL,expense,debit,3,5200,1,1
+5231,通信費,Communication Expenses,PL,expense,debit,3,5200,1,1
+5232,水道光熱費,Utilities,PL,expense,debit,3,5200,1,1
+5233,消耗品費,Supplies Expense,PL,expense,debit,3,5200,1,1
+5234,事務用品費,Office Supplies,PL,expense,debit,3,5200,1,1
+5235,修繕費,Repairs and Maintenance,PL,expense,debit,3,5200,1,1
+5236,保険料,Insurance,PL,expense,debit,3,5200,1,1
+5237,租税公課,Taxes and Dues,PL,expense,debit,3,5200,1,1
+5238,減価償却費,Depreciation,PL,expense,debit,3,5200,1,1
+5239,のれん償却費,Amortization of Goodwill,PL,expense,debit,3,5200,1,1
+5240,地代家賃,Rent,PL,expense,debit,3,5200,1,1
+5241,リース料,Lease Expenses,PL,expense,debit,3,5200,1,1
+5242,支払報酬,Professional Fees,PL,expense,debit,3,5200,1,1
+5243,外注費,Outsourcing Expenses,PL,expense,debit,3,5200,1,1
+5244,業務委託費,Contract Services,PL,expense,debit,3,5200,1,1
+5245,研究開発費,R&D Expenses,PL,expense,debit,3,5200,1,1
+5246,試験研究費,Research Expenses,PL,expense,debit,3,5200,1,1
+5250,貸倒引当金繰入額,Bad Debt Expense,PL,expense,debit,3,5200,1,1
+5251,貸倒損失,Bad Debt Losses,PL,expense,debit,3,5200,1,1
+5260,接待交際費,Entertainment,PL,expense,debit,3,5200,1,1
+5261,会議費,Meeting Expenses,PL,expense,debit,3,5200,1,1
+5262,寄付金,Donations,PL,expense,debit,3,5200,1,1
+5263,諸会費,Membership Fees,PL,expense,debit,3,5200,1,1
+5270,雑費,Miscellaneous Expenses,PL,expense,debit,3,5200,1,1
+5300,営業外費用,Non-operating Expenses,PL,expense,debit,2,5000,0,1
+5310,支払利息,Interest Expense,PL,expense,debit,3,5300,1,1
+5311,社債利息,Bond Interest,PL,expense,debit,3,5300,1,1
+5320,為替差損,Foreign Exchange Losses,PL,expense,debit,3,5300,1,1
+5330,持分法投資損失,Equity in Losses of Affiliates,PL,expense,debit,3,5300,1,1
+5340,支払手数料,Commission Expense,PL,expense,debit,3,5300,1,1
+5350,雑損失,Miscellaneous Losses,PL,expense,debit,3,5300,1,1
+5400,特別損失,Extraordinary Losses,PL,expense,debit,2,5000,0,1
+5410,固定資産売却損,Loss on Sale of Fixed Assets,PL,expense,debit,3,5400,1,1
+5411,固定資産除却損,Loss on Disposal of Fixed Assets,PL,expense,debit,3,5400,1,1
+5412,減損損失,Impairment Losses,PL,expense,debit,3,5400,1,1
+5420,投資有価証券売却損,Loss on Sale of Securities,PL,expense,debit,3,5400,1,1
+5421,投資有価証券評価損,Loss on Valuation of Securities,PL,expense,debit,3,5400,1,1
+5430,関係会社株式売却損,Loss on Sale of Subsidiary Shares,PL,expense,debit,3,5400,1,1
+5431,関係会社株式評価損,Loss on Valuation of Subsidiary,PL,expense,debit,3,5400,1,1
+5440,災害損失,Disaster Losses,PL,expense,debit,3,5400,1,1
+5450,訴訟関連損失,Litigation Losses,PL,expense,debit,3,5400,1,1
+5460,事業構造改善費用,Restructuring Charges,PL,expense,debit,3,5400,1,1
+5470,環境対策費用,Environmental Costs,PL,expense,debit,3,5400,1,1
+5480,過年度損益修正損,Prior Period Adjustments - Loss,PL,expense,debit,3,5400,1,1
+5500,法人税等,Income Taxes,PL,expense,debit,2,5000,0,1
+5510,法人税住民税事業税,Corporate Income Taxes,PL,expense,debit,3,5500,1,1
+5520,法人税等調整額,Deferred Income Taxes,PL,expense,debit,3,5500,1,1
