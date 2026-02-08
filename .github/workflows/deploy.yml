@@ -1,0 +1,373 @@
+# =============================================================================
+# JAIA Cloud Deployment Pipeline
+# =============================================================================
+# AWS/Azure/GCPへのクラウドデプロイメント
+#
+# トリガー:
+#   - mainブランチへのプッシュ
+#   - 手動実行（workflow_dispatch）
+# =============================================================================
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'infrastructure/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      cloud_provider:
+        description: 'Cloud provider to deploy to'
+        required: true
+        default: 'aws'
+        type: choice
+        options:
+          - aws
+          - azure
+          - gcp
+
+env:
+  PYTHON_VERSION: "3.11"
+  TERRAFORM_VERSION: "1.6.0"
+
+jobs:
+  # ===========================================================================
+  # Setup & Validation
+  # ===========================================================================
+  setup:
+    name: Setup & Validate
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      cloud_provider: ${{ steps.set-env.outputs.cloud_provider }}
+
+    steps:
+      - name: Set environment variables
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "cloud_provider=${{ inputs.cloud_provider }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "cloud_provider=aws" >> $GITHUB_OUTPUT
+          fi
+
+  # ===========================================================================
+  # Build Docker Image
+  # ===========================================================================
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: setup
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            jaia-backend
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=${{ needs.setup.outputs.environment }}
+
+      - name: Build and export
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/jaia-backend.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/jaia-backend.tar
+
+  # ===========================================================================
+  # Deploy to AWS
+  # ===========================================================================
+  deploy-aws:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: needs.setup.outputs.cloud_provider == 'aws'
+    environment: ${{ needs.setup.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/jaia-backend.tar
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: jaia-backend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag jaia-backend:${{ needs.setup.outputs.environment }} $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform/aws
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform/aws
+        run: |
+          terraform plan \
+            -var="environment=${{ needs.setup.outputs.environment }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: needs.setup.outputs.environment != 'production' || github.event_name == 'workflow_dispatch'
+        working-directory: infrastructure/terraform/aws
+        run: terraform apply -auto-approve tfplan
+
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service \
+            --cluster jaia-${{ needs.setup.outputs.environment }} \
+            --service jaia-backend \
+            --force-new-deployment
+
+  # ===========================================================================
+  # Deploy to Azure
+  # ===========================================================================
+  deploy-azure:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: needs.setup.outputs.cloud_provider == 'azure'
+    environment: ${{ needs.setup.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/jaia-backend.tar
+
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name acrjaia${{ needs.setup.outputs.environment }}
+
+      - name: Push image to ACR
+        env:
+          ACR_NAME: acrjaia${{ needs.setup.outputs.environment }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag jaia-backend:${{ needs.setup.outputs.environment }} $ACR_NAME.azurecr.io/jaia-backend:$IMAGE_TAG
+          docker push $ACR_NAME.azurecr.io/jaia-backend:$IMAGE_TAG
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform/azure
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform/azure
+        run: |
+          terraform plan \
+            -var="environment=${{ needs.setup.outputs.environment }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: needs.setup.outputs.environment != 'production' || github.event_name == 'workflow_dispatch'
+        working-directory: infrastructure/terraform/azure
+        run: terraform apply -auto-approve tfplan
+
+      - name: Update Container App
+        run: |
+          az containerapp update \
+            --name ca-jaia-backend \
+            --resource-group rg-jaia-${{ needs.setup.outputs.environment }} \
+            --image acrjaia${{ needs.setup.outputs.environment }}.azurecr.io/jaia-backend:${{ github.sha }}
+
+  # ===========================================================================
+  # Deploy to GCP
+  # ===========================================================================
+  deploy-gcp:
+    name: Deploy to GCP
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: needs.setup.outputs.cloud_provider == 'gcp'
+    environment: ${{ needs.setup.outputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/jaia-backend.tar
+
+      - name: Push image to Artifact Registry
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          REGION: asia-northeast1
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag jaia-backend:${{ needs.setup.outputs.environment }} \
+            $REGION-docker.pkg.dev/$PROJECT_ID/jaia-${{ needs.setup.outputs.environment }}/jaia-backend:$IMAGE_TAG
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/jaia-${{ needs.setup.outputs.environment }}/jaia-backend:$IMAGE_TAG
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform/gcp
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: infrastructure/terraform/gcp
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          terraform plan \
+            -var="environment=${{ needs.setup.outputs.environment }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: needs.setup.outputs.environment != 'production' || github.event_name == 'workflow_dispatch'
+        working-directory: infrastructure/terraform/gcp
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Deploy to Cloud Run
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          REGION: asia-northeast1
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          gcloud run deploy jaia-backend \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/jaia-${{ needs.setup.outputs.environment }}/jaia-backend:$IMAGE_TAG \
+            --region $REGION \
+            --platform managed
+
+  # ===========================================================================
+  # Post-Deploy Verification
+  # ===========================================================================
+  verify:
+    name: Post-Deploy Verification
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-aws, deploy-azure, deploy-gcp]
+    if: always() && (needs.deploy-aws.result == 'success' || needs.deploy-azure.result == 'success' || needs.deploy-gcp.result == 'success')
+
+    steps:
+      - name: Get deployment URL
+        id: get-url
+        run: |
+          if [ "${{ needs.setup.outputs.cloud_provider }}" == "aws" ]; then
+            echo "url=${{ secrets.AWS_DEPLOYMENT_URL }}" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.setup.outputs.cloud_provider }}" == "azure" ]; then
+            echo "url=${{ secrets.AZURE_DEPLOYMENT_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ secrets.GCP_DEPLOYMENT_URL }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Health check
+        run: |
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.get-url.outputs.url }}/api/v1/health" || echo "000")
+            if [ "$STATUS" == "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: Status $STATUS, retrying..."
+            sleep 10
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ needs.setup.outputs.environment }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cloud Provider | ${{ needs.setup.outputs.cloud_provider }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
