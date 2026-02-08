@@ -1349,8 +1349,8 @@ Vertex AI - GCPのAI/MLプラットフォーム
 │  │  └───────────────┘  └───────────────┘                   │   │
 │  │                                                          │   │
 │  │  ┌───────────────┐  ┌───────────────┐                   │   │
-│  │  │ Gemini 2.0    │  │ Claude 3.5    │                   │   │
-│  │  │ Flash         │  │ (Model Garden)│                   │   │
+│  │  │ Gemini 2.5    │  │ Claude        │                   │   │
+│  │  │ Flash Lite    │  │ Sonnet 4.5    │                   │   │
 │  │  └───────────────┘  └───────────────┘                   │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
@@ -1746,12 +1746,12 @@ ENVIRONMENT=development
 
 # --- Anthropic Claude（最も簡単）---
 LLM_PROVIDER=anthropic
-LLM_MODEL=claude-sonnet-4
+LLM_MODEL=claude-sonnet-4-5
 ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxx
 
 # --- AWS Bedrock（エンタープライズ推奨）---
 # LLM_PROVIDER=bedrock
-# LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
+# LLM_MODEL=us.anthropic.claude-opus-4-6-20260201-v1:0
 # AWS_REGION=us-east-1
 # AWS_ACCESS_KEY_ID=AKIAxxxxxxxx
 # AWS_SECRET_ACCESS_KEY=xxxxxxxx

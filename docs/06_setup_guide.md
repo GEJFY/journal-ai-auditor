@@ -310,19 +310,21 @@ ufw enable
 
 | プロバイダー | 推奨モデル | 特徴 |
 | ------------- | ---------- | ------ |
-| **AWS Bedrock** | Claude Sonnet 4.6 Opus | エンタープライズ推奨 |
+| **AWS Bedrock** | Claude Opus 4.6 | エンタープライズ推奨 |
 | **Azure Foundry** | GPT-5.2 | 最高精度 |
-| **GCP Vertex AI** | Gemini 3.0 Flash | コスト重視 |
-| **Anthropic** | Claude Sonnet 4 | バランス良好 |
-| **OpenAI** | GPT-4o | 汎用 |
-| **Google AI** | Gemini 2.0 Flash | 開発向け |
+| **GCP Vertex AI** | Gemini 2.5 Flash Lite | コスト重視 |
+| **Anthropic** | Claude Sonnet 4.5 | バランス良好 |
+| **OpenAI** | GPT-5 | 汎用 |
+| **Google AI** | Gemini 2.5 Flash Lite | 開発向け |
+| **Azure OpenAI** | GPT-4o | レガシー |
+| **Ollama** | phi4 | ローカル開発 |
 
 ### 4.2 AWS Bedrock（エンタープライズ推奨）
 
 ```bash
 # backend/.env
 LLM_PROVIDER=bedrock
-LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
+LLM_MODEL=us.anthropic.claude-opus-4-6-20260201-v1:0
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=AKIAxxxxxxxxxxxx
 AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -356,7 +358,7 @@ GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
 ```bash
 # backend/.env
 LLM_PROVIDER=anthropic
-LLM_MODEL=claude-sonnet-4
+LLM_MODEL=claude-sonnet-4-5
 ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxx
 ```
 
@@ -365,11 +367,33 @@ ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxx
 ```bash
 # backend/.env
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=gpt-5-mini
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxx
 ```
 
-### 4.7 接続テスト
+### 4.7 Google AI Studio
+
+```bash
+# backend/.env
+LLM_PROVIDER=google
+LLM_MODEL=gemini-2.5-flash-lite
+GOOGLE_API_KEY=AIzaSy-xxxxxxxxxxxxxxxxxxxx
+```
+
+### 4.8 Ollama（ローカルLLM）
+
+```bash
+# Ollamaインストール（https://ollama.ai）
+# モデルの取得
+ollama pull phi4
+
+# backend/.env
+LLM_PROVIDER=ollama
+LLM_MODEL=phi4
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+### 4.9 接続テスト
 
 ```powershell
 cd backend

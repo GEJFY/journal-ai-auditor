@@ -232,6 +232,18 @@ pytest --cov=app --cov-report=html
 
 # 特定テスト
 pytest tests/test_import.py -v
+
+# エージェント・LLMサービステスト
+pytest tests/test_agents.py tests/test_llm_service.py -v
+
+# データベーステスト
+pytest tests/test_database.py -v
+
+# ローカルLLM結合テスト（Ollama起動が必要）
+pytest tests/test_integration_ollama.py -v --no-cov
+
+# クラウドプロバイダー結合テスト（API キーが必要）
+pytest tests/test_integration_cloud.py -v --no-cov
 ```
 
 ### 6.2 フロントエンド

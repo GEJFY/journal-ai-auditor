@@ -1253,24 +1253,28 @@ class AnalysisState:
 
 ### 16.6 LLMプロバイダー設定（マルチクラウド対応）
 
-設定画面からLLMプロバイダーを選択可能。企業のクラウド戦略・契約状況に応じて柔軟に切り替え可能。
+設定画面からLLMプロバイダーを選択可能。企業のクラウド戦略・契約状況に応じて柔軟に切り替え可能。ローカルLLM（Ollama）による開発・テスト環境もサポート。
 
-#### 16.6.1 対応プロバイダー一覧
+#### 16.6.1 対応プロバイダー一覧（8プロバイダー）
 
-| プロバイダー | モデル | SDK/API | 用途 |
-| ------------ | ------ | ------- | ---- |
-| **AWS Bedrock** | Claude 4.5 Sonnet | boto3 / Bedrock Runtime | 洞察生成、チャット応答、レポート作成 |
-| **Google Cloud Vertex AI** | Gemini 2.0 Pro | google-cloud-aiplatform | 洞察生成、チャット応答、レポート作成 |
-| **Microsoft Azure OpenAI** | GPT-5.2 | azure-openai | 洞察生成、チャット応答、レポート作成 |
-| **Anthropic API（直接）** | Claude 4.5 Sonnet | anthropic-sdk | 洞察生成、チャット応答、レポート作成 |
+| プロバイダー | 代表モデル | SDK/API | 用途 |
+| ------------ | ---------- | ------- | ---- |
+| **AWS Bedrock** | Claude Opus 4.6, Nova Premier | boto3 / Bedrock Runtime | **エンタープライズ推奨** |
+| **Azure AI Foundry** | GPT-5.2, Claude Opus 4.6 | azure-openai SDK | 最新GPT-5シリーズ + Claude |
+| **GCP Vertex AI** | Gemini 3 Pro, Gemini 2.5 Flash Lite | google-cloud-aiplatform | **コスト重視** |
+| **Anthropic Direct** | Claude Opus 4.6, Sonnet 4.5, Haiku 4.5 | anthropic SDK | 最新モデル即時利用 |
+| **OpenAI Direct** | GPT-5.2, GPT-5, o3-pro, o4-mini | openai SDK | GPT-5直接利用 |
+| **Google AI Studio** | Gemini 3 Flash, Gemini 2.5 Pro | google-genai SDK | 個人/PoC |
+| **Azure OpenAI（レガシー）** | GPT-4o | azure-openai SDK | 既存Azure環境 |
+| **Ollama（ローカル）** | Phi-4, DeepSeek R1, Llama 3.3 | REST API (httpx) | **開発・テスト用** |
 
 #### 16.6.2 設定項目
 
 | 設定項目 | 型 | 説明 |
 |---------|---|------|
-| provider | ENUM | aws_bedrock / vertex_ai / azure_openai / anthropic_direct |
-| model_id | STRING | 使用するモデルID（例: claude-v4-sonnet, gemini-2.0-pro） |
-| region | STRING | リージョン（例: us-east-1, asia-northeast1） |
+| provider | ENUM | bedrock / azure_foundry / vertex_ai / anthropic / openai / google / azure / ollama |
+| model_id | STRING | 使用するモデルID（例: claude-opus-4-6, gemini-3-pro, phi4） |
+| region | STRING | リージョン（例: us-east-1, us-central1） |
 | api_key / credentials | SECRET | 認証情報（環境変数または設定ファイル） |
 | max_tokens | INTEGER | 最大出力トークン数（デフォルト: 4096） |
 | temperature | FLOAT | 生成の多様性（デフォルト: 0.3） |
@@ -1282,32 +1286,41 @@ class AnalysisState:
 **AWS Bedrock（推奨：既存AWS環境がある場合）**
 ```json
 {
-  "provider": "aws_bedrock",
-  "model_id": "anthropic.claude-v4-sonnet",
+  "provider": "bedrock",
+  "model_id": "us.anthropic.claude-opus-4-6-20260201-v1:0",
   "region": "us-east-1",
   "credentials": "IAM_ROLE or ACCESS_KEY"
 }
 ```
 
-**Google Cloud Vertex AI（推奨：GCP環境がある場合）**
+**Azure AI Foundry（推奨：最新GPT-5を使う場合）**
+```json
+{
+  "provider": "azure_foundry",
+  "model_id": "gpt-5.2",
+  "endpoint": "https://your-foundry.openai.azure.com/",
+  "api_version": "2026-01-01",
+  "credentials": "API_KEY"
+}
+```
+
+**GCP Vertex AI（推奨：コスト重視の場合）**
 ```json
 {
   "provider": "vertex_ai",
-  "model_id": "gemini-2.0-pro",
-  "region": "asia-northeast1",
+  "model_id": "gemini-2.5-flash-lite",
+  "region": "us-central1",
   "project_id": "your-project-id",
   "credentials": "SERVICE_ACCOUNT_JSON"
 }
 ```
 
-**Microsoft Azure OpenAI（推奨：Azure環境がある場合）**
+**Ollama（ローカル開発・テスト）**
 ```json
 {
-  "provider": "azure_openai",
-  "model_id": "gpt-5.2",
-  "endpoint": "https://your-resource.openai.azure.com/",
-  "api_version": "2024-12-01",
-  "credentials": "API_KEY or MANAGED_IDENTITY"
+  "provider": "ollama",
+  "model_id": "phi4",
+  "base_url": "http://localhost:11434"
 }
 ```
 
@@ -1321,14 +1334,18 @@ class AnalysisState:
 | fallback_provider | フォールバック先プロバイダー |
 | fallback_threshold | フォールバック発動の失敗回数 |
 
-#### 16.6.5 コスト・性能比較（参考）
+#### 16.6.5 コスト・性能比較（参考・2026年2月時点）
 
-| プロバイダー | 入力コスト(/1M tokens) | 出力コスト(/1M tokens) | レイテンシ | 備考 |
-|-------------|----------------------|----------------------|----------|------|
-| AWS Bedrock (Claude) | $3.00 | $15.00 | 低 | VPC内通信可、監査ログ統合 |
-| Vertex AI (Gemini) | $1.25 | $5.00 | 低 | BigQuery連携、長コンテキスト |
-| Azure OpenAI (GPT) | $2.50 | $10.00 | 中 | M365連携、コンプライアンス |
-| Anthropic Direct | $3.00 | $15.00 | 低 | 最新モデル即時利用 |
+| プロバイダー | 代表モデル | 入力(/1M tokens) | 出力(/1M tokens) | レイテンシ | 備考 |
+|-------------|-----------|------------------|------------------|----------|------|
+| AWS Bedrock | Claude Opus 4.6 | $15.00 | $75.00 | 低 | VPC内通信、監査ログ統合 |
+| AWS Bedrock | Claude Haiku 4.5 | $0.80 | $4.00 | 非常に低 | 大量処理向け |
+| Azure Foundry | GPT-5.2 | $10.00 | $30.00 | 中 | M365連携、コンプライアンス |
+| Vertex AI | Gemini 2.5 Flash Lite | $0.15 | $0.60 | 非常に低 | **最低コスト** |
+| Vertex AI | Gemini 3 Pro | $5.00 | $15.00 | 低 | BigQuery連携 |
+| Anthropic Direct | Claude Opus 4.6 | $15.00 | $75.00 | 低 | 最新モデル即時利用 |
+| OpenAI Direct | GPT-5.2 | $10.00 | $30.00 | 中 | 直接API利用 |
+| Ollama | Phi-4 (ローカル) | 無料 | 無料 | ハード依存 | GPU推奨、開発用 |
 
 ※ 料金は2026年2月時点の参考値。実際の料金は各プロバイダーの最新情報を確認。
 

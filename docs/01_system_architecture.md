@@ -73,8 +73,12 @@
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                           External Services                                      │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐           │
-│  │ AWS Bedrock  │ │ Vertex AI   │ │ Azure OpenAI │ │ Anthropic    │           │
-│  │  (Claude)    │ │  (Gemini)   │ │   (GPT)      │ │   Direct     │           │
+│  │ AWS Bedrock  │ │ Vertex AI   │ │Azure Foundry │ │ Anthropic    │           │
+│  │(Claude,Nova) │ │  (Gemini)   │ │(GPT-5,Claude)│ │   Direct     │           │
+│  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘           │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐           │
+│  │ OpenAI       │ │ Google AI   │ │ Azure OpenAI │ │   Ollama     │           │
+│  │  Direct      │ │  Studio     │ │  (Legacy)    │ │  (Local)     │           │
 │  └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘           │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -217,13 +221,11 @@ jaia/
 │   │       ├── account_repo.py
 │   │       └── insight_repo.py
 │   │
-│   ├── llm/                      # LLMプロバイダー
-│   │   ├── base.py               # 抽象基底クラス
-│   │   ├── bedrock.py            # AWS Bedrock
-│   │   ├── vertex.py             # Google Vertex AI
-│   │   ├── azure_openai.py       # Azure OpenAI
-│   │   ├── anthropic_direct.py   # Anthropic Direct
-│   │   └── factory.py            # プロバイダーファクトリ
+│   ├── services/llm/             # LLMプロバイダー（8プロバイダー対応）
+│   │   ├── models.py             # LLMConfig, LLMResponse, ModelInfo
+│   │   └── service.py            # マルチプロバイダーLLMサービス
+│   │                             # (Bedrock, Azure Foundry, Vertex AI,
+│   │                             #  Anthropic, OpenAI, Google, Azure, Ollama)
 │   │
 │   ├── tests/                    # テスト
 │   │   ├── unit/

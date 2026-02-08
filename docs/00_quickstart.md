@@ -43,7 +43,7 @@ copy .env.example .env
 
 ```ini
 LLM_PROVIDER=anthropic
-LLM_MODEL=claude-sonnet-4
+LLM_MODEL=claude-sonnet-4-5
 ANTHROPIC_API_KEY=sk-ant-api03-あなたのキー
 ```
 
@@ -51,7 +51,7 @@ ANTHROPIC_API_KEY=sk-ant-api03-あなたのキー
 
 ```ini
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=gpt-5-mini
 OPENAI_API_KEY=sk-proj-あなたのキー
 ```
 
@@ -59,9 +59,19 @@ OPENAI_API_KEY=sk-proj-あなたのキー
 
 ```ini
 LLM_PROVIDER=google
-LLM_MODEL=gemini-2.0-flash
+LLM_MODEL=gemini-2.5-flash-lite
 GOOGLE_API_KEY=AIzaSy-あなたのキー
 ```
+
+#### オプション D: Ollama（ローカルLLM・APIキー不要）
+
+```ini
+LLM_PROVIDER=ollama
+LLM_MODEL=phi4
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+> Ollamaのインストール: https://ollama.ai → `ollama pull phi4` でモデル取得
 
 ### Step 4: バックエンドの起動
 

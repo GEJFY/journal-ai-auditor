@@ -82,9 +82,13 @@ JAIA（Journal entry AI Analyzer）は、仕訳データの分析と内部監査
 AI分析機能を使用する場合：
 
 ```
-LLMプロバイダー: [Azure OpenAI ▼]
-APIキー: [********************************]
-エンドポイント: [https://your-resource.openai.azure.com/]
+LLMプロバイダー: [Bedrock ▼]
+  選択肢: Bedrock / Azure Foundry / Vertex AI / Anthropic /
+          OpenAI / Google AI Studio / Azure OpenAI / Ollama
+
+（選択したプロバイダーに応じた設定項目が表示されます）
+APIキー/認証情報: [********************************]
+モデル: [us.anthropic.claude-opus-4-6-20260201-v1:0 ▼]
 ```
 
 ---
@@ -483,13 +487,21 @@ AIが質問してくる場合があります：
 ┌─────────────────────────────────────────────────────┐
 │ LLM設定                                              │
 ├─────────────────────────────────────────────────────┤
-│ プロバイダー: [Azure OpenAI ▼]                      │
+│ プロバイダー: [Bedrock ▼]                           │
+│   Bedrock / Azure Foundry / Vertex AI / Anthropic   │
+│   OpenAI / Google AI Studio / Azure OpenAI / Ollama │
 │                                                      │
-│ Azure OpenAI設定:                                    │
-│ APIキー: [********************************]          │
-│ エンドポイント: [https://...]                       │
-│ デプロイメント名: [gpt-4-turbo]                     │
-│ APIバージョン: [2024-02-01]                         │
+│ ── Bedrock設定 ──                                   │
+│ AWSリージョン: [us-east-1]                          │
+│ アクセスキーID: [AKIA...]                           │
+│ シークレットキー: [****]                            │
+│ モデル: [us.anthropic.claude-opus-4-6-... ▼]       │
+│                                                      │
+│ ── 推奨モデル ──                                    │
+│ Bedrock:  Claude Opus 4.6 / Claude Sonnet 4.5       │
+│ Foundry:  GPT-5.2 / Claude Opus 4.6                 │
+│ Vertex:   Gemini 3 Pro / Gemini 2.5 Flash Lite      │
+│ Ollama:   phi4 / deepseek-r1:14b（ローカル）       │
 │                                                      │
 │ 詳細設定:                                            │
 │ 最大トークン: [4096]                                 │

@@ -12,9 +12,10 @@ AI分析機能に使用するLLMプロバイダーの設定方法を説明しま
 6. [OpenAI GPT（直接API）](#6-openai-gpt直接api)
 7. [Google AI Studio](#7-google-ai-studio)
 8. [Azure OpenAI（レガシー）](#8-azure-openaiレガシー)
-9. [Dockerデプロイメント](#9-dockerデプロイメント)
-10. [設定の確認](#10-設定の確認)
-11. [トラブルシューティング](#11-トラブルシューティング)
+9. [Ollama（ローカルLLM）](#9-ollamaローカルllm)
+10. [Dockerデプロイメント](#10-dockerデプロイメント)
+11. [設定の確認](#11-設定の確認)
+12. [トラブルシューティング](#12-トラブルシューティング)
 
 ---
 
@@ -24,37 +25,41 @@ AI分析機能に使用するLLMプロバイダーの設定方法を説明しま
 
 | プロバイダー | モデル | Tier | コスト | 推奨用途 |
 |-------------|--------|------|--------|---------|
-| **AWS Bedrock** | Claude Sonnet 4.6 Opus | Premium | 高 | **エンタープライズ推奨** |
-| | Claude Sonnet 4 | Balanced | 中 | 汎用分析 |
-| | Claude Haiku 3.5 | Fast | 低 | 高速処理 |
-| | Amazon Nova Pro | Balanced | 中 | AWS最適化 |
+| **AWS Bedrock** | Claude Opus 4.6 | Premium | 高 | **エンタープライズ推奨** |
+| | Claude Sonnet 4.5 | Balanced | 中 | 汎用分析 |
+| | Claude Haiku 4.5 | Fast | 低 | 高速処理 |
+| | Amazon Nova Premier | Premium | 高 | AWS最適化 |
 | **Azure Foundry** | GPT-5.2 | Premium | 非常に高 | **最高精度** |
 | | GPT-5 Nano | Fast | 低 | 超高速処理 |
-| | Claude Sonnet 4 | Balanced | 中 | 汎用分析 |
-| **GCP Vertex AI** | Gemini 3.0 Flash Preview | Fast | 低 | **コスト重視** |
-| | Gemini 3.0 Pro Preview | Premium | 高 | 高精度分析 |
-| | Gemini 2.0 Flash | Fast | 非常に低 | バッチ処理 |
-| **Anthropic** | Claude Opus 4 | Premium | 高 | 最高精度 |
-| | Claude Sonnet 4 | Balanced | 中 | デフォルト推奨 |
-| **OpenAI** | GPT-4o | Premium | 高 | 汎用 |
-| | o1 | Reasoning | 非常に高 | 複雑な推論 |
+| | Claude Opus 4.6 | Premium | 高 | マルチモデル |
+| **GCP Vertex AI** | Gemini 3 Pro | Premium | 高 | 高精度分析 |
+| | Gemini 3 Flash Preview | Fast | 低 | **コスト重視** |
+| | Gemini 2.5 Flash Lite | Fast | 非常に低 | バッチ処理 |
+| **Anthropic** | Claude Opus 4.6 | Premium | 高 | 最高精度 |
+| | Claude Sonnet 4.5 | Balanced | 中 | デフォルト推奨 |
+| **OpenAI** | GPT-5.2 | Premium | 高 | 最先端分析 |
+| | o3-pro | Reasoning | 非常に高 | 複雑な推論 |
+| | o4-mini | Fast | 低 | 高速推論 |
+| **Ollama** | Phi-4 | Local | 無料 | **開発・テスト** |
+| | DeepSeek R1:14b | Local | 無料 | ローカル推論 |
 
 ### 推奨設定（ユースケース別）
 
 | 用途 | プロバイダー | モデル | 説明 |
 |------|-------------|--------|------|
 | **最高精度** | Azure Foundry | gpt-5.2 | GPT-5.2による最先端分析 |
-| **高精度** | AWS Bedrock | Claude Sonnet 4.6 Opus | 複雑な調査、レポート生成 |
-| **バランス** | GCP Vertex AI | gemini-3.0-pro-preview | 日常的な分析 |
-| **コスト重視** | GCP Vertex AI | gemini-3.0-flash-preview | 大量データ処理 |
+| **高精度** | AWS Bedrock | Claude Opus 4.6 | 複雑な調査、レポート生成 |
+| **バランス** | GCP Vertex AI | gemini-3-pro | 日常的な分析 |
+| **コスト重視** | GCP Vertex AI | gemini-2.5-flash-lite | 大量データ処理 |
 | **超高速** | Azure Foundry | gpt-5-nano | リアルタイム処理 |
+| **ローカル開発** | Ollama | phi4 | GPU不要、即座に開始 |
 
 ### 設定ファイル
 
 ```bash
 # backend/.env
-LLM_PROVIDER=bedrock  # bedrock | azure_foundry | vertex_ai | anthropic | openai | google | azure
-LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
+LLM_PROVIDER=bedrock  # bedrock | azure_foundry | vertex_ai | anthropic | openai | google | azure | ollama
+LLM_MODEL=us.anthropic.claude-opus-4-6-20260201-v1:0
 ```
 
 ---
@@ -65,11 +70,13 @@ LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
 
 | モデル ID | 名前 | 特徴 | 推奨用途 |
 |----------|------|------|---------|
-| anthropic.claude-sonnet-4-6-opus-20260115-v1:0 | Claude Sonnet 4.6 Opus | 最新最高精度 | **エンタープライズ推奨** |
-| anthropic.claude-sonnet-4-20251022-v1:0 | Claude Sonnet 4 | バランス良好 | 通常分析 |
-| anthropic.claude-haiku-3-5-20251022-v1:0 | Claude Haiku 3.5 | 超高速 | 大量処理 |
+| us.anthropic.claude-opus-4-6-20260201-v1:0 | Claude Opus 4.6 | 最新最高精度 | **エンタープライズ推奨** |
+| us.anthropic.claude-sonnet-4-5-20250929-v1:0 | Claude Sonnet 4.5 | バランス良好 | 通常分析 |
+| us.anthropic.claude-haiku-4-5-20251001-v1:0 | Claude Haiku 4.5 | 超高速 | 大量処理 |
+| amazon.nova-premier-v1:0 | Amazon Nova Premier | AWS最高精度 | 大規模分析 |
 | amazon.nova-pro-v1:0 | Amazon Nova Pro | AWS最適化 | AWSネイティブ |
 | amazon.nova-lite-v1:0 | Amazon Nova Lite | 低コスト | バッチ処理 |
+| amazon.nova-micro-v1:0 | Amazon Nova Micro | 超低コスト | テキスト処理 |
 
 ### セットアップ
 
@@ -80,7 +87,7 @@ LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
 ```bash
 # backend/.env
 LLM_PROVIDER=bedrock
-LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
+LLM_MODEL=us.anthropic.claude-opus-4-6-20260201-v1:0
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=AKIAxxxxxxxx
 AWS_SECRET_ACCESS_KEY=xxxxxxxx
@@ -109,7 +116,7 @@ cd backend
 .\venv\Scripts\activate
 python -c "
 from app.services.llm import LLMService, LLMConfig
-config = LLMConfig(provider='bedrock', model='anthropic.claude-sonnet-4-6-opus-20260115-v1:0')
+config = LLMConfig(provider='bedrock', model='us.anthropic.claude-opus-4-6-20260201-v1:0')
 service = LLMService(config)
 print('Bedrock connection: OK')
 "
@@ -164,10 +171,10 @@ print('Azure Foundry connection: OK')
 
 | モデル | 特徴 | 推奨用途 |
 |--------|------|---------|
-| gemini-3.0-flash-preview | Gemini 3.0最速、低コスト | **コスト重視** |
-| gemini-3.0-pro-preview | Gemini 3.0高精度 | 高精度分析 |
-| gemini-2.0-flash | Gemini 2.0高速 | バッチ処理 |
-| gemini-2.0-pro | Gemini 2.0バランス | 通常分析 |
+| gemini-3-pro | Gemini 3最高精度 | 高精度分析 |
+| gemini-3-flash-preview | Gemini 3高速 | 高速分析 |
+| gemini-2.5-pro | Gemini 2.5バランス | 通常分析 |
+| gemini-2.5-flash-lite | Gemini 2.5超低コスト | **コスト重視** |
 
 ### セットアップ
 
@@ -179,7 +186,7 @@ print('Azure Foundry connection: OK')
 ```bash
 # backend/.env
 LLM_PROVIDER=vertex_ai
-LLM_MODEL=gemini-3.0-flash-preview
+LLM_MODEL=gemini-2.5-flash-lite
 GCP_PROJECT_ID=your-project-id
 GCP_LOCATION=us-central1
 GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
@@ -210,9 +217,9 @@ print('Vertex AI connection: OK')
 
 | モデル | 特徴 | 推奨用途 |
 |--------|------|---------|
-| claude-opus-4 | 最高精度、深い分析力 | 重要レポート |
-| claude-sonnet-4 | バランス良好、高速 | **通常利用** |
-| claude-haiku-3.5 | 超高速、低コスト | 大量処理 |
+| claude-opus-4-6 | 最高精度、深い分析力 | 重要レポート |
+| claude-sonnet-4-5 | バランス良好、高速 | **通常利用** |
+| claude-haiku-4-5 | 超高速、低コスト | 大量処理 |
 
 ### セットアップ
 
@@ -222,7 +229,7 @@ print('Vertex AI connection: OK')
 ```bash
 # backend/.env
 LLM_PROVIDER=anthropic
-LLM_MODEL=claude-sonnet-4
+LLM_MODEL=claude-sonnet-4-5
 ANTHROPIC_API_KEY=sk-ant-api03-xxxxxx
 ```
 
@@ -234,17 +241,20 @@ ANTHROPIC_API_KEY=sk-ant-api03-xxxxxx
 
 | モデル | 特徴 | 推奨用途 |
 |--------|------|---------|
-| gpt-4o | 最新、マルチモーダル | 画像含む分析 |
-| gpt-4o-mini | 高速、低コスト | 日常利用 |
-| o1 | 深い推論 | 複雑な問題解決 |
-| o3-mini | 推論（軽量） | 推論タスク |
+| gpt-5.2 | 最新最高精度 | **最先端分析** |
+| gpt-5 | GPT-5フラッグシップ | 汎用高精度 |
+| gpt-5-mini | GPT-5軽量版 | 日常利用 |
+| gpt-5-nano | GPT-5超軽量 | 超高速処理 |
+| o3-pro | 最高推論精度 | 複雑な問題解決 |
+| o3 | 高速推論 | 推論タスク |
+| o4-mini | 推論（軽量） | コスパ推論 |
 
 ### セットアップ
 
 ```bash
 # backend/.env
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=gpt-5-nano
 OPENAI_API_KEY=sk-proj-xxxxxx
 ```
 
@@ -252,12 +262,20 @@ OPENAI_API_KEY=sk-proj-xxxxxx
 
 ## 7. Google AI Studio
 
+### 利用可能モデル
+
+| モデル | 特徴 | 推奨用途 |
+|--------|------|---------|
+| gemini-3-flash-preview | Gemini 3.0最速 | 高速分析 |
+| gemini-2.5-pro | Gemini 2.5高精度 | 汎用分析 |
+| gemini-2.5-flash-lite | 超低コスト | **コスト重視** |
+
 ### セットアップ
 
 ```bash
 # backend/.env
 LLM_PROVIDER=google
-LLM_MODEL=gemini-2.0-flash
+LLM_MODEL=gemini-2.5-flash-lite
 GOOGLE_API_KEY=AIzaSyxxxxxx
 ```
 
@@ -279,7 +297,86 @@ AZURE_OPENAI_API_VERSION=2024-10-21
 
 ---
 
-## 9. Dockerデプロイメント
+## 9. Ollama（ローカルLLM）
+
+クラウドAPI不要でローカル環境のみでAI分析が可能。開発・テスト・デモ用途に最適。
+
+### 利用可能モデル
+
+| モデル | パラメータ | 特徴 | 推奨用途 |
+|--------|-----------|------|---------|
+| phi4 | 14B | Microsoft製、バランス良好 | **開発推奨** |
+| qwen2.5-coder:14b | 14B | コード特化 | コード分析 |
+| deepseek-r1:14b | 14B | 推論特化 | 推論タスク |
+| llama3.3:8b | 8B | Meta製、汎用 | 軽量テスト |
+| gemma3:27b | 27B | Google製、高精度 | 高品質ローカル |
+
+### セットアップ
+
+1. Ollamaをインストール:
+
+```bash
+# Linux/macOS
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Windows
+# https://ollama.com/download からインストーラーをダウンロード
+```
+
+2. モデルをダウンロード:
+
+```bash
+# 推奨モデル（約8GB）
+ollama pull phi4
+
+# 軽量テスト用（約4GB）
+ollama pull llama3.3:8b
+```
+
+3. 環境設定:
+
+```bash
+# backend/.env
+LLM_PROVIDER=ollama
+LLM_MODEL=phi4
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+### 動作確認
+
+```bash
+# Ollamaサーバー起動（通常は自動起動）
+ollama serve
+
+# モデル一覧確認
+ollama list
+
+# テスト生成
+ollama run phi4 "Hello, world!"
+```
+
+### 接続テスト
+
+```powershell
+python -c "
+from app.services.llm import LLMService, LLMConfig
+config = LLMConfig(provider='ollama', model='phi4')
+service = LLMService(config)
+response = service.generate('Say hello in Japanese')
+print(f'Response: {response.content}')
+"
+```
+
+### 注意事項
+
+- GPU（NVIDIA/AMD）があると高速化されるが、CPU でも動作可能
+- phi4 (14B) は 16GB RAM 以上を推奨
+- llama3.3:8b は 8GB RAM でも動作可能
+- 本番環境での使用は非推奨（精度・安定性の観点）
+
+---
+
+## 10. Dockerデプロイメント
 
 ### 開発環境
 
@@ -302,7 +399,7 @@ docker-compose -f docker-compose.dev.yml logs -f
 ```bash
 # .env
 LLM_PROVIDER=bedrock
-LLM_MODEL=anthropic.claude-sonnet-4-6-opus-20260115-v1:0
+LLM_MODEL=us.anthropic.claude-opus-4-6-20260201-v1:0
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=AKIAxxxxxxxx
 AWS_SECRET_ACCESS_KEY=xxxxxxxx
@@ -330,7 +427,7 @@ docker-compose up -d
 ```bash
 # .env
 LLM_PROVIDER=vertex_ai
-LLM_MODEL=gemini-3.0-flash-preview
+LLM_MODEL=gemini-2.5-flash-lite
 GCP_PROJECT_ID=your-project-id
 GCP_LOCATION=us-central1
 GCP_CREDENTIALS_PATH=./credentials/gcp-credentials.json
@@ -387,7 +484,7 @@ curl http://localhost:8001/api/v1/health
 
 ---
 
-## 10. 設定の確認
+## 11. 設定の確認
 
 ### コマンドラインで確認
 
@@ -428,7 +525,7 @@ for use_case, info in recommended.items():
 
 ---
 
-## 11. トラブルシューティング
+## 12. トラブルシューティング
 
 ### 共通の問題
 
