@@ -13,9 +13,11 @@ from typing import Any
 import matplotlib
 
 matplotlib.use("Agg")
+
+# isort: split
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
@@ -1129,7 +1131,7 @@ class PPTReportGenerator:
         if findings:
             top = findings[0]
             recs.append({
-                "title": f"最多違反パターンの原因分析",
+                "title": "最多違反パターンの原因分析",
                 "detail": f"「{top['rule_name']}」({top['count']:,}件)について根本原因を究明してください。",
                 "color": self.SECONDARY,
             })
@@ -1575,11 +1577,11 @@ class PDFReportGenerator:
         bar_width = 0.35
         x_pos = range(len(x))
 
-        bars1 = ax.bar(
+        ax.bar(
             [p - bar_width / 2 for p in x_pos], actual, bar_width,
             label="実績 (%)", color=self.COLORS["accent"], edgecolor="white",
         )
-        bars2 = ax.bar(
+        ax.bar(
             [p + bar_width / 2 for p in x_pos], expected, bar_width,
             label="理論値 (%)", color=self.COLORS["gray"], edgecolor="white",
         )
@@ -1618,7 +1620,7 @@ class PDFReportGenerator:
         ax1.set_ylabel("仕訳件数", color=self.COLORS["accent"], fontsize=11)
         ax1.tick_params(axis="y", labelcolor=self.COLORS["accent"])
         ax1.yaxis.set_major_formatter(mticker.FuncFormatter(
-            lambda x, p: f"{x:,.0f}"
+            lambda x, _p: f"{x:,.0f}"
         ))
 
         # 高リスク件数（第2軸）
@@ -1658,10 +1660,7 @@ class PDFReportGenerator:
         col_widths: list[int] | None = None,
     ) -> Table:
         """Create formatted table."""
-        if col_widths:
-            widths = [w * mm for w in col_widths]
-        else:
-            widths = [100 * mm, 50 * mm]
+        widths = [w * mm for w in col_widths] if col_widths else [100 * mm, 50 * mm]
 
         table = Table(data, colWidths=widths)
         style = [
