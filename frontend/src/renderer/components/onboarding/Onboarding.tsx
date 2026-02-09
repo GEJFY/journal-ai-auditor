@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react';
 import {
   Activity,
   Upload,
-  BarChart3,
   Shield,
   Bot,
   ClipboardList,
