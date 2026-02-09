@@ -61,7 +61,7 @@ JAIA（Journal entry AI Analyzer）は、仕訳データの自動分析と内部
 
 ```powershell
 # 1. リポジトリをクローン
-git clone https://github.com/your-org/journal-ai-auditor.git
+git clone https://github.com/GEJFY/journal-ai-auditor.git
 cd journal-ai-auditor
 
 # 2. セットアップスクリプトを実行
@@ -78,8 +78,8 @@ cd journal-ai-auditor
 .\scripts\start_all.ps1
 
 # または個別起動
-.\scripts\start_backend.ps1   # バックエンド: http://localhost:8000
-.\scripts\start_frontend.ps1  # フロントエンド: http://localhost:3000
+.\scripts\start_backend.ps1   # バックエンド: http://localhost:8001
+.\scripts\start_frontend.ps1  # フロントエンド: http://localhost:5180
 ```
 
 ### 動作確認
@@ -168,6 +168,21 @@ API仕様詳細: [docs/04_api_design.md](docs/04_api_design.md)
 
 ## 設定
 
+### マルチクラウドLLM対応（8プロバイダー）
+
+JAIAは8種類のLLMプロバイダーに対応しています。用途に応じて選択してください。
+
+| プロバイダー | 主なモデル | 用途 |
+|------------|-----------|------|
+| **Ollama** | phi4, llama3.3 | ローカル実行（APIキー不要） |
+| **Anthropic** | Claude Opus 4.6, Sonnet 4.5 | 高精度分析（推奨） |
+| **OpenAI** | GPT-5.2, GPT-5-mini | 汎用分析 |
+| **Google AI Studio** | Gemini 2.5 Pro/Flash | 高速処理 |
+| **AWS Bedrock** | Claude, Amazon Nova | エンタープライズ（AWS統合） |
+| **Azure AI Foundry** | GPT-5, Claude | エンタープライズ（Azure統合） |
+| **GCP Vertex AI** | Gemini 3 Pro | エンタープライズ（GCP統合） |
+| **Azure OpenAI** | GPT-4o | Azure経由GPTアクセス |
+
 ### 環境変数
 
 `backend/.env` ファイルで設定：
@@ -181,16 +196,37 @@ JAIA_LOG_LEVEL=INFO
 DUCKDB_PATH=data/jaia.duckdb
 SQLITE_PATH=data/jaia_meta.db
 
-# LLM設定（いずれか1つを設定）
-# OpenAI
+# LLMプロバイダー選択（以下から1つ選択）
+LLM_PROVIDER=anthropic  # anthropic / openai / google / bedrock / azure_foundry / vertex_ai / azure / ollama
+
+# Anthropic Direct
+ANTHROPIC_API_KEY=sk-ant-...
+
+# OpenAI Direct
 OPENAI_API_KEY=sk-...
 
-# Azure OpenAI
-AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_ENDPOINT=https://...
+# Google AI Studio
+GOOGLE_API_KEY=AIzaSy...
 
-# Anthropic
-ANTHROPIC_API_KEY=sk-ant-...
+# Ollama（ローカルLLM）
+OLLAMA_BASE_URL=http://localhost:11434
+
+# AWS Bedrock
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+
+# Azure AI Foundry
+AZURE_FOUNDRY_ENDPOINT=https://...
+AZURE_FOUNDRY_API_KEY=...
+
+# GCP Vertex AI
+GCP_PROJECT_ID=your-project
+GCP_LOCATION=us-central1
+
+# Azure OpenAI
+AZURE_OPENAI_ENDPOINT=https://...
+AZURE_OPENAI_API_KEY=...
 ```
 
 ### ルール閾値のカスタマイズ
@@ -239,7 +275,7 @@ Proprietary License - Copyright (c) 2026 Go Yoshizawa. All rights reserved. 詳�
 
 ## サポート
 
-- **Issue報告**: [GitHub Issues](https://github.com/your-org/journal-ai-auditor/issues)
+- **Issue報告**: [GitHub Issues](https://github.com/GEJFY/journal-ai-auditor/issues)
 - **ドキュメント**: [docs/](docs/) ディレクトリ
 
 ---
