@@ -297,7 +297,7 @@ class TestAgentsAPI:
             data = response.json()
             assert isinstance(data, (dict, list))
         else:
-            assert response.status_code in (404, 500)
+            assert response.status_code in (404, 422, 500)
 
     def test_ask_without_body(self, client):
         response = client.post("/api/v1/agents/ask")

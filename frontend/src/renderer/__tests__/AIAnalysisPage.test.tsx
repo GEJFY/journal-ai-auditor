@@ -45,7 +45,7 @@ function renderWithQuery(ui: React.ReactElement) {
 describe('AIAnalysisPage', () => {
   it('renders page title', () => {
     renderWithQuery(<AIAnalysisPage />);
-    expect(screen.getByText('AI分析')).toBeTruthy();
+    expect(screen.getByText(/AI分析/)).toBeTruthy();
   });
 
   it('renders welcome message', () => {

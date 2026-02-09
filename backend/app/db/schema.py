@@ -130,6 +130,24 @@ CREATE TABLE IF NOT EXISTS rule_violations (
 );
 
 -- =========================================
+-- ML Anomalies (ML Detection Results)
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS ml_anomalies (
+    gl_detail_id VARCHAR NOT NULL,
+    journal_id VARCHAR NOT NULL,
+    anomaly_score DECIMAL(5, 2) NOT NULL,
+    detection_method VARCHAR(50) NOT NULL,
+    is_anomaly BOOLEAN NOT NULL,
+    feature_values VARCHAR,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_ma_anomaly_score ON ml_anomalies(anomaly_score DESC);
+CREATE INDEX IF NOT EXISTS idx_ma_is_anomaly ON ml_anomalies(is_anomaly);
+CREATE INDEX IF NOT EXISTS idx_ma_detection_method ON ml_anomalies(detection_method);
+
+-- =========================================
 -- Aggregation Tables for Dashboard
 -- =========================================
 

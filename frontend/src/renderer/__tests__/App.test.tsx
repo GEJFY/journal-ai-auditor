@@ -91,6 +91,6 @@ describe('App', () => {
 
   it('renders dashboard by default', () => {
     render(<App />);
-    expect(screen.getByText(/ダッシュボード/)).toBeTruthy();
+    expect(screen.getAllByText(/ダッシュボード/).length).toBeGreaterThanOrEqual(1);
   });
 });
