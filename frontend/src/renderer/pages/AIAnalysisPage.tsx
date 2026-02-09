@@ -6,16 +6,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Send,
-  Bot,
-  User,
-  Loader2,
-  FileText,
-  Search,
-  AlertTriangle,
-  Sparkles,
-} from 'lucide-react';
+import { Send, Bot, User, Loader2, FileText, Search, AlertTriangle, Sparkles } from 'lucide-react';
 import { api, type AgentResponse } from '../lib/api';
 
 interface Message {
@@ -27,10 +18,26 @@ interface Message {
 }
 
 const QUICK_ACTIONS = [
-  { icon: <Search className="w-4 h-4" />, label: '高リスク仕訳を検索', query: '高リスクの仕訳を見せてください' },
-  { icon: <AlertTriangle className="w-4 h-4" />, label: '異常検知結果', query: '今期の異常検知結果を説明してください' },
-  { icon: <FileText className="w-4 h-4" />, label: 'サマリーレポート', query: '今期の仕訳検証サマリーを作成してください' },
-  { icon: <Sparkles className="w-4 h-4" />, label: 'リスク評価', query: '現在のリスク評価と主要な懸念事項を教えてください' },
+  {
+    icon: <Search className="w-4 h-4" />,
+    label: '高リスク仕訳を検索',
+    query: '高リスクの仕訳を見せてください',
+  },
+  {
+    icon: <AlertTriangle className="w-4 h-4" />,
+    label: '異常検知結果',
+    query: '今期の異常検知結果を説明してください',
+  },
+  {
+    icon: <FileText className="w-4 h-4" />,
+    label: 'サマリーレポート',
+    query: '今期の仕訳検証サマリーを作成してください',
+  },
+  {
+    icon: <Sparkles className="w-4 h-4" />,
+    label: 'リスク評価',
+    query: '現在のリスク評価と主要な懸念事項を教えてください',
+  },
 ];
 
 export default function AIAnalysisPage() {
@@ -38,7 +45,8 @@ export default function AIAnalysisPage() {
     {
       id: '0',
       role: 'assistant',
-      content: 'こんにちは！JAIAのAIアシスタントです。仕訳データの分析、リスク評価、監査に関する質問にお答えします。何かお手伝いできることはありますか？',
+      content:
+        'こんにちは！JAIAのAIアシスタントです。仕訳データの分析、リスク評価、監査に関する質問にお答えします。何かお手伝いできることはありますか？',
       timestamp: new Date(),
       agentType: 'QA',
     },
@@ -64,7 +72,7 @@ export default function AIAnalysisPage() {
         timestamp: new Date(),
         agentType: response.agent_type,
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     },
     onError: (error: Error) => {
       const errorMessage: Message = {
@@ -73,7 +81,7 @@ export default function AIAnalysisPage() {
         content: `エラーが発生しました: ${error.message}`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     },
   });
 
@@ -88,7 +96,7 @@ export default function AIAnalysisPage() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     mutation.mutate(input);
     setInput('');
   };
@@ -103,7 +111,7 @@ export default function AIAnalysisPage() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     mutation.mutate(query);
   };
 
@@ -142,9 +150,7 @@ export default function AIAnalysisPage() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex gap-3 ${
-              message.role === 'user' ? 'flex-row-reverse' : ''
-            }`}
+            className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -174,9 +180,7 @@ export default function AIAnalysisPage() {
               <div className="whitespace-pre-wrap">{message.content}</div>
               <div
                 className={`text-xs mt-2 ${
-                  message.role === 'user'
-                    ? 'text-primary-200'
-                    : 'text-gray-400'
+                  message.role === 'user' ? 'text-primary-200' : 'text-gray-400'
                 }`}
               >
                 {message.timestamp.toLocaleTimeString('ja-JP', {

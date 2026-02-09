@@ -39,14 +39,11 @@ export default function ImportPage() {
     }
   }, []);
 
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-        handleFile(e.target.files[0]);
-      }
-    },
-    []
-  );
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  }, []);
 
   const handleFile = async (file: File) => {
     const allowedExtensions = ['.csv', '.xlsx', '.xls'];
@@ -96,8 +93,7 @@ export default function ImportPage() {
         message: `${file.name} の読み込みが完了しました（${result.imported_count ?? 0} 件）`,
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'インポート中にエラーが発生しました';
+      const message = error instanceof Error ? error.message : 'インポート中にエラーが発生しました';
       setStatus({ step: 'error', message });
     }
   };
@@ -106,9 +102,7 @@ export default function ImportPage() {
     <div className="space-y-6">
       {/* Upload Area */}
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          データ取込
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">データ取込</h2>
 
         <div
           className={`
@@ -159,8 +153,8 @@ export default function ImportPage() {
               status.step === 'error'
                 ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                 : status.step === 'complete'
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                  : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
             }
           `}
           >
@@ -186,9 +180,7 @@ export default function ImportPage() {
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="flex items-center gap-3 mb-2">
               <FileText className="w-5 h-5 text-green-600" />
-              <span className="font-medium text-gray-900 dark:text-white">
-                AICPA GL_Detail
-              </span>
+              <span className="font-medium text-gray-900 dark:text-white">AICPA GL_Detail</span>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               AICPA監査データ標準に準拠した仕訳明細形式
@@ -198,9 +190,7 @@ export default function ImportPage() {
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="flex items-center gap-3 mb-2">
               <FileText className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-900 dark:text-white">
-                汎用CSV/Excel
-              </span>
+              <span className="font-medium text-gray-900 dark:text-white">汎用CSV/Excel</span>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               カスタム列マッピングで柔軟に対応
@@ -211,9 +201,7 @@ export default function ImportPage() {
 
       {/* Import History */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          取込履歴
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">取込履歴</h3>
 
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           まだ取込履歴がありません

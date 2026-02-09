@@ -46,10 +46,9 @@ export default function StatCard({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {icon && (
-            <div className={clsx(
-              'w-12 h-12 rounded-xl flex items-center justify-center',
-              iconBgColor
-            )}>
+            <div
+              className={clsx('w-12 h-12 rounded-xl flex items-center justify-center', iconBgColor)}
+            >
               {icon}
             </div>
           )}
@@ -63,30 +62,28 @@ export default function StatCard({
               )}
             </div>
             <div className="stat-value">{value}</div>
-            {subtitle && (
-              <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>}
           </div>
         </div>
       </div>
 
       {change !== undefined && (
         <div className="mt-4 pt-4 border-t border-neutral-100">
-          <div className={clsx(
-            'stat-change flex items-center gap-1',
-            isPositive && 'stat-change-positive',
-            isNegative && 'stat-change-negative',
-            !isPositive && !isNegative && 'text-neutral-500'
-          )}>
+          <div
+            className={clsx(
+              'stat-change flex items-center gap-1',
+              isPositive && 'stat-change-positive',
+              isNegative && 'stat-change-negative',
+              !isPositive && !isNegative && 'text-neutral-500'
+            )}
+          >
             {isPositive && <TrendingUp size={16} />}
             {isNegative && <TrendingDown size={16} />}
             <span>
               {isPositive && '+'}
               {change}%
             </span>
-            {changeLabel && (
-              <span className="text-neutral-400 ml-1">{changeLabel}</span>
-            )}
+            {changeLabel && <span className="text-neutral-400 ml-1">{changeLabel}</span>}
           </div>
         </div>
       )}

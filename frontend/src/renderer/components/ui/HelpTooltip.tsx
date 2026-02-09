@@ -93,9 +93,7 @@ export default function HelpTooltip({
           role="tooltip"
         >
           <h4 className="font-semibold text-sm mb-1">{content.title}</h4>
-          <p className="text-neutral-300 text-sm leading-relaxed">
-            {content.description}
-          </p>
+          <p className="text-neutral-300 text-sm leading-relaxed">{content.description}</p>
           {content.learnMoreUrl && (
             <a
               href={content.learnMoreUrl}

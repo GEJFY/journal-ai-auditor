@@ -14,9 +14,13 @@ vi.mock('lucide-react', () => ({
   Loader2: (props: Record<string, unknown>) => <span data-testid="icon-loader" {...props} />,
   CheckCircle: (props: Record<string, unknown>) => <span data-testid="icon-check" {...props} />,
   AlertCircle: (props: Record<string, unknown>) => <span data-testid="icon-alert" {...props} />,
-  FileSpreadsheet: (props: Record<string, unknown>) => <span data-testid="icon-spreadsheet" {...props} />,
+  FileSpreadsheet: (props: Record<string, unknown>) => (
+    <span data-testid="icon-spreadsheet" {...props} />
+  ),
   FileBarChart: (props: Record<string, unknown>) => <span data-testid="icon-bar" {...props} />,
-  ClipboardList: (props: Record<string, unknown>) => <span data-testid="icon-clipboard" {...props} />,
+  ClipboardList: (props: Record<string, unknown>) => (
+    <span data-testid="icon-clipboard" {...props} />
+  ),
   Shield: (props: Record<string, unknown>) => <span data-testid="icon-shield" {...props} />,
   BarChart3: (props: Record<string, unknown>) => <span data-testid="icon-barchart3" {...props} />,
 }));
@@ -49,9 +53,7 @@ function renderWithQuery(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 describe('ReportsPage', () => {

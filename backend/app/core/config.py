@@ -1,7 +1,7 @@
 """Application configuration using Pydantic Settings."""
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -277,11 +277,11 @@ class Settings(BaseSettings):
         """Ensure data directory exists."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_available_models(self) -> dict:
+    def get_available_models(self) -> dict[str, Any]:
         """Get available models for current provider."""
         return LLM_MODELS.get(self.llm_provider, {})
 
-    def get_recommended_model(self, use_case: str = "balanced") -> dict:
+    def get_recommended_model(self, use_case: str = "balanced") -> dict[str, Any]:
         """Get recommended model for use case."""
         return RECOMMENDED_MODELS.get(use_case, RECOMMENDED_MODELS["balanced"])
 

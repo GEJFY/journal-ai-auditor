@@ -8,8 +8,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  AlertTriangle: (props: Record<string, unknown>) => <span data-testid="icon-alert-triangle" {...props} />,
-  AlertCircle: (props: Record<string, unknown>) => <span data-testid="icon-alert-circle" {...props} />,
+  AlertTriangle: (props: Record<string, unknown>) => (
+    <span data-testid="icon-alert-triangle" {...props} />
+  ),
+  AlertCircle: (props: Record<string, unknown>) => (
+    <span data-testid="icon-alert-circle" {...props} />
+  ),
   Info: (props: Record<string, unknown>) => <span data-testid="icon-info" {...props} />,
   ChevronRight: (props: Record<string, unknown>) => <span data-testid="icon-chevron" {...props} />,
   Filter: (props: Record<string, unknown>) => <span data-testid="icon-filter" {...props} />,
@@ -17,7 +21,9 @@ vi.mock('lucide-react', () => ({
 
 // Mock recharts
 vi.mock('recharts', () => ({
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
+  BarChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="bar-chart">{children}</div>
+  ),
   Bar: () => <div />,
   XAxis: () => <div />,
   YAxis: () => <div />,
@@ -51,9 +57,7 @@ function renderWithQuery(ui: React.ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 describe('RiskPage', () => {

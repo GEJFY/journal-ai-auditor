@@ -59,9 +59,7 @@ export default function SettingsPage() {
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-6">
           <Database className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            データ設定
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">データ設定</h2>
         </div>
 
         <div className="space-y-4">
@@ -71,9 +69,7 @@ export default function SettingsPage() {
             </label>
             <select
               value={settings.fiscalYearStart}
-              onChange={(e) =>
-                setSettings({ ...settings, fiscalYearStart: e.target.value })
-              }
+              onChange={(e) => setSettings({ ...settings, fiscalYearStart: e.target.value })}
               className="input"
             >
               <option value="01">1月</option>
@@ -89,9 +85,7 @@ export default function SettingsPage() {
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-6">
           <Bot className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            AI設定
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI設定</h2>
         </div>
 
         <div className="space-y-4">
@@ -101,9 +95,7 @@ export default function SettingsPage() {
             </label>
             <select
               value={settings.llmProvider}
-              onChange={(e) =>
-                setSettings({ ...settings, llmProvider: e.target.value })
-              }
+              onChange={(e) => setSettings({ ...settings, llmProvider: e.target.value })}
               className="input"
             >
               <option value="anthropic">Anthropic (Claude)</option>
@@ -120,9 +112,7 @@ export default function SettingsPage() {
             <input
               type="password"
               value={settings.apiKey}
-              onChange={(e) =>
-                setSettings({ ...settings, apiKey: e.target.value })
-              }
+              onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
               placeholder="sk-..."
               className="input"
             />
@@ -137,9 +127,7 @@ export default function SettingsPage() {
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-6">
           <Palette className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            外観設定
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">外観設定</h2>
         </div>
 
         <div className="space-y-4">
@@ -149,9 +137,7 @@ export default function SettingsPage() {
             </label>
             <select
               value={settings.theme}
-              onChange={(e) =>
-                setSettings({ ...settings, theme: e.target.value })
-              }
+              onChange={(e) => setSettings({ ...settings, theme: e.target.value })}
               className="input"
             >
               <option value="system">システム設定に従う</option>
@@ -164,10 +150,7 @@ export default function SettingsPage() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className="btn btn-primary flex items-center gap-2"
-        >
+        <button onClick={handleSave} className="btn btn-primary flex items-center gap-2">
           <Save className="w-4 h-4" />
           {saved ? '保存しました' : '設定を保存'}
         </button>

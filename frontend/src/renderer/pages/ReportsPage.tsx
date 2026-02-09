@@ -52,7 +52,7 @@ export default function ReportsPage() {
   const generateMutation = useMutation({
     mutationFn: (request: ReportRequest) => api.generateReport(request),
     onSuccess: (data, variables) => {
-      const template = templates?.templates.find(t => t.id === variables.report_type);
+      const template = templates?.templates.find((t) => t.id === variables.report_type);
       const report: GeneratedReport = {
         id: `RPT-${Date.now()}`,
         type: variables.report_type,
@@ -60,7 +60,7 @@ export default function ReportsPage() {
         generatedAt: new Date(),
         data,
       };
-      setGeneratedReports(prev => [report, ...prev]);
+      setGeneratedReports((prev) => [report, ...prev]);
       setSelectedReport(report);
     },
   });
@@ -86,9 +86,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          レポート生成
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">レポート生成</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {fiscalYear}年度の監査レポートを生成
         </p>
@@ -112,15 +110,13 @@ export default function ReportsPage() {
                     {REPORT_ICONS[template.id] || <FileText className="w-6 h-6" />}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      {template.name}
-                    </h4>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{template.name}</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {template.description}
                     </p>
                   </div>
                   {generateMutation.isPending &&
-                   generateMutation.variables?.report_type === template.id ? (
+                  generateMutation.variables?.report_type === template.id ? (
                     <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
                   ) : (
                     <FileText className="w-5 h-5 text-gray-400" />
@@ -152,9 +148,7 @@ export default function ReportsPage() {
                     <div className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-green-500" />
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {report.name}
-                        </p>
+                        <p className="font-medium text-gray-900 dark:text-white">{report.name}</p>
                         <p className="text-sm text-gray-500">
                           {report.generatedAt.toLocaleString('ja-JP')}
                         </p>

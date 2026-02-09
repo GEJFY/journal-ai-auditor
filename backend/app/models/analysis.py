@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -59,7 +59,7 @@ class RuleViolation(BaseModel):
     message: str = Field(
         description="違反メッセージ",
     )
-    evidence: dict | None = Field(
+    evidence: dict[str, Any] | None = Field(
         default=None,
         description="証拠データ",
     )
@@ -73,7 +73,7 @@ class AnalysisSession(BaseModel):
     ended_at: datetime | None = None
     status: Literal["running", "completed", "failed", "cancelled"] = "running"
     fiscal_year: int
-    filters: dict | None = None
+    filters: dict[str, Any] | None = None
     total_entries_analyzed: int = 0
     total_insights: int = 0
     summary: str | None = None
@@ -88,7 +88,7 @@ class Insight(BaseModel):
     title: str
     description: str
     severity: Literal["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"] = "INFO"
-    evidence: dict | None = None
+    evidence: dict[str, Any] | None = None
     affected_journals: list[str] = Field(default_factory=list)
     affected_count: int = 0
     affected_amount: Decimal = Decimal("0")
@@ -107,8 +107,8 @@ class AggregatedMetrics(BaseModel):
 
     # Account metrics
     unique_accounts: int = 0
-    top_debit_accounts: list[dict] = Field(default_factory=list)
-    top_credit_accounts: list[dict] = Field(default_factory=list)
+    top_debit_accounts: list[dict[str, Any]] = Field(default_factory=list)
+    top_credit_accounts: list[dict[str, Any]] = Field(default_factory=list)
 
     # Risk metrics
     high_risk_count: int = 0

@@ -4,6 +4,7 @@ Provides abstract base class and common utilities for all audit rules.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
@@ -306,5 +307,5 @@ class RuleSet:
     def __len__(self) -> int:
         return len(self._rules)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[AuditRule]:
         return iter(self._rules.values())

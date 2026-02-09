@@ -75,22 +75,14 @@ const steps: OnboardingStep[] = [
     title: 'AI分析',
     description: 'AIエージェントによる対話型分析',
     icon: <Bot size={48} className="text-accent-600" />,
-    details: [
-      '自然言語での質問・調査依頼',
-      '自動仮説生成と検証',
-      '分析結果の要約と提案',
-    ],
+    details: ['自然言語での質問・調査依頼', '自動仮説生成と検証', '分析結果の要約と提案'],
   },
   {
     id: 'reports',
     title: 'レポート生成',
     description: '監査調書・分析レポートを自動作成',
     icon: <ClipboardList size={48} className="text-primary-600" />,
-    details: [
-      'エグゼクティブサマリー',
-      '詳細な違反一覧レポート',
-      'PowerPoint/PDF出力対応',
-    ],
+    details: ['エグゼクティブサマリー', '詳細な違反一覧レポート', 'PowerPoint/PDF出力対応'],
   },
 ];
 
@@ -111,13 +103,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     if (isLast) {
       handleComplete();
     } else {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (!isFirst) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -172,12 +164,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-neutral-50 mb-6">
               {step.icon}
             </div>
-            <h2 className="text-2xl font-bold text-neutral-900 mb-3">
-              {step.title}
-            </h2>
-            <p className="text-neutral-600 max-w-md mx-auto">
-              {step.description}
-            </p>
+            <h2 className="text-2xl font-bold text-neutral-900 mb-3">{step.title}</h2>
+            <p className="text-neutral-600 max-w-md mx-auto">{step.description}</p>
           </div>
 
           <div className="bg-neutral-50 rounded-xl p-6 mb-8">
@@ -208,8 +196,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   index === currentStep
                     ? 'w-8 bg-primary-600'
                     : index < currentStep
-                    ? 'bg-primary-300'
-                    : 'bg-neutral-200'
+                      ? 'bg-primary-300'
+                      : 'bg-neutral-200'
                 )}
               />
             ))}
@@ -221,10 +209,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <button
             onClick={handlePrev}
             disabled={isFirst}
-            className={clsx(
-              'btn btn-secondary',
-              isFirst && 'opacity-50 cursor-not-allowed'
-            )}
+            className={clsx('btn btn-secondary', isFirst && 'opacity-50 cursor-not-allowed')}
           >
             <ArrowLeft size={18} />
             戻る
