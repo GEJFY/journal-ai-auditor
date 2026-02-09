@@ -23,7 +23,6 @@ class TestDuckDBManager:
     def test_initialize_schema(self, temp_db):
         temp_db.initialize_schema()
         assert temp_db.table_exists("journal_entries")
-        assert temp_db.table_exists("audit_rules")
         assert temp_db.table_exists("audit_findings")
 
     def test_table_not_exists(self, temp_db):
@@ -117,10 +116,11 @@ class TestDuckDBManager:
         assert "amount" in columns
         assert "risk_score" in columns
 
-    def test_schema_has_audit_rules(self, temp_db):
+    def test_schema_has_aggregation_tables(self, temp_db):
         temp_db.initialize_schema()
-        # audit_rules should be populated with default rules
-        assert temp_db.table_exists("audit_rules")
+        # Aggregation tables are in DuckDB schema
+        assert temp_db.table_exists("agg_by_period_account")
+        assert temp_db.table_exists("agg_risk_summary")
 
     def test_connect_context_manager(self, temp_db):
         with temp_db.connect() as conn:

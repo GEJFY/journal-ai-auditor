@@ -68,7 +68,7 @@ describe('RiskPage', () => {
 
   it('renders risk level filter buttons', () => {
     renderWithQuery(<RiskPage />);
-    expect(screen.getByText('全て')).toBeTruthy();
+    expect(screen.getByText('すべて')).toBeTruthy();
     expect(screen.getByText('高')).toBeTruthy();
     expect(screen.getByText('中')).toBeTruthy();
     expect(screen.getByText('低')).toBeTruthy();

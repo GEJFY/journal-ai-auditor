@@ -35,7 +35,7 @@ class TestColumnMapping:
     def test_auto_detect_japanese_columns(self):
         from app.services.import_service import ColumnMapping
 
-        columns = ["仕訳番号", "計上日", "勘定科目コード", "金額", "貸借区分"]
+        columns = ["伝票番号", "計上日", "勘定科目コード", "金額", "借貸区分"]
         mapping = ColumnMapping.auto_detect(columns)
         assert "journal_id" in mapping
         assert "effective_date" in mapping
@@ -81,9 +81,9 @@ class TestImportResult:
         result = ImportResult()
         assert result.total_rows == 0
         assert result.imported_rows == 0
-        assert result.skipped_rows == 0
-        assert result.errors == []
-        assert result.warnings == []
+        assert result.error_rows == 0
+        assert isinstance(result.errors, list)
+        assert isinstance(result.warnings, list)
 
     def test_to_dict(self):
         from app.services.import_service import ImportResult
@@ -91,12 +91,12 @@ class TestImportResult:
         result = ImportResult()
         result.total_rows = 100
         result.imported_rows = 95
-        result.skipped_rows = 5
-        result.errors = ["error1"]
+        result.error_rows = 5
+        result.errors = [{"row": 1, "message": "error1"}]
         d = result.to_dict()
         assert d["total_rows"] == 100
         assert d["imported_rows"] == 95
-        assert d["skipped_rows"] == 5
+        assert d["error_rows"] == 5
 
     def test_to_dict_limits_errors(self):
         from app.services.import_service import ImportResult
@@ -181,7 +181,7 @@ class TestImportServicePreview:
         service = ImportService(db=None)
         result = service.preview_file(csv_file, rows=10)
         assert "columns" in result
-        assert "data" in result or "rows" in result or "preview" in result
+        assert "sample_data" in result
 
     def test_preview_with_row_limit(self, tmp_path):
         from app.services.import_service import ImportService

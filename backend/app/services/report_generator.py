@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any
 
 from pptx import Presentation
-from pptx.dml.color import RgbColor
+from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 from reportlab.lib import colors
@@ -48,10 +48,10 @@ class PPTReportGenerator:
     """PowerPoint report generator."""
 
     # Color scheme
-    PRIMARY_COLOR = RgbColor(0x1E, 0x40, 0xAF)  # Blue
-    SECONDARY_COLOR = RgbColor(0x6B, 0x72, 0x80)  # Gray
-    ACCENT_COLOR = RgbColor(0xEF, 0x44, 0x44)  # Red
-    SUCCESS_COLOR = RgbColor(0x22, 0xC5, 0x5E)  # Green
+    PRIMARY_COLOR = RGBColor(0x1E, 0x40, 0xAF)  # Blue
+    SECONDARY_COLOR = RGBColor(0x6B, 0x72, 0x80)  # Gray
+    ACCENT_COLOR = RGBColor(0xEF, 0x44, 0x44)  # Red
+    SUCCESS_COLOR = RGBColor(0x22, 0xC5, 0x5E)  # Green
 
     def __init__(self, config: ReportConfig):
         """Initialize PPT generator.

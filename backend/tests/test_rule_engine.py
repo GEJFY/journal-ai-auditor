@@ -531,14 +531,14 @@ class TestRiskScore:
         s = RiskScore(
             gl_detail_id="A",
             journal_id="J",
-            total_score=75.555,
+            total_score=75.567,
             rule_score=50.0,
             ml_score=15.0,
-            benford_score=10.555,
+            benford_score=10.567,
         )
         d = s.to_dict()
-        assert d["total_score"] == 75.56
-        assert d["benford_score"] == 10.56
+        assert d["total_score"] == 75.57
+        assert d["benford_score"] == 10.57
         assert d["risk_category"] == "high"
 
 

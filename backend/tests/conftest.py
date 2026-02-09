@@ -4,19 +4,27 @@ JAIA テスト用共通フィクスチャ
 pytest用の共通フィクスチャとヘルパー関数を提供します。
 """
 
+import atexit
 import os
+import shutil
 import tempfile
 from collections.abc import Generator
-from datetime import date
+from datetime import date, time
 from pathlib import Path
 
 import polars as pl
 import pytest
 from fastapi.testclient import TestClient
 
-# テスト時はデバッグモードを有効化
-os.environ["JAIA_DEBUG"] = "true"
-os.environ["JAIA_LOG_LEVEL"] = "DEBUG"
+# テスト用環境変数（モジュールレベルで設定 - settings = Settings() より前に必要）
+_test_data_dir = tempfile.mkdtemp(prefix="jaia_test_")
+atexit.register(shutil.rmtree, _test_data_dir, ignore_errors=True)
+
+os.environ["DEBUG"] = "true"
+os.environ["LOG_LEVEL"] = "DEBUG"
+os.environ["DATA_DIR"] = _test_data_dir
+os.environ["DUCKDB_PATH"] = str(Path(_test_data_dir) / "test.duckdb")
+os.environ["SQLITE_PATH"] = str(Path(_test_data_dir) / "test.db")
 
 
 @pytest.fixture(scope="session")
@@ -27,19 +35,14 @@ def temp_data_dir() -> Generator[Path, None, None]:
     Yields:
         Path: 一時ディレクトリパス
     """
-    with tempfile.TemporaryDirectory() as tmpdir:
-        yield Path(tmpdir)
+    yield Path(_test_data_dir)
 
 
 @pytest.fixture(scope="session")
-def test_settings(temp_data_dir: Path):
+def test_settings():
     """
-    テスト用の設定を作成します。
+    テスト用の設定を取得します。
     """
-    os.environ["JAIA_DATA_DIR"] = str(temp_data_dir)
-    os.environ["JAIA_DUCKDB_PATH"] = str(temp_data_dir / "test.duckdb")
-    os.environ["JAIA_SQLITE_PATH"] = str(temp_data_dir / "test.db")
-
     from app.core.config import Settings
 
     return Settings()
@@ -56,14 +59,16 @@ def app(test_settings):
 
 
 @pytest.fixture
-def client(app) -> TestClient:
+def client(app) -> Generator[TestClient, None, None]:
     """
     テスト用のHTTPクライアントを作成します。
+    Context managerでlifespanイベントを起動します。
 
-    Returns:
+    Yields:
         TestClient: FastAPIテストクライアント
     """
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture
@@ -128,16 +133,16 @@ def sample_journal_entries() -> pl.DataFrame:
             date(2024, 7, 15),
         ],
         "entry_time": [
-            "09:00:00",
-            "09:00:00",
-            "10:30:00",
-            "10:30:00",
-            "23:55:00",
-            "23:55:00",  # 営業時間外
-            "14:00:00",
-            "14:00:00",
-            "11:00:00",
-            "11:00:00",
+            time(9, 0),
+            time(9, 0),
+            time(10, 30),
+            time(10, 30),
+            time(23, 55),
+            time(23, 55),  # 営業時間外
+            time(14, 0),
+            time(14, 0),
+            time(11, 0),
+            time(11, 0),
         ],
         "gl_account_number": [
             "1131",
@@ -270,16 +275,16 @@ def sample_journal_entries_with_anomalies() -> pl.DataFrame:
         "effective_date": [date(2024, 6, 30)] * 10,  # 期末集中
         "entry_date": [date(2024, 6, 30)] * 10,
         "entry_time": [
-            "23:58:00",
-            "23:59:00",  # 営業時間外
-            "02:30:00",
-            "03:45:00",  # 深夜
-            "09:00:00",
-            "10:00:00",
-            "11:00:00",
-            "12:00:00",
-            "13:00:00",
-            "14:00:00",
+            time(23, 58),
+            time(23, 59),  # 営業時間外
+            time(2, 30),
+            time(3, 45),  # 深夜
+            time(9, 0),
+            time(10, 0),
+            time(11, 0),
+            time(12, 0),
+            time(13, 0),
+            time(14, 0),
         ],
         "gl_account_number": [
             "1131",

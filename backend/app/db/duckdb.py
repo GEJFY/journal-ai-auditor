@@ -136,10 +136,16 @@ class DuckDBManager:
         with self.connect() as conn:
             # Execute the full schema
             for statement in DUCKDB_SCHEMA.split(";"):
-                statement = statement.strip()
-                if statement and not statement.startswith("--"):
+                # Strip comment-only lines to get actual SQL
+                lines = [
+                    line
+                    for line in statement.split("\n")
+                    if line.strip() and not line.strip().startswith("--")
+                ]
+                clean_stmt = "\n".join(lines).strip()
+                if clean_stmt:
                     try:
-                        conn.execute(statement)
+                        conn.execute(clean_stmt)
                     except Exception:
                         # Skip errors for already existing objects
                         pass

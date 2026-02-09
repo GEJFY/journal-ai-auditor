@@ -18,30 +18,30 @@ class TestImportDataAPI:
     def test_upload_csv(self, client, tmp_path):
         csv_content = b"journal_id,effective_date,amount\nJE001,2024-04-01,100000\n"
         response = client.post(
-            "/api/import/upload",
+            "/api/v1/import/upload",
             files={"file": ("test.csv", io.BytesIO(csv_content), "text/csv")},
         )
         assert response.status_code in (200, 201, 422)
 
     def test_upload_no_file(self, client):
-        response = client.post("/api/import/upload")
+        response = client.post("/api/v1/import/upload")
         assert response.status_code in (400, 422)
 
     def test_upload_unsupported_extension(self, client):
         response = client.post(
-            "/api/import/upload",
+            "/api/v1/import/upload",
             files={"file": ("test.txt", io.BytesIO(b"data"), "text/plain")},
         )
         # 非対応拡張子はエラー
         assert response.status_code in (400, 415, 422)
 
     def test_preview_nonexistent_file(self, client):
-        response = client.get("/api/import/preview/nonexistent_id")
+        response = client.get("/api/v1/import/preview/nonexistent_id")
         assert response.status_code in (404, 400, 500)
 
     def test_mapping_suggest(self, client):
         response = client.get(
-            "/api/import/mapping/suggest",
+            "/api/v1/import/mapping/suggest",
             params={"columns": "journal_id,effective_date,amount"},
         )
         assert response.status_code in (200, 422)
@@ -60,7 +60,7 @@ class TestDashboardAPI:
     """
 
     def test_summary(self, client):
-        response = client.get("/api/dashboard/summary")
+        response = client.get("/api/v1/dashboard/summary")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -69,7 +69,7 @@ class TestDashboardAPI:
 
     def test_summary_with_period(self, client):
         response = client.get(
-            "/api/dashboard/summary",
+            "/api/v1/dashboard/summary",
             params={"fiscal_year": 2024},
         )
         if response.status_code == 200:
@@ -80,7 +80,7 @@ class TestDashboardAPI:
 
     def test_timeseries_daily(self, client):
         response = client.get(
-            "/api/dashboard/timeseries",
+            "/api/v1/dashboard/timeseries",
             params={"aggregation": "daily"},
         )
         if response.status_code == 200:
@@ -90,7 +90,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_kpi(self, client):
-        response = client.get("/api/dashboard/kpi")
+        response = client.get("/api/v1/dashboard/kpi")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -98,7 +98,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_benford(self, client):
-        response = client.get("/api/dashboard/benford")
+        response = client.get("/api/v1/dashboard/benford")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -106,7 +106,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_risk(self, client):
-        response = client.get("/api/dashboard/risk")
+        response = client.get("/api/v1/dashboard/risk")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -114,7 +114,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_accounts(self, client):
-        response = client.get("/api/dashboard/accounts")
+        response = client.get("/api/v1/dashboard/accounts")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -131,7 +131,7 @@ class TestAnalysisAPI:
     """分析APIのテスト"""
 
     def test_violations(self, client):
-        response = client.get("/api/analysis/violations")
+        response = client.get("/api/v1/analysis/violations")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -140,7 +140,7 @@ class TestAnalysisAPI:
 
     def test_violations_with_filters(self, client):
         response = client.get(
-            "/api/analysis/violations",
+            "/api/v1/analysis/violations",
             params={"limit": 10, "offset": 0},
         )
         if response.status_code == 200:
@@ -150,7 +150,7 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_ml_anomalies(self, client):
-        response = client.get("/api/analysis/ml-anomalies")
+        response = client.get("/api/v1/analysis/ml-anomalies")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -158,7 +158,7 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_risk_details(self, client):
-        response = client.get("/api/analysis/risk-details")
+        response = client.get("/api/v1/analysis/risk-details")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -166,7 +166,7 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_benford_detail(self, client):
-        response = client.get("/api/analysis/benford-detail")
+        response = client.get("/api/v1/analysis/benford-detail")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -174,7 +174,7 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_rules_summary(self, client):
-        response = client.get("/api/analysis/rules-summary")
+        response = client.get("/api/v1/analysis/rules-summary")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -191,7 +191,7 @@ class TestReportsAPI:
     """レポートAPIのテスト"""
 
     def test_templates(self, client):
-        response = client.get("/api/reports/templates")
+        response = client.get("/api/v1/reports/templates")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -199,7 +199,7 @@ class TestReportsAPI:
             assert response.status_code == 500
 
     def test_history(self, client):
-        response = client.get("/api/reports/history")
+        response = client.get("/api/v1/reports/history")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -208,7 +208,7 @@ class TestReportsAPI:
 
     def test_generate_summary(self, client):
         response = client.post(
-            "/api/reports/generate",
+            "/api/v1/reports/generate",
             json={
                 "report_type": "summary",
                 "fiscal_year": 2024,
@@ -222,7 +222,7 @@ class TestReportsAPI:
 
     def test_export_ppt(self, client):
         response = client.get(
-            "/api/reports/export/ppt",
+            "/api/v1/reports/export/ppt",
             params={"fiscal_year": 2024},
         )
         if response.status_code == 200:
@@ -233,7 +233,7 @@ class TestReportsAPI:
 
     def test_export_pdf(self, client):
         response = client.get(
-            "/api/reports/export/pdf",
+            "/api/v1/reports/export/pdf",
             params={"fiscal_year": 2024},
         )
         if response.status_code == 200:
@@ -251,7 +251,7 @@ class TestBatchAPI:
     """バッチ処理APIのテスト"""
 
     def test_jobs_list(self, client):
-        response = client.get("/api/batch/jobs")
+        response = client.get("/api/v1/batch/jobs")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -259,7 +259,7 @@ class TestBatchAPI:
             assert response.status_code == 500
 
     def test_rules_summary(self, client):
-        response = client.get("/api/batch/rules")
+        response = client.get("/api/v1/batch/rules")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -267,7 +267,7 @@ class TestBatchAPI:
             assert response.status_code == 500
 
     def test_status_nonexistent(self, client):
-        response = client.get("/api/batch/status/nonexistent_id")
+        response = client.get("/api/v1/batch/status/nonexistent_id")
         assert response.status_code in (404, 400, 500)
 
 
@@ -280,7 +280,7 @@ class TestAgentsAPI:
     """エージェントAPIのテスト"""
 
     def test_workflows_list(self, client):
-        response = client.get("/api/agents/workflows")
+        response = client.get("/api/v1/agents/workflows")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -288,11 +288,11 @@ class TestAgentsAPI:
             assert response.status_code == 500
 
     def test_ask_without_body(self, client):
-        response = client.post("/api/agents/ask")
+        response = client.post("/api/v1/agents/ask")
         assert response.status_code in (400, 422)
 
     def test_route_without_body(self, client):
-        response = client.post("/api/agents/route")
+        response = client.post("/api/v1/agents/route")
         assert response.status_code in (400, 422)
 
 
@@ -305,13 +305,13 @@ class TestHealthAPI:
     """ヘルスチェックAPIのテスト"""
 
     def test_health(self, client):
-        response = client.get("/api/health")
+        response = client.get("/api/v1/health")
         assert response.status_code == 200
         data = response.json()
         assert data.get("status") == "healthy" or "status" in data
 
     def test_status(self, client):
-        response = client.get("/api/health/status")
+        response = client.get("/api/v1/health/status")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)

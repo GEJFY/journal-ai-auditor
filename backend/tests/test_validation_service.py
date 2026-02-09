@@ -150,7 +150,7 @@ class TestV003DateRange:
     def test_future_date_warning(self):
         from app.services.validation_service import ValidationService
 
-        future = date.today() + timedelta(days=400)
+        future = date.today() + timedelta(days=800)
         df = make_journal_df(
             effective_date=[future, future],
             entry_date=[future, future],

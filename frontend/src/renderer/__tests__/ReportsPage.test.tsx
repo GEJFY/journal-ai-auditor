@@ -59,7 +59,7 @@ function renderWithQuery(ui: React.ReactElement) {
 describe('ReportsPage', () => {
   it('renders page title', () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText('レポート')).toBeTruthy();
+    expect(screen.getByText('レポート生成')).toBeTruthy();
   });
 
   it('renders report template section', () => {
@@ -69,12 +69,12 @@ describe('ReportsPage', () => {
 
   it('renders generated reports section', () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText(/生成済み|履歴/)).toBeTruthy();
+    expect(screen.getByText(/生成されたレポート/)).toBeTruthy();
   });
 
   it('shows empty state when no reports generated', () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText(/まだ|レポートが/)).toBeTruthy();
+    expect(screen.getByText(/テンプレートをクリック/)).toBeTruthy();
   });
 
   it('renders export buttons area', () => {
