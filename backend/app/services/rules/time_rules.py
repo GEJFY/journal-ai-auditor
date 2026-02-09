@@ -55,9 +55,7 @@ class WeekendHolidayRule(AuditRule):
         holiday_threshold = self.get_threshold("high_amount_weekend", 10_000_000)
 
         # Filter weekend entries (Polars ISO weekday: 1=Mon, 6=Sat, 7=Sun)
-        weekend = df.filter(
-            pl.col("entry_date").dt.weekday().is_in([6, 7])
-        )
+        weekend = df.filter(pl.col("entry_date").dt.weekday().is_in([6, 7]))
 
         # Only flag high-value weekend entries
         high_value_weekend = weekend.filter(pl.col("amount").abs() >= holiday_threshold)
