@@ -2,8 +2,8 @@
  * DashboardPage Tests
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -66,9 +66,9 @@ vi.mock('recharts', () => ({
   Bar: () => null,
 }));
 
+import DashboardPage from '../pages/DashboardPage';
+
 function renderDashboard() {
-  // Lazy import to ensure mocks are in place
-  const DashboardPage = require('../pages/DashboardPage').default;
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -82,20 +82,24 @@ function renderDashboard() {
 }
 
 describe('DashboardPage', () => {
-  it('renders page header', () => {
+  it('renders page header', async () => {
     renderDashboard();
-    expect(screen.getByText(/ダッシュボード/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/ダッシュボード/)).toBeInTheDocument();
+    });
   });
 
-  it('renders stat cards section', () => {
+  it('renders stat cards section', async () => {
     renderDashboard();
-    // The page should have a refresh or data-related element
-    expect(document.querySelector('[class*="grid"]')).toBeTruthy();
+    await waitFor(() => {
+      expect(document.querySelector('[class*="grid"]')).toBeTruthy();
+    });
   });
 
-  it('renders chart sections', () => {
+  it('renders chart sections', async () => {
     renderDashboard();
-    // Charts are mocked, but containers should exist
-    expect(document.querySelector('[class*="card"]')).toBeTruthy();
+    await waitFor(() => {
+      expect(document.querySelector('[class*="card"]')).toBeTruthy();
+    });
   });
 });

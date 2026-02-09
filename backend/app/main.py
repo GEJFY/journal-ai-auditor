@@ -194,6 +194,28 @@ def create_app() -> FastAPI:
     app.include_router(api_router, prefix="/api/v1")
     logger.debug("APIルーターを登録しました: /api/v1")
 
+    # ========================================
+    # ルートエンドポイント
+    # ========================================
+    @app.get("/health", tags=["System"])
+    async def health_check() -> dict:
+        return {
+            "status": "healthy",
+            "app": settings.app_name,
+            "version": settings.app_version,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+
+    @app.get("/", tags=["System"])
+    async def root() -> dict:
+        return {
+            "name": settings.app_name,
+            "description": "AI駆動の仕訳データ分析・内部監査支援システム",
+            "version": settings.app_version,
+            "docs_url": "/docs" if settings.debug else None,
+            "api_url": "/api/v1",
+        }
+
     logger.info("FastAPIアプリケーションの作成が完了しました")
 
     return app
@@ -201,50 +223,3 @@ def create_app() -> FastAPI:
 
 # アプリケーションインスタンス
 app = create_app()
-
-
-# ========================================
-# ルートエンドポイント
-# ========================================
-
-
-@app.get("/health", tags=["System"])
-async def health_check() -> dict:
-    """
-    ヘルスチェックエンドポイント。
-
-    アプリケーションの稼働状態を確認するために使用します。
-    ロードバランサーやモニタリングシステムからの定期的なチェックに対応。
-
-    Returns:
-        dict: ヘルスステータス情報
-            - status: "healthy" または "unhealthy"
-            - app: アプリケーション名
-            - version: アプリケーションバージョン
-            - timestamp: 現在時刻（UTC）
-    """
-    return {
-        "status": "healthy",
-        "app": settings.app_name,
-        "version": settings.app_version,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    }
-
-
-@app.get("/", tags=["System"])
-async def root() -> dict:
-    """
-    ルートエンドポイント。
-
-    アプリケーションの基本情報を返します。
-
-    Returns:
-        dict: アプリケーション情報
-    """
-    return {
-        "name": settings.app_name,
-        "description": "AI駆動の仕訳データ分析・内部監査支援システム",
-        "version": settings.app_version,
-        "docs_url": "/docs" if settings.debug else None,
-        "api_url": "/api/v1",
-    }

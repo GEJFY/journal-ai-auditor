@@ -2,9 +2,14 @@
  * AIAnalysisPage Component Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Mock scrollIntoView (not implemented in jsdom)
+beforeEach(() => {
+  Element.prototype.scrollIntoView = vi.fn();
+});
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
@@ -68,13 +73,11 @@ describe('AIAnalysisPage', () => {
     if (sendButton) {
       fireEvent.click(sendButton);
     }
-    // 空入力でメッセージが追加されないことを確認
     expect(screen.getByText(/JAIAのAIアシスタント/)).toBeTruthy();
   });
 
   it('shows disclaimer text', () => {
     renderWithQuery(<AIAnalysisPage />);
-    // 免責事項テキストの確認
     const page = document.body;
     expect(page.textContent).toContain('AI');
   });

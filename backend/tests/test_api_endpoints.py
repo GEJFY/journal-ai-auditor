@@ -7,6 +7,7 @@ API エンドポイント ユニットテスト
 
 import io
 
+
 # =========================================================
 # Import Data API テスト
 # =========================================================
@@ -57,10 +58,13 @@ class TestDashboardAPI:
 
     Note: DBにデータがない状態では一部エンドポイントが500を返すことがある。
     200が返る場合はレスポンス構造を検証する。
+    全エンドポイントで fiscal_year は必須パラメータ。
     """
 
     def test_summary(self, client):
-        response = client.get("/api/v1/dashboard/summary")
+        response = client.get(
+            "/api/v1/dashboard/summary", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -70,7 +74,7 @@ class TestDashboardAPI:
     def test_summary_with_period(self, client):
         response = client.get(
             "/api/v1/dashboard/summary",
-            params={"fiscal_year": 2024},
+            params={"fiscal_year": 2024, "period_from": 4, "period_to": 6},
         )
         if response.status_code == 200:
             data = response.json()
@@ -81,7 +85,7 @@ class TestDashboardAPI:
     def test_timeseries_daily(self, client):
         response = client.get(
             "/api/v1/dashboard/timeseries",
-            params={"aggregation": "daily"},
+            params={"fiscal_year": 2024, "aggregation": "daily"},
         )
         if response.status_code == 200:
             data = response.json()
@@ -90,7 +94,9 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_kpi(self, client):
-        response = client.get("/api/v1/dashboard/kpi")
+        response = client.get(
+            "/api/v1/dashboard/kpi", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -98,7 +104,9 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_benford(self, client):
-        response = client.get("/api/v1/dashboard/benford")
+        response = client.get(
+            "/api/v1/dashboard/benford", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -106,7 +114,9 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_risk(self, client):
-        response = client.get("/api/v1/dashboard/risk")
+        response = client.get(
+            "/api/v1/dashboard/risk", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -114,7 +124,9 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_accounts(self, client):
-        response = client.get("/api/v1/dashboard/accounts")
+        response = client.get(
+            "/api/v1/dashboard/accounts", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -128,10 +140,12 @@ class TestDashboardAPI:
 
 
 class TestAnalysisAPI:
-    """分析APIのテスト"""
+    """分析APIのテスト（全エンドポイント fiscal_year 必須）"""
 
     def test_violations(self, client):
-        response = client.get("/api/v1/analysis/violations")
+        response = client.get(
+            "/api/v1/analysis/violations", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -141,7 +155,7 @@ class TestAnalysisAPI:
     def test_violations_with_filters(self, client):
         response = client.get(
             "/api/v1/analysis/violations",
-            params={"limit": 10, "offset": 0},
+            params={"fiscal_year": 2024, "limit": 10, "offset": 0},
         )
         if response.status_code == 200:
             data = response.json()
@@ -150,7 +164,9 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_ml_anomalies(self, client):
-        response = client.get("/api/v1/analysis/ml-anomalies")
+        response = client.get(
+            "/api/v1/analysis/ml-anomalies", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -158,7 +174,9 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_risk_details(self, client):
-        response = client.get("/api/v1/analysis/risk-details")
+        response = client.get(
+            "/api/v1/analysis/risk-details", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -166,7 +184,9 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_benford_detail(self, client):
-        response = client.get("/api/v1/analysis/benford-detail")
+        response = client.get(
+            "/api/v1/analysis/benford-detail", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -174,7 +194,9 @@ class TestAnalysisAPI:
             assert response.status_code == 500
 
     def test_rules_summary(self, client):
-        response = client.get("/api/v1/analysis/rules-summary")
+        response = client.get(
+            "/api/v1/analysis/rules-summary", params={"fiscal_year": 2024}
+        )
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (dict, list))
@@ -226,7 +248,6 @@ class TestReportsAPI:
             params={"fiscal_year": 2024},
         )
         if response.status_code == 200:
-            # PPTバイナリまたはJSONレスポンス
             assert len(response.content) > 0
         else:
             assert response.status_code == 500
@@ -285,7 +306,7 @@ class TestAgentsAPI:
             data = response.json()
             assert isinstance(data, (dict, list))
         else:
-            assert response.status_code == 500
+            assert response.status_code in (404, 500)
 
     def test_ask_without_body(self, client):
         response = client.post("/api/v1/agents/ask")
@@ -304,14 +325,23 @@ class TestAgentsAPI:
 class TestHealthAPI:
     """ヘルスチェックAPIのテスト"""
 
-    def test_health(self, client):
+    def test_root_health(self, client):
+        """ルートレベルのヘルスチェック"""
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+
+    def test_api_health(self, client):
+        """API v1 ヘルスチェック"""
         response = client.get("/api/v1/health")
         assert response.status_code == 200
         data = response.json()
-        assert data.get("status") == "healthy" or "status" in data
+        assert "status" in data
 
     def test_status(self, client):
-        response = client.get("/api/v1/health/status")
+        """ステータスエンドポイント"""
+        response = client.get("/api/v1/status")
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)

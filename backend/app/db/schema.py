@@ -112,6 +112,24 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- =========================================
+-- Rule Violations (Analysis Results)
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS rule_violations (
+    gl_detail_id VARCHAR NOT NULL,
+    journal_id VARCHAR,
+    rule_id VARCHAR(20) NOT NULL,
+    rule_name VARCHAR(200),
+    category VARCHAR(50),
+    severity VARCHAR(20) NOT NULL,
+    message VARCHAR(500),
+    violation_description VARCHAR(1000),
+    details VARCHAR,
+    score_impact DECIMAL(5, 2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================
 -- Aggregation Tables for Dashboard
 -- =========================================
 

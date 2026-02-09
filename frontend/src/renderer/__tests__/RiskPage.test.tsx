@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock lucide-react icons
@@ -61,41 +61,50 @@ function renderWithQuery(ui: React.ReactElement) {
 }
 
 describe('RiskPage', () => {
-  it('renders page title', () => {
+  it('renders page title', async () => {
     renderWithQuery(<RiskPage />);
-    expect(screen.getByText('リスク分析')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('リスク分析')).toBeTruthy();
+    });
   });
 
-  it('renders risk level filter buttons', () => {
+  it('renders risk level filter buttons', async () => {
     renderWithQuery(<RiskPage />);
-    expect(screen.getByText('すべて')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('すべて')).toBeTruthy();
+    });
     expect(screen.getByText('高')).toBeTruthy();
     expect(screen.getByText('中')).toBeTruthy();
     expect(screen.getByText('低')).toBeTruthy();
   });
 
-  it('renders risk distribution section', () => {
+  it('renders risk distribution section', async () => {
     renderWithQuery(<RiskPage />);
-    expect(screen.getByText('リスク分布')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('リスク分布')).toBeTruthy();
+    });
   });
 
-  it('renders violation summary section', () => {
+  it('renders violation summary section', async () => {
     renderWithQuery(<RiskPage />);
-    expect(screen.getByText('違反サマリー')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('違反サマリー')).toBeTruthy();
+    });
   });
 
-  it('changes filter on button click', () => {
+  it('changes filter on button click', async () => {
     renderWithQuery(<RiskPage />);
+    await waitFor(() => {
+      expect(screen.getByText('高')).toBeTruthy();
+    });
     const highButton = screen.getByText('高');
     fireEvent.click(highButton);
-    // フィルタ変更後もUIが表示される
     expect(screen.getByText('リスク分析')).toBeTruthy();
   });
 
-  it('shows loading state', () => {
+  it('shows loading state initially', () => {
     renderWithQuery(<RiskPage />);
-    // ロード中の表示があるか確認
-    const page = screen.getByText('リスク分析');
-    expect(page).toBeTruthy();
+    // Initially shows loading spinner before data resolves
+    expect(document.querySelector('[class*="animate-spin"]')).toBeTruthy();
   });
 });

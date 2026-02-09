@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock lucide-react icons
@@ -57,29 +57,39 @@ function renderWithQuery(ui: React.ReactElement) {
 }
 
 describe('ReportsPage', () => {
-  it('renders page title', () => {
+  it('renders page title', async () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText('レポート生成')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText('レポート生成')).toBeTruthy();
+    });
   });
 
-  it('renders report template section', () => {
+  it('renders report template section', async () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText(/テンプレート|レポート種類/)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(/テンプレート|レポート種類/)).toBeTruthy();
+    });
   });
 
-  it('renders generated reports section', () => {
+  it('renders generated reports section', async () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText(/生成されたレポート/)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(/生成されたレポート/)).toBeTruthy();
+    });
   });
 
-  it('shows empty state when no reports generated', () => {
+  it('shows empty state when no reports generated', async () => {
     renderWithQuery(<ReportsPage />);
-    expect(screen.getByText(/テンプレートをクリック/)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(/テンプレートをクリック/)).toBeTruthy();
+    });
   });
 
-  it('renders export buttons area', () => {
+  it('renders page content', async () => {
     renderWithQuery(<ReportsPage />);
-    const page = document.body;
-    expect(page.textContent).toContain('レポート');
+    await waitFor(() => {
+      const page = document.body;
+      expect(page.textContent).toContain('レポート');
+    });
   });
 });
