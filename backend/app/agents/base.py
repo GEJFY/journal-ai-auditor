@@ -6,17 +6,17 @@ Provides common infrastructure for all JAIA agents using LangGraph.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional, TypedDict
+from enum import StrEnum
+from typing import Any, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.language_models import BaseChatModel
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langgraph.graph import StateGraph
 
 from app.core.config import settings
 
 
-class AgentType(str, Enum):
+class AgentType(StrEnum):
     """Types of agents available."""
 
     ANALYSIS = "analysis"
@@ -52,8 +52,8 @@ class AgentState(TypedDict, total=False):
 
     # Metadata
     started_at: str
-    completed_at: Optional[str]
-    error: Optional[str]
+    completed_at: str | None
+    error: str | None
 
 
 @dataclass
@@ -89,7 +89,7 @@ class AgentResult:
     messages: list[dict[str, str]] = field(default_factory=list)
     execution_time_ms: float = 0.0
     step_count: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -126,6 +126,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+
         return ChatAnthropic(
             model=config.model_name,
             api_key=settings.anthropic_api_key,
@@ -135,6 +136,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "openai":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=config.model_name,
             api_key=settings.openai_api_key,
@@ -144,6 +146,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "azure":
         from langchain_openai import AzureChatOpenAI
+
         return AzureChatOpenAI(
             azure_deployment=settings.azure_openai_deployment,
             azure_endpoint=settings.azure_openai_endpoint,
@@ -155,6 +158,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "azure_foundry":
         from langchain_openai import AzureChatOpenAI
+
         return AzureChatOpenAI(
             azure_deployment=settings.azure_foundry_deployment or config.model_name,
             azure_endpoint=settings.azure_foundry_endpoint,
@@ -166,6 +170,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "bedrock":
         from langchain_aws import ChatBedrockConverse
+
         return ChatBedrockConverse(
             model=config.model_name,
             region_name=settings.aws_region,
@@ -175,6 +180,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "vertex_ai":
         from langchain_google_vertexai import ChatVertexAI
+
         return ChatVertexAI(
             model_name=config.model_name,
             project=settings.gcp_project_id,
@@ -185,6 +191,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
+
         return ChatGoogleGenerativeAI(
             model=config.model_name,
             google_api_key=settings.google_api_key,
@@ -194,6 +201,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "ollama":
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=config.model_name,
             base_url=settings.ollama_base_url,
@@ -219,7 +227,7 @@ class BaseAgent(ABC):
     - Graph building
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize agent.
 
         Args:
@@ -228,7 +236,7 @@ class BaseAgent(ABC):
         self.config = config or AgentConfig(agent_type=self.agent_type)
         self.llm = create_llm(self.config)
         self.tools: list[Any] = []
-        self._graph: Optional[StateGraph] = None
+        self._graph: StateGraph | None = None
 
     @property
     @abstractmethod
@@ -285,7 +293,7 @@ class BaseAgent(ABC):
     def _create_initial_state(
         self,
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> AgentState:
         """Create initial state for execution.
 
@@ -369,7 +377,7 @@ class BaseAgent(ABC):
     async def execute(
         self,
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> AgentResult:
         """Execute the agent on a task.
 
@@ -381,6 +389,7 @@ class BaseAgent(ABC):
             Agent execution result.
         """
         import time
+
         start_time = time.perf_counter()
 
         try:
@@ -400,8 +409,10 @@ class BaseAgent(ABC):
                 recommendations=final_state.get("recommendations", []),
                 insights=final_state.get("insights", []),
                 messages=[
-                    {"role": "assistant" if isinstance(m, AIMessage) else "user",
-                     "content": m.content}
+                    {
+                        "role": "assistant" if isinstance(m, AIMessage) else "user",
+                        "content": m.content,
+                    }
                     for m in final_state.get("messages", [])
                     if not isinstance(m, SystemMessage)
                 ],
@@ -422,7 +433,7 @@ class BaseAgent(ABC):
     def execute_sync(
         self,
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> AgentResult:
         """Synchronous execution wrapper.
 
@@ -434,4 +445,5 @@ class BaseAgent(ABC):
             Agent execution result.
         """
         import asyncio
+
         return asyncio.run(self.execute(task, context))

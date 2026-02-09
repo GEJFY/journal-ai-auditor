@@ -7,14 +7,13 @@ This agent specializes in:
 - Interactive data exploration
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import ToolMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import QA_TOOLS
-
 
 QA_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の質問応答エージェントです。
 監査人からの仕訳データに関する質問に回答します。
@@ -45,7 +44,7 @@ QA_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の質問応�
 class QAAgent(BaseAgent):
     """Agent for answering questions about journal data."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize QA agent.
 
         Args:
@@ -78,7 +77,7 @@ class QAAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "respond",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("respond", END)
@@ -130,7 +129,7 @@ class QAAgent(BaseAgent):
     async def ask(
         self,
         question: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Ask a question about journal data.
 

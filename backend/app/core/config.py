@@ -1,18 +1,25 @@
 """Application configuration using Pydantic Settings."""
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 # Available LLM Models (2026-02 Latest)
 LLM_MODELS = {
     # Anthropic Direct API
     "anthropic": {
-        "claude-opus-4-6": {"name": "Claude Opus 4.6", "tier": "premium", "cost": "very_high"},
-        "claude-sonnet-4-5": {"name": "Claude Sonnet 4.5", "tier": "balanced", "cost": "medium"},
+        "claude-opus-4-6": {
+            "name": "Claude Opus 4.6",
+            "tier": "premium",
+            "cost": "very_high",
+        },
+        "claude-sonnet-4-5": {
+            "name": "Claude Sonnet 4.5",
+            "tier": "balanced",
+            "cost": "medium",
+        },
         "claude-haiku-4-5": {"name": "Claude Haiku 4.5", "tier": "fast", "cost": "low"},
     },
     # OpenAI Direct API
@@ -28,36 +35,96 @@ LLM_MODELS = {
     },
     # Google AI Studio (google-genai SDK)
     "google": {
-        "gemini-3-flash-preview": {"name": "Gemini 3 Flash Preview", "tier": "fast", "cost": "low"},
+        "gemini-3-flash-preview": {
+            "name": "Gemini 3 Flash Preview",
+            "tier": "fast",
+            "cost": "low",
+        },
         "gemini-2.5-pro": {"name": "Gemini 2.5 Pro", "tier": "premium", "cost": "high"},
-        "gemini-2.5-flash-lite": {"name": "Gemini 2.5 Flash-Lite", "tier": "fast", "cost": "very_low"},
+        "gemini-2.5-flash-lite": {
+            "name": "Gemini 2.5 Flash-Lite",
+            "tier": "fast",
+            "cost": "very_low",
+        },
     },
     # AWS Bedrock (2026-02 Latest)
     "bedrock": {
-        "us.anthropic.claude-opus-4-6-20260201-v1:0": {"name": "Claude Opus 4.6", "tier": "premium", "cost": "very_high"},
-        "us.anthropic.claude-sonnet-4-5-20250929-v1:0": {"name": "Claude Sonnet 4.5", "tier": "balanced", "cost": "medium"},
-        "us.anthropic.claude-haiku-4-5-20251001-v1:0": {"name": "Claude Haiku 4.5", "tier": "fast", "cost": "low"},
-        "amazon.nova-premier-v1:0": {"name": "Amazon Nova Premier", "tier": "premium", "cost": "high"},
-        "amazon.nova-pro-v1:0": {"name": "Amazon Nova Pro", "tier": "balanced", "cost": "medium"},
-        "amazon.nova-lite-v1:0": {"name": "Amazon Nova Lite", "tier": "fast", "cost": "low"},
-        "amazon.nova-micro-v1:0": {"name": "Amazon Nova Micro", "tier": "fast", "cost": "very_low"},
-        "us.deepseek.r1-v1:0": {"name": "DeepSeek R1", "tier": "reasoning", "cost": "medium"},
+        "us.anthropic.claude-opus-4-6-20260201-v1:0": {
+            "name": "Claude Opus 4.6",
+            "tier": "premium",
+            "cost": "very_high",
+        },
+        "us.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+            "name": "Claude Sonnet 4.5",
+            "tier": "balanced",
+            "cost": "medium",
+        },
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0": {
+            "name": "Claude Haiku 4.5",
+            "tier": "fast",
+            "cost": "low",
+        },
+        "amazon.nova-premier-v1:0": {
+            "name": "Amazon Nova Premier",
+            "tier": "premium",
+            "cost": "high",
+        },
+        "amazon.nova-pro-v1:0": {
+            "name": "Amazon Nova Pro",
+            "tier": "balanced",
+            "cost": "medium",
+        },
+        "amazon.nova-lite-v1:0": {
+            "name": "Amazon Nova Lite",
+            "tier": "fast",
+            "cost": "low",
+        },
+        "amazon.nova-micro-v1:0": {
+            "name": "Amazon Nova Micro",
+            "tier": "fast",
+            "cost": "very_low",
+        },
+        "us.deepseek.r1-v1:0": {
+            "name": "DeepSeek R1",
+            "tier": "reasoning",
+            "cost": "medium",
+        },
     },
     # Azure AI Foundry (GPT-5 series + Claude)
     "azure_foundry": {
         "gpt-5.2": {"name": "GPT-5.2", "tier": "premium", "cost": "very_high"},
         "gpt-5": {"name": "GPT-5", "tier": "premium", "cost": "high"},
         "gpt-5-nano": {"name": "GPT-5 Nano", "tier": "fast", "cost": "low"},
-        "claude-opus-4-6": {"name": "Claude Opus 4.6", "tier": "premium", "cost": "very_high"},
-        "claude-sonnet-4-5": {"name": "Claude Sonnet 4.5", "tier": "balanced", "cost": "medium"},
+        "claude-opus-4-6": {
+            "name": "Claude Opus 4.6",
+            "tier": "premium",
+            "cost": "very_high",
+        },
+        "claude-sonnet-4-5": {
+            "name": "Claude Sonnet 4.5",
+            "tier": "balanced",
+            "cost": "medium",
+        },
         "claude-haiku-4-5": {"name": "Claude Haiku 4.5", "tier": "fast", "cost": "low"},
     },
     # GCP Vertex AI (Gemini 3 series, Global Region)
     "vertex_ai": {
         "gemini-3-pro": {"name": "Gemini 3 Pro", "tier": "premium", "cost": "high"},
-        "gemini-3-flash-preview": {"name": "Gemini 3 Flash Preview", "tier": "balanced", "cost": "medium"},
-        "gemini-2.5-pro": {"name": "Gemini 2.5 Pro", "tier": "balanced", "cost": "medium"},
-        "gemini-2.5-flash-lite": {"name": "Gemini 2.5 Flash-Lite", "tier": "fast", "cost": "very_low"},
+        "gemini-3-flash-preview": {
+            "name": "Gemini 3 Flash Preview",
+            "tier": "balanced",
+            "cost": "medium",
+        },
+        "gemini-2.5-pro": {
+            "name": "Gemini 2.5 Pro",
+            "tier": "balanced",
+            "cost": "medium",
+        },
+        "gemini-2.5-flash-lite": {
+            "name": "Gemini 2.5 Flash-Lite",
+            "tier": "fast",
+            "cost": "very_low",
+        },
     },
     # Azure OpenAI (Legacy)
     "azure": {
@@ -67,8 +134,16 @@ LLM_MODELS = {
     # Local LLM (Ollama)
     "ollama": {
         "phi4": {"name": "Phi-4 (14B)", "tier": "balanced", "cost": "very_low"},
-        "qwen2.5-coder:14b": {"name": "Qwen 2.5 Coder 14B", "tier": "balanced", "cost": "very_low"},
-        "deepseek-r1:14b": {"name": "DeepSeek R1 14B", "tier": "reasoning", "cost": "very_low"},
+        "qwen2.5-coder:14b": {
+            "name": "Qwen 2.5 Coder 14B",
+            "tier": "balanced",
+            "cost": "very_low",
+        },
+        "deepseek-r1:14b": {
+            "name": "DeepSeek R1 14B",
+            "tier": "reasoning",
+            "cost": "very_low",
+        },
         "llama3.3:8b": {"name": "Llama 3.3 8B", "tier": "fast", "cost": "very_low"},
         "gemma3:27b": {"name": "Gemma 3 27B", "tier": "premium", "cost": "very_low"},
     },
@@ -136,8 +211,13 @@ class Settings(BaseSettings):
 
     # LLM Providers - Multi-cloud + Local (2026-02)
     llm_provider: Literal[
-        "anthropic", "openai", "google",
-        "bedrock", "azure_foundry", "vertex_ai", "azure",
+        "anthropic",
+        "openai",
+        "google",
+        "bedrock",
+        "azure_foundry",
+        "vertex_ai",
+        "azure",
         "ollama",
     ] = "bedrock"
     llm_model: str = "us.anthropic.claude-opus-4-6-20260201-v1:0"
@@ -197,11 +277,11 @@ class Settings(BaseSettings):
         """Ensure data directory exists."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_available_models(self) -> dict:
+    def get_available_models(self) -> dict[str, Any]:
         """Get available models for current provider."""
         return LLM_MODELS.get(self.llm_provider, {})
 
-    def get_recommended_model(self, use_case: str = "balanced") -> dict:
+    def get_recommended_model(self, use_case: str = "balanced") -> dict[str, Any]:
         """Get recommended model for use case."""
         return RECOMMENDED_MODELS.get(use_case, RECOMMENDED_MODELS["balanced"])
 

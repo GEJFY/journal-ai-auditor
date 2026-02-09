@@ -19,8 +19,7 @@ Risk categories:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import polars as pl
 
@@ -71,7 +70,9 @@ class RiskScore:
             "rule_score": round(self.rule_score, 2),
             "ml_score": round(self.ml_score, 2),
             "benford_score": round(self.benford_score, 2),
-            "category_scores": {k: round(v, 2) for k, v in self.category_scores.items()},
+            "category_scores": {
+                k: round(v, 2) for k, v in self.category_scores.items()
+            },
             "violation_count": self.violation_count,
             "violations": self.violations,
             "severity_level": self.severity_level,
@@ -85,25 +86,29 @@ class ScoringConfig:
     """Configuration for risk scoring."""
 
     # Severity weights
-    severity_weights: dict[str, float] = field(default_factory=lambda: {
-        "critical": 25.0,
-        "high": 15.0,
-        "medium": 10.0,
-        "low": 5.0,
-        "info": 0.0,
-    })
+    severity_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "critical": 25.0,
+            "high": 15.0,
+            "medium": 10.0,
+            "low": 5.0,
+            "info": 0.0,
+        }
+    )
 
     # Category weights (multipliers)
-    category_weights: dict[str, float] = field(default_factory=lambda: {
-        "amount": 1.0,
-        "time": 1.0,
-        "account": 1.0,
-        "approval": 1.5,  # Approval violations are more serious
-        "description": 0.8,
-        "pattern": 1.0,
-        "trend": 0.9,
-        "ml": 1.2,
-    })
+    category_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "amount": 1.0,
+            "time": 1.0,
+            "account": 1.0,
+            "approval": 1.5,  # Approval violations are more serious
+            "description": 0.8,
+            "pattern": 1.0,
+            "trend": 0.9,
+            "ml": 1.2,
+        }
+    )
 
     # ML score weight
     ml_weight: float = 1.0
@@ -124,8 +129,8 @@ class RiskScoringService:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
-        config: Optional[ScoringConfig] = None,
+        db: DuckDBManager | None = None,
+        config: ScoringConfig | None = None,
     ) -> None:
         """Initialize scoring service.
 
@@ -157,15 +162,11 @@ class RiskScoringService:
         # Sum up violation scores
         for v in violations:
             base_score = self.config.severity_weights.get(
-                v.severity.value,
-                self.config.severity_weights.get("medium", 10.0)
+                v.severity.value, self.config.severity_weights.get("medium", 10.0)
             )
 
             # Apply category weight
-            category_weight = self.config.category_weights.get(
-                v.category.value,
-                1.0
-            )
+            category_weight = self.config.category_weights.get(v.category.value, 1.0)
 
             # Use custom score impact if provided
             if v.score_impact > 0:
@@ -214,13 +215,12 @@ class RiskScoringService:
                 score.category_scores[cat] = 0.0
 
             # Calculate contribution
-            base_score = self.config.severity_weights.get(
-                v.severity.value,
-                10.0
-            )
+            base_score = self.config.severity_weights.get(v.severity.value, 10.0)
             category_weight = self.config.category_weights.get(cat, 1.0)
 
-            contribution = (v.score_impact if v.score_impact > 0 else base_score) * category_weight
+            contribution = (
+                v.score_impact if v.score_impact > 0 else base_score
+            ) * category_weight
             score.category_scores[cat] += contribution
 
             # Track specific score types
@@ -234,18 +234,24 @@ class RiskScoringService:
             # Update severity level
             if v.severity == RuleSeverity.CRITICAL:
                 score.severity_level = "critical"
-            elif v.severity == RuleSeverity.HIGH and score.severity_level not in ["critical"]:
+            elif v.severity == RuleSeverity.HIGH and score.severity_level not in [
+                "critical"
+            ]:
                 score.severity_level = "high"
-            elif v.severity == RuleSeverity.MEDIUM and score.severity_level not in ["critical", "high"]:
+            elif v.severity == RuleSeverity.MEDIUM and score.severity_level not in [
+                "critical",
+                "high",
+            ]:
                 score.severity_level = "medium"
 
         # Calculate total scores
         for score in scores.values():
             score.total_score = min(
-                sum(score.category_scores.values()),
-                self.config.max_score
+                sum(score.category_scores.values()), self.config.max_score
             )
-            score.requires_review = score.total_score >= self.config.auto_review_threshold
+            score.requires_review = (
+                score.total_score >= self.config.auto_review_threshold
+            )
 
         return scores
 
@@ -368,7 +374,7 @@ class RiskScoringService:
 
     def get_scoring_summary(
         self,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> dict[str, Any]:
         """Get summary of risk scoring results.
 
@@ -399,7 +405,9 @@ class RiskScoringService:
             return {
                 "total_entries": row[0] or 0,
                 "flagged_entries": row[1] or 0,
-                "flagged_percentage": round((row[1] or 0) / max(row[0] or 1, 1) * 100, 2),
+                "flagged_percentage": round(
+                    (row[1] or 0) / max(row[0] or 1, 1) * 100, 2
+                ),
                 "critical_count": row[2] or 0,
                 "high_count": row[3] or 0,
                 "medium_count": row[4] or 0,
@@ -415,14 +423,14 @@ class RiskPrioritizer:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
+        db: DuckDBManager | None = None,
     ) -> None:
         self.db = db or DuckDBManager()
 
     def get_review_queue(
         self,
         max_entries: int = 100,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> pl.DataFrame:
         """Get prioritized queue of entries for review.
 
@@ -473,7 +481,7 @@ class RiskPrioritizer:
 
     def get_sample_by_risk_level(
         self,
-        sample_sizes: Optional[dict[str, int]] = None,
+        sample_sizes: dict[str, int] | None = None,
     ) -> pl.DataFrame:
         """Get stratified sample by risk level.
 

@@ -9,7 +9,7 @@ Provides REST API for dashboard data:
 """
 
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -28,14 +28,14 @@ class FilterParams(BaseModel):
     """Common filter parameters for dashboard queries."""
 
     fiscal_year: int
-    period_from: Optional[int] = None
-    period_to: Optional[int] = None
-    date_from: Optional[date] = None
-    date_to: Optional[date] = None
-    accounts: Optional[list[str]] = None
-    departments: Optional[list[str]] = None
-    min_amount: Optional[float] = None
-    max_amount: Optional[float] = None
+    period_from: int | None = None
+    period_to: int | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+    accounts: list[str] | None = None
+    departments: list[str] | None = None
+    min_amount: float | None = None
+    max_amount: float | None = None
 
 
 class SummaryResponse(BaseModel):
@@ -111,8 +111,8 @@ class RiskResponse(BaseModel):
 @router.get("/summary", response_model=SummaryResponse)
 async def get_dashboard_summary(
     fiscal_year: int = Query(..., description="Fiscal year"),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
 ) -> SummaryResponse:
     """Get dashboard summary statistics."""
     db = get_db()
@@ -175,8 +175,8 @@ async def get_dashboard_summary(
 async def get_time_series(
     fiscal_year: int = Query(...),
     aggregation: str = Query("daily", regex="^(daily|weekly|monthly)$"),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
 ) -> TimeSeriesResponse:
     """Get time series data for charts."""
     db = get_db()
@@ -226,8 +226,8 @@ async def get_time_series(
 @router.get("/accounts", response_model=AccountsResponse)
 async def get_accounts_analysis(
     fiscal_year: int = Query(...),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(50, le=500),
 ) -> AccountsResponse:
     """Get account-level analysis."""
@@ -282,8 +282,8 @@ async def get_accounts_analysis(
 @router.get("/risk", response_model=RiskResponse)
 async def get_risk_analysis(
     fiscal_year: int = Query(...),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
 ) -> RiskResponse:
     """Get risk analysis results."""
@@ -412,8 +412,15 @@ async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
     db = get_db()
 
     expected = {
-        1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-        6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+        1: 0.301,
+        2: 0.176,
+        3: 0.125,
+        4: 0.097,
+        5: 0.079,
+        6: 0.067,
+        7: 0.058,
+        8: 0.051,
+        9: 0.046,
     }
 
     query = """
@@ -439,13 +446,15 @@ async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
         digit, count = row[0], row[1]
         actual_pct = count / total if total > 0 else 0
         expected_pct = expected.get(digit, 0)
-        distribution.append({
-            "digit": digit,
-            "count": count,
-            "actual_pct": round(actual_pct, 4),
-            "expected_pct": expected_pct,
-            "deviation": round(actual_pct - expected_pct, 4),
-        })
+        distribution.append(
+            {
+                "digit": digit,
+                "count": count,
+                "actual_pct": round(actual_pct, 4),
+                "expected_pct": expected_pct,
+                "deviation": round(actual_pct - expected_pct, 4),
+            }
+        )
 
     mad = sum(abs(d["deviation"]) for d in distribution) / 9 if distribution else 0
 
@@ -454,9 +463,12 @@ async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
         "total_count": total,
         "mad": round(mad, 4),
         "conformity": (
-            "close" if mad <= 0.006 else
-            "acceptable" if mad <= 0.012 else
-            "marginally_acceptable" if mad <= 0.015 else
-            "nonconforming"
+            "close"
+            if mad <= 0.006
+            else "acceptable"
+            if mad <= 0.012
+            else "marginally_acceptable"
+            if mad <= 0.015
+            else "nonconforming"
         ),
     }

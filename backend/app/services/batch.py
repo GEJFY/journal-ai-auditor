@@ -19,31 +19,31 @@ Execution modes:
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 import polars as pl
 
 from app.db import DuckDBManager
 from app.services.aggregation import AggregationService
-from app.services.rules.base import RuleCategory
-from app.services.rules.rule_engine import RuleEngine, EngineResult
-from app.services.rules.scoring import RiskScoringService, ScoringConfig
-from app.services.rules.amount_rules import create_amount_rule_set
-from app.services.rules.time_rules import create_time_rule_set
 from app.services.rules.account_rules import create_account_rule_set
+from app.services.rules.amount_rules import create_amount_rule_set
 from app.services.rules.approval_rules import create_approval_rule_set
-from app.services.rules.ml_detection import create_ml_rule_set
+from app.services.rules.base import RuleCategory
 from app.services.rules.benford import create_benford_rule_set
+from app.services.rules.ml_detection import create_ml_rule_set
+from app.services.rules.rule_engine import RuleEngine
+from app.services.rules.scoring import RiskScoringService
+from app.services.rules.time_rules import create_time_rule_set
 
 
-class BatchMode(str, Enum):
+class BatchMode(StrEnum):
     """Batch execution mode."""
 
-    FULL = "full"           # Run all rules
+    FULL = "full"  # Run all rules
     INCREMENTAL = "incremental"  # New/modified entries only
-    QUICK = "quick"         # Critical rules only
-    ML_ONLY = "ml_only"     # ML detection only
+    QUICK = "quick"  # Critical rules only
+    ML_ONLY = "ml_only"  # ML detection only
     RULES_ONLY = "rules_only"  # Rules without ML
 
 
@@ -52,15 +52,15 @@ class BatchConfig:
     """Configuration for batch execution."""
 
     mode: BatchMode = BatchMode.FULL
-    fiscal_year: Optional[int] = None
-    business_unit_code: Optional[str] = None
-    accounting_period: Optional[int] = None
+    fiscal_year: int | None = None
+    business_unit_code: str | None = None
+    accounting_period: int | None = None
     parallel_execution: bool = True
     max_workers: int = 4
     update_aggregations: bool = True
     store_violations: bool = True
     update_risk_scores: bool = True
-    categories: Optional[list[RuleCategory]] = None
+    categories: list[RuleCategory] | None = None
 
 
 @dataclass
@@ -70,7 +70,7 @@ class BatchResult:
     batch_id: str
     mode: BatchMode
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     total_entries: int = 0
     rules_executed: int = 0
     rules_failed: int = 0
@@ -95,7 +95,9 @@ class BatchResult:
             "batch_id": self.batch_id,
             "mode": self.mode.value,
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
             "success": self.success,
             "total_entries": self.total_entries,
             "rules_executed": self.rules_executed,
@@ -117,7 +119,7 @@ class BatchOrchestrator:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
+        db: DuckDBManager | None = None,
     ) -> None:
         """Initialize batch orchestrator.
 
@@ -143,7 +145,7 @@ class BatchOrchestrator:
 
     def execute(
         self,
-        config: Optional[BatchConfig] = None,
+        config: BatchConfig | None = None,
     ) -> BatchResult:
         """Execute batch processing.
 
@@ -154,6 +156,7 @@ class BatchOrchestrator:
             BatchResult with execution details.
         """
         import uuid
+
         config = config or BatchConfig()
         result = BatchResult(
             batch_id=str(uuid.uuid4()),
@@ -167,7 +170,9 @@ class BatchOrchestrator:
             phase_start = time.perf_counter()
             df = self._load_data(config)
             result.total_entries = len(df)
-            result.phase_timings["load_data"] = (time.perf_counter() - phase_start) * 1000
+            result.phase_timings["load_data"] = (
+                time.perf_counter() - phase_start
+            ) * 1000
 
             if len(df) == 0:
                 result.completed_at = datetime.now()
@@ -187,29 +192,39 @@ class BatchOrchestrator:
             result.total_violations = engine_result.total_violations
             result.violations_by_severity = engine_result.violations_by_severity
             result.violations_by_category = engine_result.violations_by_category
-            result.phase_timings["rule_execution"] = (time.perf_counter() - phase_start) * 1000
+            result.phase_timings["rule_execution"] = (
+                time.perf_counter() - phase_start
+            ) * 1000
 
             # Phase 3: Store violations
             if config.store_violations and engine_result.all_violations:
                 phase_start = time.perf_counter()
                 self.rule_engine.store_violations(engine_result.all_violations)
-                result.phase_timings["store_violations"] = (time.perf_counter() - phase_start) * 1000
+                result.phase_timings["store_violations"] = (
+                    time.perf_counter() - phase_start
+                ) * 1000
 
             # Phase 4: Calculate and update risk scores
             if config.update_risk_scores and engine_result.all_violations:
                 phase_start = time.perf_counter()
-                scores = self.scoring_service.score_violations(engine_result.all_violations)
+                scores = self.scoring_service.score_violations(
+                    engine_result.all_violations
+                )
                 self.scoring_service.update_database_scores(scores)
                 result.scoring_completed = True
                 result.entries_scored = len(scores)
-                result.phase_timings["scoring"] = (time.perf_counter() - phase_start) * 1000
+                result.phase_timings["scoring"] = (
+                    time.perf_counter() - phase_start
+                ) * 1000
 
             # Phase 5: Update aggregations
             if config.update_aggregations:
                 phase_start = time.perf_counter()
                 agg_results = self.aggregation_service.update_all(config.fiscal_year)
                 result.aggregations_updated = sum(1 for r in agg_results if r.success)
-                result.phase_timings["aggregations"] = (time.perf_counter() - phase_start) * 1000
+                result.phase_timings["aggregations"] = (
+                    time.perf_counter() - phase_start
+                ) * 1000
 
             result.completed_at = datetime.now()
 
@@ -250,9 +265,15 @@ class BatchOrchestrator:
             rules = all_rules
         elif config.mode == BatchMode.QUICK:
             # Critical rules only (approval and high-severity)
-            rules = [r for r in all_rules if r.category in [
-                RuleCategory.APPROVAL,
-            ] or r.default_severity.value in ["critical", "high"]]
+            rules = [
+                r
+                for r in all_rules
+                if r.category
+                in [
+                    RuleCategory.APPROVAL,
+                ]
+                or r.default_severity.value in ["critical", "high"]
+            ]
         elif config.mode == BatchMode.ML_ONLY:
             rules = [r for r in all_rules if r.category == RuleCategory.ML]
         elif config.mode == BatchMode.RULES_ONLY:
@@ -266,7 +287,7 @@ class BatchOrchestrator:
 
         return rules
 
-    def get_status(self, batch_id: str) -> Optional[dict[str, Any]]:
+    def get_status(self, batch_id: str) -> dict[str, Any] | None:
         """Get status of a batch job.
 
         Args:
@@ -293,12 +314,14 @@ class BatchOrchestrator:
             if cat not in by_category:
                 by_category[cat] = {"count": 0, "rules": []}
             by_category[cat]["count"] += 1
-            by_category[cat]["rules"].append({
-                "id": rule.rule_id,
-                "name": rule.rule_name,
-                "severity": rule.default_severity.value,
-                "enabled": rule.enabled,
-            })
+            by_category[cat]["rules"].append(
+                {
+                    "id": rule.rule_id,
+                    "name": rule.rule_name,
+                    "severity": rule.default_severity.value,
+                    "enabled": rule.enabled,
+                }
+            )
 
         return {
             "total_rules": len(rules),
@@ -312,7 +335,7 @@ class BatchScheduler:
 
     def __init__(
         self,
-        orchestrator: Optional[BatchOrchestrator] = None,
+        orchestrator: BatchOrchestrator | None = None,
     ) -> None:
         """Initialize batch scheduler.
 
@@ -345,7 +368,7 @@ class BatchScheduler:
     def schedule_quick_check(
         self,
         fiscal_year: int,
-        period: Optional[int] = None,
+        period: int | None = None,
     ) -> str:
         """Schedule a quick check job.
 
@@ -386,7 +409,7 @@ class BatchScheduler:
         self._jobs[result.batch_id] = result
         return result.batch_id
 
-    def get_job_result(self, job_id: str) -> Optional[BatchResult]:
+    def get_job_result(self, job_id: str) -> BatchResult | None:
         """Get result of a scheduled job.
 
         Args:

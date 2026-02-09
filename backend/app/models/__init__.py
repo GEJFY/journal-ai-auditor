@@ -1,5 +1,10 @@
 """Pydantic models for JAIA application."""
 
+from app.models.analysis import (
+    AnomalyFlag,
+    RiskScore,
+    RuleViolation,
+)
 from app.models.journal import (
     JournalEntry,
     JournalEntryCreate,
@@ -10,13 +15,8 @@ from app.models.master import (
     Account,
     AccountCreate,
     Department,
-    Vendor,
     User,
-)
-from app.models.analysis import (
-    RiskScore,
-    AnomalyFlag,
-    RuleViolation,
+    Vendor,
 )
 
 __all__ = [

@@ -13,11 +13,11 @@ Architecture:
 - Orchestrator coordinates multi-agent workflows
 """
 
-from app.agents.base import AgentState, BaseAgent, AgentConfig
-from app.agents.orchestrator import AgentOrchestrator
 from app.agents.analysis import AnalysisAgent
-from app.agents.investigation import InvestigationAgent
+from app.agents.base import AgentConfig, AgentState, BaseAgent
 from app.agents.documentation import DocumentationAgent
+from app.agents.investigation import InvestigationAgent
+from app.agents.orchestrator import AgentOrchestrator
 from app.agents.qa import QAAgent
 from app.agents.review import ReviewAgent
 

@@ -1,8 +1,9 @@
 """DuckDB connection manager for OLAP operations."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import duckdb
 import polars as pl
@@ -52,7 +53,9 @@ class DuckDBManager:
         finally:
             conn.close()
 
-    def execute(self, query: str, params: list[Any] | None = None) -> list[tuple[Any, ...]]:
+    def execute(
+        self, query: str, params: list[Any] | None = None
+    ) -> list[tuple[Any, ...]]:
         """Execute a query and return results.
 
         Args:
@@ -63,10 +66,7 @@ class DuckDBManager:
             List of result tuples.
         """
         with self.connect() as conn:
-            if params:
-                result = conn.execute(query, params)
-            else:
-                result = conn.execute(query)
+            result = conn.execute(query, params) if params else conn.execute(query)
             return result.fetchall()
 
     def execute_df(self, query: str, params: list[Any] | None = None) -> pl.DataFrame:
@@ -80,10 +80,7 @@ class DuckDBManager:
             Polars DataFrame with query results.
         """
         with self.connect() as conn:
-            if params:
-                result = conn.execute(query, params)
-            else:
-                result = conn.execute(query)
+            result = conn.execute(query, params) if params else conn.execute(query)
             return result.pl()
 
     def insert_df(self, table_name: str, df: pl.DataFrame) -> int:
@@ -139,10 +136,16 @@ class DuckDBManager:
         with self.connect() as conn:
             # Execute the full schema
             for statement in DUCKDB_SCHEMA.split(";"):
-                statement = statement.strip()
-                if statement and not statement.startswith("--"):
+                # Strip comment-only lines to get actual SQL
+                lines = [
+                    line
+                    for line in statement.split("\n")
+                    if line.strip() and not line.strip().startswith("--")
+                ]
+                clean_stmt = "\n".join(lines).strip()
+                if clean_stmt:
                     try:
-                        conn.execute(statement)
+                        conn.execute(clean_stmt)
                     except Exception:
                         # Skip errors for already existing objects
                         pass

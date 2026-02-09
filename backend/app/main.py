@@ -17,17 +17,17 @@ JAIAアプリケーションのメインエントリーポイントです。
         uvicorn app.main:app --workers 4 --host 0.0.0.0 --port 8000
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import router as api_router
 from app.core.config import settings
-from app.core.logging import setup_logging, get_logger, audit_log
-from app.core.middleware import setup_middleware, setup_audit_middleware
+from app.core.logging import audit_log, get_logger, setup_logging
+from app.core.middleware import setup_audit_middleware, setup_middleware
 from app.db import DuckDBManager, SQLiteManager
 
 # ロギングシステムを初期化
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     startup_time = datetime.now()
     logger.info(
         f"{settings.app_name} v{settings.app_version} を起動します",
-        extra={"environment": settings.environment}
+        extra={"environment": settings.environment},
     )
 
     # 監査ログに記録
@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             "event_type": "application_startup",
             "app_version": settings.app_version,
             "environment": settings.environment,
-        }
+        },
     )
 
     # データディレクトリの確保
@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     startup_duration = (datetime.now() - startup_time).total_seconds()
     logger.info(
         f"{settings.app_name} の起動が完了しました",
-        extra={"startup_duration_seconds": startup_duration}
+        extra={"startup_duration_seconds": startup_duration},
     )
 
     yield
@@ -107,7 +107,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "アプリケーションシャットダウン",
         extra={
             "event_type": "application_shutdown",
-        }
+        },
     )
 
     logger.info(f"{settings.app_name} のシャットダウンが完了しました")
@@ -194,6 +194,28 @@ def create_app() -> FastAPI:
     app.include_router(api_router, prefix="/api/v1")
     logger.debug("APIルーターを登録しました: /api/v1")
 
+    # ========================================
+    # ルートエンドポイント
+    # ========================================
+    @app.get("/health", tags=["System"])
+    async def health_check() -> dict:
+        return {
+            "status": "healthy",
+            "app": settings.app_name,
+            "version": settings.app_version,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+
+    @app.get("/", tags=["System"])
+    async def root() -> dict:
+        return {
+            "name": settings.app_name,
+            "description": "AI駆動の仕訳データ分析・内部監査支援システム",
+            "version": settings.app_version,
+            "docs_url": "/docs" if settings.debug else None,
+            "api_url": "/api/v1",
+        }
+
     logger.info("FastAPIアプリケーションの作成が完了しました")
 
     return app
@@ -201,49 +223,3 @@ def create_app() -> FastAPI:
 
 # アプリケーションインスタンス
 app = create_app()
-
-
-# ========================================
-# ルートエンドポイント
-# ========================================
-
-@app.get("/health", tags=["System"])
-async def health_check() -> dict:
-    """
-    ヘルスチェックエンドポイント。
-
-    アプリケーションの稼働状態を確認するために使用します。
-    ロードバランサーやモニタリングシステムからの定期的なチェックに対応。
-
-    Returns:
-        dict: ヘルスステータス情報
-            - status: "healthy" または "unhealthy"
-            - app: アプリケーション名
-            - version: アプリケーションバージョン
-            - timestamp: 現在時刻（UTC）
-    """
-    return {
-        "status": "healthy",
-        "app": settings.app_name,
-        "version": settings.app_version,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    }
-
-
-@app.get("/", tags=["System"])
-async def root() -> dict:
-    """
-    ルートエンドポイント。
-
-    アプリケーションの基本情報を返します。
-
-    Returns:
-        dict: アプリケーション情報
-    """
-    return {
-        "name": settings.app_name,
-        "description": "AI駆動の仕訳データ分析・内部監査支援システム",
-        "version": settings.app_version,
-        "docs_url": "/docs" if settings.debug else None,
-        "api_url": "/api/v1",
-    }

@@ -7,13 +7,13 @@ Provides REST API for:
 - Risk scoring details
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.db import DuckDBManager
-from app.services.rules import RuleEngine, RiskScoringService
+from app.services.rules import RiskScoringService
 
 router = APIRouter()
 
@@ -116,11 +116,11 @@ class BenfordResponse(BaseModel):
 @router.get("/violations", response_model=ViolationsResponse)
 async def get_violations(
     fiscal_year: int = Query(...),
-    rule_id: Optional[str] = Query(None),
-    severity: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    rule_id: str | None = Query(None),
+    severity: str | None = Query(None),
+    category: str | None = Query(None),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
     offset: int = Query(0, ge=0),
 ) -> ViolationsResponse:
@@ -240,10 +240,10 @@ async def get_violations(
 @router.get("/ml-anomalies", response_model=MLAnomaliesResponse)
 async def get_ml_anomalies(
     fiscal_year: int = Query(...),
-    method: Optional[str] = Query(None),
+    method: str | None = Query(None),
     min_score: float = Query(0.5, ge=0, le=1),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
 ) -> MLAnomaliesResponse:
     """Get ML anomaly detection results.
@@ -319,7 +319,7 @@ async def get_ml_anomalies(
     total_count = db.execute(count_query, params)[0][0] or 0
 
     # Get method distribution
-    method_query = f"""
+    method_query = """
         SELECT ma.detection_method, COUNT(*)
         FROM ml_anomalies ma
         JOIN journal_entries je ON ma.gl_detail_id = je.gl_detail_id
@@ -341,8 +341,8 @@ async def get_risk_details(
     fiscal_year: int = Query(...),
     min_score: float = Query(0, ge=0, le=100),
     max_score: float = Query(100, ge=0, le=100),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
 ) -> RiskDetailsResponse:
     """Get detailed risk score breakdown.
@@ -400,17 +400,19 @@ async def get_risk_details(
         flags = (row[4] or "").split(",") if row[4] else []
         risk_factors = [v.strip() for v in violations + flags if v.strip()]
 
-        entries.append(RiskDetailItem(
-            gl_detail_id=row[0] or "",
-            journal_id=row[1] or "",
-            risk_score=row[2] or 0,
-            rule_score=0,  # Would be calculated from violations
-            ml_score=0,    # Would be from ml_anomalies
-            benford_score=0,  # Would be from benford analysis
-            risk_factors=risk_factors,
-            amount=row[5] or 0,
-            date=str(row[6]) if row[6] else "",
-        ))
+        entries.append(
+            RiskDetailItem(
+                gl_detail_id=row[0] or "",
+                journal_id=row[1] or "",
+                risk_score=row[2] or 0,
+                rule_score=0,  # Would be calculated from violations
+                ml_score=0,  # Would be from ml_anomalies
+                benford_score=0,  # Would be from benford analysis
+                risk_factors=risk_factors,
+                amount=row[5] or 0,
+                date=str(row[6]) if row[6] else "",
+            )
+        )
 
     # Get statistics
     stats_query = f"""
@@ -425,7 +427,7 @@ async def get_risk_details(
     avg_risk = stats[0][1] or 0
 
     # Get distribution
-    dist_query = f"""
+    dist_query = """
         SELECT
             CASE
                 WHEN risk_score >= 60 THEN 'high'
@@ -458,7 +460,7 @@ async def get_risk_details(
 @router.get("/benford-detail", response_model=BenfordResponse)
 async def get_benford_detail(
     fiscal_year: int = Query(...),
-    account: Optional[str] = Query(None),
+    account: str | None = Query(None),
 ) -> BenfordResponse:
     """Get detailed Benford's Law analysis.
 
@@ -479,12 +481,27 @@ async def get_benford_detail(
 
     # Expected Benford distributions
     expected_first = {
-        1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-        6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+        1: 0.301,
+        2: 0.176,
+        3: 0.125,
+        4: 0.097,
+        5: 0.079,
+        6: 0.067,
+        7: 0.058,
+        8: 0.051,
+        9: 0.046,
     }
     expected_second = {
-        0: 0.120, 1: 0.114, 2: 0.109, 3: 0.104, 4: 0.100,
-        5: 0.097, 6: 0.093, 7: 0.090, 8: 0.088, 9: 0.085,
+        0: 0.120,
+        1: 0.114,
+        2: 0.109,
+        3: 0.104,
+        4: 0.100,
+        5: 0.097,
+        6: 0.093,
+        7: 0.090,
+        8: 0.088,
+        9: 0.085,
     }
 
     # First digit distribution
@@ -511,16 +528,22 @@ async def get_benford_detail(
         expected_pct = expected_first.get(digit, 0)
         deviation = actual_pct - expected_pct
         # Z-score approximation
-        z_score = deviation / (expected_pct * (1 - expected_pct) / total_first) ** 0.5 if total_first > 0 else 0
+        z_score = (
+            deviation / (expected_pct * (1 - expected_pct) / total_first) ** 0.5
+            if total_first > 0
+            else 0
+        )
 
-        first_digit_data.append(BenfordDigitData(
-            digit=digit,
-            actual_count=count,
-            actual_pct=round(actual_pct, 4),
-            expected_pct=expected_pct,
-            deviation=round(deviation, 4),
-            z_score=round(z_score, 2),
-        ))
+        first_digit_data.append(
+            BenfordDigitData(
+                digit=digit,
+                actual_count=count,
+                actual_pct=round(actual_pct, 4),
+                expected_pct=expected_pct,
+                deviation=round(deviation, 4),
+                z_score=round(z_score, 2),
+            )
+        )
 
     # Second digit distribution
     second_query = f"""
@@ -545,20 +568,32 @@ async def get_benford_detail(
         actual_pct = count / total_second
         expected_pct = expected_second.get(digit, 0)
         deviation = actual_pct - expected_pct
-        z_score = deviation / (expected_pct * (1 - expected_pct) / total_second) ** 0.5 if total_second > 0 else 0
+        z_score = (
+            deviation / (expected_pct * (1 - expected_pct) / total_second) ** 0.5
+            if total_second > 0
+            else 0
+        )
 
-        second_digit_data.append(BenfordDigitData(
-            digit=digit,
-            actual_count=count,
-            actual_pct=round(actual_pct, 4),
-            expected_pct=expected_pct,
-            deviation=round(deviation, 4),
-            z_score=round(z_score, 2),
-        ))
+        second_digit_data.append(
+            BenfordDigitData(
+                digit=digit,
+                actual_count=count,
+                actual_pct=round(actual_pct, 4),
+                expected_pct=expected_pct,
+                deviation=round(deviation, 4),
+                z_score=round(z_score, 2),
+            )
+        )
 
     # Calculate MAD
-    mad_first = sum(abs(d.deviation) for d in first_digit_data) / 9 if first_digit_data else 0
-    mad_second = sum(abs(d.deviation) for d in second_digit_data) / 10 if second_digit_data else 0
+    mad_first = (
+        sum(abs(d.deviation) for d in first_digit_data) / 9 if first_digit_data else 0
+    )
+    mad_second = (
+        sum(abs(d.deviation) for d in second_digit_data) / 10
+        if second_digit_data
+        else 0
+    )
 
     # Determine conformity
     if mad_first <= 0.006:
@@ -571,7 +606,7 @@ async def get_benford_detail(
         conformity = "nonconforming"
 
     # Find suspicious accounts (high deviation)
-    suspicious_query = f"""
+    suspicious_query = """
         WITH account_benford AS (
             SELECT
                 gl_account_number,
@@ -688,7 +723,7 @@ async def get_rules_summary(fiscal_year: int = Query(...)) -> dict[str, Any]:
 @router.post("/recalculate-scores")
 async def recalculate_risk_scores(
     fiscal_year: int = Query(...),
-    period: Optional[int] = Query(None, ge=1, le=12),
+    period: int | None = Query(None, ge=1, le=12),
 ) -> dict[str, Any]:
     """Recalculate risk scores for entries.
 

@@ -7,14 +7,13 @@ This agent specializes in:
 - Preparing working papers
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import ToolMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import DOCUMENTATION_TOOLS
-
 
 DOCUMENTATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の文書化エージェントです。
 監査調書や報告書の作成を支援します。
@@ -52,7 +51,7 @@ DOCUMENTATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) �
 class DocumentationAgent(BaseAgent):
     """Agent for generating audit documentation."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize documentation agent.
 
         Args:
@@ -87,7 +86,7 @@ class DocumentationAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "document",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("document", END)
@@ -165,10 +164,13 @@ class DocumentationAgent(BaseAgent):
 5. 改善推奨事項
 6. 経営陣への提言
 """
-        result = await self.execute(task, {
-            "fiscal_year": fiscal_year,
-            "finding_type": finding_type,
-        })
+        result = await self.execute(
+            task,
+            {
+                "fiscal_year": fiscal_year,
+                "finding_type": finding_type,
+            },
+        )
         return result.to_dict()
 
     async def generate_summary_report(
@@ -211,10 +213,12 @@ class DocumentationAgent(BaseAgent):
         Returns:
             Draft management letter.
         """
-        findings_summary = "\n".join([
-            f"- {f.get('title', 'Finding')}: {f.get('description', '')}"
-            for f in findings
-        ])
+        findings_summary = "\n".join(
+            [
+                f"- {f.get('title', 'Finding')}: {f.get('description', '')}"
+                for f in findings
+            ]
+        )
 
         task = f"""
 以下の発見事項に基づいて、{fiscal_year}年度のマネジメントレターの草案を作成してください。
@@ -230,8 +234,11 @@ class DocumentationAgent(BaseAgent):
 5. 経営陣の対応期限
 6. 結語
 """
-        result = await self.execute(task, {
-            "fiscal_year": fiscal_year,
-            "findings": findings,
-        })
+        result = await self.execute(
+            task,
+            {
+                "fiscal_year": fiscal_year,
+                "findings": findings,
+            },
+        )
         return result.to_dict()

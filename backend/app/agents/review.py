@@ -7,14 +7,13 @@ This agent specializes in:
 - Suggesting remediation actions
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import ToolMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import REVIEW_TOOLS
-
 
 REVIEW_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) のレビューエージェントです。
 監査発見事項のレビューと評価を行います。
@@ -46,7 +45,7 @@ REVIEW_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) のレビ
 class ReviewAgent(BaseAgent):
     """Agent for reviewing and validating audit findings."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize review agent.
 
         Args:
@@ -79,7 +78,7 @@ class ReviewAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "evaluate",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("evaluate", END)
@@ -215,10 +214,12 @@ class ReviewAgent(BaseAgent):
         Returns:
             Validation results.
         """
-        findings_summary = "\n".join([
-            f"- {f.get('id', 'N/A')}: {f.get('description', '')} [Risk: {f.get('risk_level', 'Unknown')}]"
-            for f in findings
-        ])
+        findings_summary = "\n".join(
+            [
+                f"- {f.get('id', 'N/A')}: {f.get('description', '')} [Risk: {f.get('risk_level', 'Unknown')}]"
+                for f in findings
+            ]
+        )
 
         task = f"""
 以下の発見事項のリスク評価を検証してください：

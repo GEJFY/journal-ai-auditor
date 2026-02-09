@@ -11,16 +11,14 @@
 - APR-008: Unauthorized approver
 """
 
-from typing import Any
-
 import polars as pl
 
 from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -52,8 +50,7 @@ class SelfApprovalRule(AuditRule):
 
         # Filter entries with both preparer and approver
         with_approval = df.filter(
-            pl.col("prepared_by").is_not_null() &
-            pl.col("approved_by").is_not_null()
+            pl.col("prepared_by").is_not_null() & pl.col("approved_by").is_not_null()
         )
         result.total_checked = len(with_approval)
 
@@ -61,8 +58,8 @@ class SelfApprovalRule(AuditRule):
 
         # Find self-approvals
         self_approved = with_approval.filter(
-            (pl.col("prepared_by") == pl.col("approved_by")) &
-            (pl.col("amount").abs() >= min_amount)
+            (pl.col("prepared_by") == pl.col("approved_by"))
+            & (pl.col("amount").abs() >= min_amount)
         )
 
         for row in self_approved.iter_rows(named=True):
@@ -114,8 +111,8 @@ class MissingApprovalRule(AuditRule):
 
         # High-value entries without approval
         missing = df.filter(
-            (pl.col("amount").abs() >= approval_threshold) &
-            (pl.col("approved_by").is_null())
+            (pl.col("amount").abs() >= approval_threshold)
+            & (pl.col("approved_by").is_null())
         )
 
         for row in missing.iter_rows(named=True):
@@ -162,12 +159,15 @@ class ApprovalHierarchyRule(AuditRule):
         result = self._create_result()
 
         # Define approval tiers (would be configured per company)
-        tiers = self.get_threshold("approval_tiers", [
-            {"min": 0, "max": 1_000_000, "level": "staff"},
-            {"min": 1_000_000, "max": 10_000_000, "level": "manager"},
-            {"min": 10_000_000, "max": 50_000_000, "level": "director"},
-            {"min": 50_000_000, "max": float("inf"), "level": "executive"},
-        ])
+        self.get_threshold(
+            "approval_tiers",
+            [
+                {"min": 0, "max": 1_000_000, "level": "staff"},
+                {"min": 1_000_000, "max": 10_000_000, "level": "manager"},
+                {"min": 10_000_000, "max": 50_000_000, "level": "director"},
+                {"min": 50_000_000, "max": float("inf"), "level": "executive"},
+            ],
+        )
 
         # Define approver levels (would come from user master)
         # Simplified: check based on approver ID patterns
@@ -226,20 +226,23 @@ class BulkApprovalRule(AuditRule):
         result = self._create_result()
 
         with_approval = df.filter(
-            pl.col("approved_by").is_not_null() &
-            pl.col("approved_date").is_not_null()
+            pl.col("approved_by").is_not_null() & pl.col("approved_date").is_not_null()
         )
 
         # Group by approver and approval date
-        grouped = with_approval.group_by([
-            "approved_by",
-            pl.col("approved_date").cast(pl.Date),
-        ]).agg([
-            pl.count().alias("approval_count"),
-            pl.col("amount").abs().sum().alias("total_amount"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        grouped = with_approval.group_by(
+            [
+                "approved_by",
+                pl.col("approved_date").cast(pl.Date),
+            ]
+        ).agg(
+            [
+                pl.count().alias("approval_count"),
+                pl.col("amount").abs().sum().alias("total_amount"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         result.total_checked = len(grouped)
 
@@ -295,12 +298,14 @@ class SameUserEntriesRule(AuditRule):
         with_user = df.filter(pl.col("prepared_by").is_not_null())
 
         # Calculate user statistics
-        user_stats = with_user.group_by("prepared_by").agg([
-            pl.count().alias("entry_count"),
-            pl.col("amount").abs().sum().alias("total_amount"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        user_stats = with_user.group_by("prepared_by").agg(
+            [
+                pl.count().alias("entry_count"),
+                pl.col("amount").abs().sum().alias("total_amount"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         result.total_checked = len(user_stats)
 
@@ -311,8 +316,7 @@ class SameUserEntriesRule(AuditRule):
         if std_count and std_count > 0:
             threshold = avg_count + 3 * std_count
             concentration_threshold = self.get_threshold(
-                "concentration_threshold",
-                max(threshold, 1000)
+                "concentration_threshold", max(threshold, 1000)
             )
 
             outliers = user_stats.filter(
@@ -367,12 +371,15 @@ class ApprovalAuthorityRule(AuditRule):
         result.total_checked = len(with_approval)
 
         # Define authority limits by approver prefix (simplified)
-        authority_limits = self.get_threshold("authority_limits", {
-            "S": 1_000_000,      # Staff: 100万
-            "M": 10_000_000,     # Manager: 1000万
-            "D": 50_000_000,     # Director: 5000万
-            "E": float("inf"),   # Executive: unlimited
-        })
+        authority_limits = self.get_threshold(
+            "authority_limits",
+            {
+                "S": 1_000_000,  # Staff: 100万
+                "M": 10_000_000,  # Manager: 1000万
+                "D": 50_000_000,  # Director: 5000万
+                "E": float("inf"),  # Executive: unlimited
+            },
+        )
 
         for row in with_approval.iter_rows(named=True):
             approver = row.get("approved_by", "")
@@ -433,8 +440,7 @@ class SequentialApprovalBypassRule(AuditRule):
         threshold = self.get_threshold("bypass_threshold", 10_000_000)
 
         with_approval = df.filter(
-            pl.col("approved_by").is_not_null() &
-            (pl.col("amount").abs() >= threshold)
+            pl.col("approved_by").is_not_null() & (pl.col("amount").abs() >= threshold)
         )
         result.total_checked = len(with_approval)
 
@@ -491,7 +497,7 @@ class UnauthorizedApproverRule(AuditRule):
         # Define authorized approver patterns (would come from user master)
         authorized_patterns = self.get_threshold(
             "authorized_patterns",
-            ["M", "D", "E", "A"]  # Manager, Director, Executive, Admin
+            ["M", "D", "E", "A"],  # Manager, Director, Executive, Admin
         )
 
         for row in with_approval.iter_rows(named=True):

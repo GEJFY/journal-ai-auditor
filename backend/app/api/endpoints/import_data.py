@@ -3,12 +3,12 @@
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from app.services.import_service import ImportService, ColumnMapping
+from app.services.import_service import ColumnMapping, ImportService
 
 router = APIRouter()
 
@@ -50,7 +50,7 @@ class ImportExecuteRequest(BaseModel):
     column_mapping: dict[str, str]
     skip_errors: bool = False
     business_unit_code: str = "DEFAULT"
-    fiscal_year: Optional[int] = None
+    fiscal_year: int | None = None
 
 
 class ImportExecuteResponse(BaseModel):
@@ -101,6 +101,7 @@ async def upload_file(
 
     # Generate temp file ID
     import uuid
+
     temp_id = str(uuid.uuid4())
     temp_path = UPLOAD_DIR / f"{temp_id}{suffix}"
 
@@ -147,7 +148,7 @@ async def preview_file(temp_file_id: str) -> FilePreviewResponse:
 @router.post("/validate/{temp_file_id}", response_model=ValidationResponse)
 async def validate_file(
     temp_file_id: str,
-    column_mapping: Optional[dict[str, str]] = None,
+    column_mapping: dict[str, str] | None = None,
 ) -> ValidationResponse:
     """Validate an uploaded file.
 
@@ -282,7 +283,14 @@ async def suggest_mapping(columns: str) -> dict:
         "suggested_mapping": mapping,
         "unmapped": [c for c in column_list if c not in mapping.values()],
         "missing_required": [
-            c for c in ["journal_id", "effective_date", "gl_account_number", "amount", "debit_credit_indicator"]
+            c
+            for c in [
+                "journal_id",
+                "effective_date",
+                "gl_account_number",
+                "amount",
+                "debit_credit_indicator",
+            ]
             if c not in mapping
         ],
     }

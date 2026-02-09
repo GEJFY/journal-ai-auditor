@@ -23,16 +23,14 @@
 - ACC-020: Dormant account activity
 """
 
-from typing import Any
-
 import polars as pl
 
 from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -63,20 +61,28 @@ class UnusualAccountCombinationRule(AuditRule):
         result = self._create_result()
 
         # Get account combinations within each journal
-        journal_accounts = df.group_by("journal_id").agg([
-            pl.col("gl_account_number").unique().alias("accounts"),
-            pl.col("amount").sum().alias("total_amount"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-        ])
+        journal_accounts = df.group_by("journal_id").agg(
+            [
+                pl.col("gl_account_number").unique().alias("accounts"),
+                pl.col("amount").sum().alias("total_amount"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+            ]
+        )
 
         result.total_checked = len(journal_accounts)
 
         # Define unusual combinations
-        unusual_pairs = self.get_threshold("unusual_pairs", [
-            ("111", "511"),  # 現金 to 売上 (direct cash sales unusual for large companies)
-            ("131", "521"),  # 売掛金 to 仕入 (receivables to purchases)
-            ("211", "411"),  # 買掛金 to 受取利息
-        ])
+        unusual_pairs = self.get_threshold(
+            "unusual_pairs",
+            [
+                (
+                    "111",
+                    "511",
+                ),  # 現金 to 売上 (direct cash sales unusual for large companies)
+                ("131", "521"),  # 売掛金 to 仕入 (receivables to purchases)
+                ("211", "411"),  # 買掛金 to 受取利息
+            ],
+        )
 
         for row in journal_accounts.iter_rows(named=True):
             accounts = row["accounts"]
@@ -128,7 +134,7 @@ class RelatedPartyRule(AuditRule):
 
         related_accounts = self.get_threshold(
             "related_party_accounts",
-            ["135", "136", "235", "236"]  # 関係会社勘定
+            ["135", "136", "235", "236"],  # 関係会社勘定
         )
 
         related_entries = df.filter(
@@ -186,7 +192,7 @@ class SuspenseAccountAgingRule(AuditRule):
 
         suspense_accounts = self.get_threshold(
             "suspense_accounts",
-            ["159", "259"]  # 仮払金、仮受金
+            ["159", "259"],  # 仮払金、仮受金
         )
 
         suspense = df.filter(
@@ -195,16 +201,18 @@ class SuspenseAccountAgingRule(AuditRule):
         result.total_checked = len(suspense)
 
         # Find old uncleared entries
-        aging_days = self.get_threshold("suspense_aging_days", 90)
+        self.get_threshold("suspense_aging_days", 90)
         threshold = self.get_threshold("suspense_threshold", 1_000_000)
 
         # Group by account to find aged items
-        aged = suspense.group_by("gl_account_number").agg([
-            pl.col("amount").sum().alias("balance"),
-            pl.col("effective_date").min().alias("oldest_date"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        aged = suspense.group_by("gl_account_number").agg(
+            [
+                pl.col("amount").sum().alias("balance"),
+                pl.col("effective_date").min().alias("oldest_date"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         # Check if balance is material and aged
         for row in aged.iter_rows(named=True):
@@ -256,8 +264,8 @@ class IntercompanyImbalanceRule(AuditRule):
 
         # Get intercompany entries
         ic_entries = df.filter(
-            pl.col("gl_account_number").str.starts_with(ic_receivable) |
-            pl.col("gl_account_number").str.starts_with(ic_payable)
+            pl.col("gl_account_number").str.starts_with(ic_receivable)
+            | pl.col("gl_account_number").str.starts_with(ic_payable)
         )
         result.total_checked = len(ic_entries)
 
@@ -479,10 +487,10 @@ class InventoryAdjustmentRule(AuditRule):
         # Large inventory adjustments (manual source)
         threshold = self.get_threshold("inventory_threshold", 50_000_000)
         adjustments = inventory.filter(
-            (pl.col("amount").abs() >= threshold) &
-            (
-                pl.col("source").is_in(["MANUAL", "ADJUST"]) |
-                pl.col("je_line_description").str.contains("(?i)調整|棚卸|評価")
+            (pl.col("amount").abs() >= threshold)
+            & (
+                pl.col("source").is_in(["MANUAL", "ADJUST"])
+                | pl.col("je_line_description").str.contains("(?i)調整|棚卸|評価")
             )
         )
 
@@ -530,16 +538,14 @@ class FixedAssetAnomalyRule(AuditRule):
         result = self._create_result()
 
         fa_prefix = self.get_threshold("fixed_asset_prefix", "16")
-        fa_entries = df.filter(
-            pl.col("gl_account_number").str.starts_with(fa_prefix)
-        )
+        fa_entries = df.filter(pl.col("gl_account_number").str.starts_with(fa_prefix))
         result.total_checked = len(fa_entries)
 
         # Large manual fixed asset entries
         threshold = self.get_threshold("fa_threshold", 100_000_000)
         large_fa = fa_entries.filter(
-            (pl.col("amount").abs() >= threshold) &
-            (pl.col("source").is_in(["MANUAL", "ADJUST"]))
+            (pl.col("amount").abs() >= threshold)
+            & (pl.col("source").is_in(["MANUAL", "ADJUST"]))
         )
 
         for row in large_fa.iter_rows(named=True):
@@ -584,18 +590,18 @@ class PrepaidExpenseAgingRule(AuditRule):
     def execute(self, df: pl.DataFrame) -> RuleResult:
         result = self._create_result()
         prepaid_prefix = self.get_threshold("prepaid_prefix", "152")
-        prepaid = df.filter(
-            pl.col("gl_account_number").str.starts_with(prepaid_prefix)
-        )
+        prepaid = df.filter(pl.col("gl_account_number").str.starts_with(prepaid_prefix))
         result.total_checked = len(prepaid)
 
         # Check for old balances
         threshold = self.get_threshold("prepaid_threshold", 10_000_000)
-        balance = prepaid.group_by("gl_account_number").agg([
-            pl.col("amount").sum().alias("balance"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        balance = prepaid.group_by("gl_account_number").agg(
+            [
+                pl.col("amount").sum().alias("balance"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         for row in balance.iter_rows(named=True):
             if abs(row["balance"]) >= threshold:
@@ -679,8 +685,7 @@ class TaxAccountConsistencyRule(AuditRule):
         # Check for manual tax adjustments
         threshold = self.get_threshold("tax_threshold", 10_000_000)
         manual_tax = tax_entries.filter(
-            (pl.col("amount").abs() >= threshold) &
-            (pl.col("source") == "MANUAL")
+            (pl.col("amount").abs() >= threshold) & (pl.col("source") == "MANUAL")
         )
 
         for row in manual_tax.iter_rows(named=True):
@@ -755,9 +760,7 @@ class CapitalTransactionRule(AuditRule):
         result = self._create_result()
 
         capital_prefix = self.get_threshold("capital_prefix", "31")
-        capital = df.filter(
-            pl.col("gl_account_number").str.starts_with(capital_prefix)
-        )
+        capital = df.filter(pl.col("gl_account_number").str.starts_with(capital_prefix))
         result.total_checked = len(capital)
 
         for row in capital.iter_rows(named=True):
@@ -804,9 +807,7 @@ class LoanAccountActivityRule(AuditRule):
         result = self._create_result()
 
         loan_prefix = self.get_threshold("loan_prefix", "23")
-        loans = df.filter(
-            pl.col("gl_account_number").str.starts_with(loan_prefix)
-        )
+        loans = df.filter(pl.col("gl_account_number").str.starts_with(loan_prefix))
         result.total_checked = len(loans)
 
         threshold = self.get_threshold("loan_threshold", 100_000_000)
@@ -1011,8 +1012,7 @@ class ChartOfAccountsViolationRule(AuditRule):
         # This would need chart_of_accounts table
         # Simplified: check for null or empty account numbers
         invalid = df.filter(
-            pl.col("gl_account_number").is_null() |
-            (pl.col("gl_account_number") == "")
+            pl.col("gl_account_number").is_null() | (pl.col("gl_account_number") == "")
         )
 
         for row in invalid.iter_rows(named=True):
@@ -1057,20 +1057,21 @@ class DormantAccountActivityRule(AuditRule):
         result = self._create_result()
 
         # Find accounts with few transactions
-        account_activity = df.group_by("gl_account_number").agg([
-            pl.count().alias("tx_count"),
-            pl.col("amount").sum().alias("total"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        account_activity = df.group_by("gl_account_number").agg(
+            [
+                pl.count().alias("tx_count"),
+                pl.col("amount").sum().alias("total"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         result.total_checked = len(account_activity)
 
         # Accounts with single high-value transaction (potentially dormant reactivation)
         threshold = self.get_threshold("dormant_threshold", 10_000_000)
         suspicious = account_activity.filter(
-            (pl.col("tx_count") <= 2) &
-            (pl.col("total").abs() >= threshold)
+            (pl.col("tx_count") <= 2) & (pl.col("total").abs() >= threshold)
         )
 
         for row in suspicious.iter_rows(named=True):

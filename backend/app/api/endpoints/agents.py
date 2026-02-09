@@ -9,24 +9,23 @@ Provides REST API access to AI agents:
 - /agents/workflow - Run multi-agent workflows
 """
 
-from typing import Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.agents import (
     AgentOrchestrator,
     AnalysisAgent,
-    InvestigationAgent,
     DocumentationAgent,
-    QAAgent,
+    InvestigationAgent,
     ReviewAgent,
 )
 
 router = APIRouter()
 
 # Lazy initialization of orchestrator
-_orchestrator: Optional[AgentOrchestrator] = None
+_orchestrator: AgentOrchestrator | None = None
 
 
 def get_orchestrator() -> AgentOrchestrator:
@@ -42,25 +41,27 @@ class AskRequest(BaseModel):
     """Request for Q&A endpoint."""
 
     question: str
-    fiscal_year: Optional[int] = None
-    context: Optional[dict[str, Any]] = None
+    fiscal_year: int | None = None
+    context: dict[str, Any] | None = None
 
 
 class AskResponse(BaseModel):
     """Response from Q&A endpoint."""
 
     success: bool
-    answer: Optional[str] = None
-    data: Optional[dict[str, Any]] = None
-    error: Optional[str] = None
+    answer: str | None = None
+    data: dict[str, Any] | None = None
+    error: str | None = None
 
 
 class AnalyzeRequest(BaseModel):
     """Request for analysis endpoint."""
 
     fiscal_year: int
-    analysis_type: str = "risk_distribution"  # risk_distribution, benford, period_comparison
-    account_prefix: Optional[str] = None
+    analysis_type: str = (
+        "risk_distribution"  # risk_distribution, benford, period_comparison
+    )
+    account_prefix: str | None = None
 
 
 class InvestigateRequest(BaseModel):
@@ -68,7 +69,7 @@ class InvestigateRequest(BaseModel):
 
     target_type: str  # entry, user, rule, journal
     target_id: str
-    fiscal_year: Optional[int] = None
+    fiscal_year: int | None = None
 
 
 class DocumentRequest(BaseModel):
@@ -76,7 +77,7 @@ class DocumentRequest(BaseModel):
 
     fiscal_year: int
     doc_type: str = "summary"  # summary, finding, management_letter
-    findings: Optional[list[dict[str, Any]]] = None
+    findings: list[dict[str, Any]] | None = None
 
 
 class ReviewRequest(BaseModel):
@@ -90,17 +91,17 @@ class WorkflowRequest(BaseModel):
     """Request for workflow endpoint."""
 
     workflow_type: str  # full_audit, investigation, documentation
-    fiscal_year: Optional[int] = None
-    parameters: Optional[dict[str, Any]] = None
+    fiscal_year: int | None = None
+    parameters: dict[str, Any] | None = None
 
 
 class AgentResponse(BaseModel):
     """Generic agent response."""
 
     success: bool
-    workflow_id: Optional[str] = None
-    result: Optional[dict[str, Any]] = None
-    error: Optional[str] = None
+    workflow_id: str | None = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
 
 
 @router.post("/ask", response_model=AskResponse)

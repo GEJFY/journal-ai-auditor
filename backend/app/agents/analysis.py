@@ -7,14 +7,13 @@ This agent specializes in:
 - Generating analytical insights
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import ANALYSIS_TOOLS
-
 
 ANALYSIS_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の分析エージェントです。
 仕訳データの異常パターンを分析し、監査に役立つ洞察を提供します。
@@ -51,7 +50,7 @@ ANALYSIS_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の分�
 class AnalysisAgent(BaseAgent):
     """Agent for analyzing anomaly patterns in journal data."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize analysis agent.
 
         Args:
@@ -92,7 +91,7 @@ class AnalysisAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "summarize",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("summarize", END)
@@ -180,12 +179,17 @@ class AnalysisAgent(BaseAgent):
 }}"""
 
         try:
-            response = self.llm.invoke([
-                SystemMessage(content="あなたは監査所見を構造化するアシスタントです。必ず有効なJSONで回答してください。"),
-                HumanMessage(content=extraction_prompt),
-            ])
+            response = self.llm.invoke(
+                [
+                    SystemMessage(
+                        content="あなたは監査所見を構造化するアシスタントです。必ず有効なJSONで回答してください。"
+                    ),
+                    HumanMessage(content=extraction_prompt),
+                ]
+            )
 
             import json
+
             content = response.content.strip()
             # Extract JSON from markdown code block if present
             if "```json" in content:
@@ -217,7 +221,13 @@ class AnalysisAgent(BaseAgent):
                     elif stripped.startswith("- ") and current_section:
                         item = stripped[2:].strip()
                         if current_section == "findings":
-                            findings.append({"title": item, "description": item, "severity": "medium"})
+                            findings.append(
+                                {
+                                    "title": item,
+                                    "description": item,
+                                    "severity": "medium",
+                                }
+                            )
                         elif current_section == "insights":
                             insights.append(item)
                         elif current_section == "recommendations":
@@ -282,7 +292,7 @@ class AnalysisAgent(BaseAgent):
     async def compare_periods(
         self,
         fiscal_year: int,
-        account_prefix: Optional[str] = None,
+        account_prefix: str | None = None,
     ) -> dict[str, Any]:
         """Compare metrics across accounting periods.
 
@@ -293,7 +303,9 @@ class AnalysisAgent(BaseAgent):
         Returns:
             Analysis result.
         """
-        account_desc = f"勘定科目{account_prefix}xxx" if account_prefix else "全勘定科目"
+        account_desc = (
+            f"勘定科目{account_prefix}xxx" if account_prefix else "全勘定科目"
+        )
         task = f"""
 {fiscal_year}年度の{account_desc}について、会計期間ごとの比較分析を行ってください。
 
@@ -303,8 +315,11 @@ class AnalysisAgent(BaseAgent):
 3. 期末集中の有無
 4. 異常な期間の特定
 """
-        result = await self.execute(task, {
-            "fiscal_year": fiscal_year,
-            "account_prefix": account_prefix,
-        })
+        result = await self.execute(
+            task,
+            {
+                "fiscal_year": fiscal_year,
+                "account_prefix": account_prefix,
+            },
+        )
         return result.to_dict()

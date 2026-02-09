@@ -74,10 +74,19 @@ class SensitiveDataFilter(logging.Filter):
     """
 
     SENSITIVE_PATTERNS = [
-        "api_key", "apikey", "api-key", "secret",
-        "password", "passwd", "token", "authorization",
-        "credential", "aws_access_key", "aws_secret",
-        "private_key", "api_secret",
+        "api_key",
+        "apikey",
+        "api-key",
+        "secret",
+        "password",
+        "passwd",
+        "token",
+        "authorization",
+        "credential",
+        "aws_access_key",
+        "aws_secret",
+        "private_key",
+        "api_secret",
     ]
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -94,14 +103,17 @@ class SensitiveDataFilter(logging.Filter):
     def _mask_sensitive(self, msg: str) -> str:
         """機密値をマスキングします。"""
         import re
+
         patterns = [
-            (r'(sk-ant-[a-zA-Z0-9-]{10,})', r'sk-ant-***MASKED***'),
-            (r'(sk-proj-[a-zA-Z0-9-]{10,})', r'sk-proj-***MASKED***'),
-            (r'(sk-[a-zA-Z0-9]{20,})', r'sk-***MASKED***'),
-            (r'(AKIA[A-Z0-9]{12,})', r'AKIA***MASKED***'),
-            (r'(AIzaSy[a-zA-Z0-9_-]{20,})', r'AIzaSy***MASKED***'),
-            (r'(["\']?(?:password|secret|token|api_key)["\']?\s*[:=]\s*["\']?)([^"\']{4,})(["\']?)',
-             r'\1***MASKED***\3'),
+            (r"(sk-ant-[a-zA-Z0-9-]{10,})", r"sk-ant-***MASKED***"),
+            (r"(sk-proj-[a-zA-Z0-9-]{10,})", r"sk-proj-***MASKED***"),
+            (r"(sk-[a-zA-Z0-9]{20,})", r"sk-***MASKED***"),
+            (r"(AKIA[A-Z0-9]{12,})", r"AKIA***MASKED***"),
+            (r"(AIzaSy[a-zA-Z0-9_-]{20,})", r"AIzaSy***MASKED***"),
+            (
+                r'(["\']?(?:password|secret|token|api_key)["\']?\s*[:=]\s*["\']?)([^"\']{4,})(["\']?)',
+                r"\1***MASKED***\3",
+            ),
         ]
         for pattern, replacement in patterns:
             msg = re.sub(pattern, replacement, msg, flags=re.IGNORECASE)
@@ -165,9 +177,17 @@ class JSONFormatter(logging.Formatter):
 
         # extra情報を追加
         extra_fields = [
-            "user_id", "import_id", "session_id", "journal_id",
-            "duration_ms", "status_code", "method", "path",
-            "rule_id", "risk_score", "error_code"
+            "user_id",
+            "import_id",
+            "session_id",
+            "journal_id",
+            "duration_ms",
+            "status_code",
+            "method",
+            "path",
+            "rule_id",
+            "risk_score",
+            "error_code",
         ]
         for field in extra_fields:
             if hasattr(record, field):
@@ -186,10 +206,10 @@ class ColoredFormatter(logging.Formatter):
 
     # ANSIカラーコード
     COLORS = {
-        "DEBUG": "\033[36m",     # シアン
-        "INFO": "\033[32m",      # 緑
-        "WARNING": "\033[33m",   # 黄
-        "ERROR": "\033[31m",     # 赤
+        "DEBUG": "\033[36m",  # シアン
+        "INFO": "\033[32m",  # 緑
+        "WARNING": "\033[33m",  # 黄
+        "ERROR": "\033[31m",  # 赤
         "CRITICAL": "\033[35m",  # マゼンタ
     }
     RESET = "\033[0m"
@@ -275,7 +295,7 @@ def setup_logging() -> None:
         filename=log_dir / "jaia.log",
         maxBytes=10 * 1024 * 1024,  # 10MB
         backupCount=10,
-        encoding="utf-8"
+        encoding="utf-8",
     )
     main_file_handler.setLevel(log_level)
     main_file_handler.addFilter(request_id_filter)
@@ -289,7 +309,7 @@ def setup_logging() -> None:
         filename=log_dir / "jaia_error.log",
         maxBytes=10 * 1024 * 1024,  # 10MB
         backupCount=10,
-        encoding="utf-8"
+        encoding="utf-8",
     )
     error_file_handler.setLevel(logging.ERROR)
     error_file_handler.addFilter(request_id_filter)
@@ -308,7 +328,7 @@ def setup_logging() -> None:
         when="midnight",
         interval=1,
         backupCount=90,  # 90日間保持
-        encoding="utf-8"
+        encoding="utf-8",
     )
     audit_handler.addFilter(request_id_filter)
     audit_handler.setFormatter(JSONFormatter())
@@ -325,7 +345,7 @@ def setup_logging() -> None:
         filename=log_dir / "jaia_performance.log",
         maxBytes=50 * 1024 * 1024,  # 50MB
         backupCount=5,
-        encoding="utf-8"
+        encoding="utf-8",
     )
     perf_handler.addFilter(request_id_filter)
     perf_handler.setFormatter(JSONFormatter())
@@ -343,7 +363,7 @@ def setup_logging() -> None:
         when="midnight",
         interval=1,
         backupCount=365,  # 1年間保持（コンプライアンス対応）
-        encoding="utf-8"
+        encoding="utf-8",
     )
     security_handler.addFilter(request_id_filter)
     security_handler.addFilter(sensitive_data_filter)
@@ -398,7 +418,7 @@ class LogContext:
         logger: logging.Logger,
         operation: str,
         level: int = logging.INFO,
-        **context: Any
+        **context: Any,
     ):
         """
         LogContextを初期化します。
@@ -419,9 +439,7 @@ class LogContext:
         """コンテキスト開始時の処理"""
         self.start_time = datetime.now()
         self.logger.log(
-            self.level,
-            f"{self.operation} を開始します",
-            extra=self.context
+            self.level, f"{self.operation} を開始します", extra=self.context
         )
         return self
 
@@ -433,13 +451,13 @@ class LogContext:
             self.logger.error(
                 f"{self.operation} が失敗しました",
                 extra={**self.context, "duration_ms": duration_ms},
-                exc_info=True
+                exc_info=True,
             )
         else:
             self.logger.log(
                 self.level,
                 f"{self.operation} が完了しました",
-                extra={**self.context, "duration_ms": duration_ms}
+                extra={**self.context, "duration_ms": duration_ms},
             )
 
         # パフォーマンスログにも記録
@@ -448,8 +466,8 @@ class LogContext:
             extra={
                 **self.context,
                 "duration_ms": duration_ms,
-                "success": exc_type is None
-            }
+                "success": exc_type is None,
+            },
         )
 
 
@@ -468,6 +486,7 @@ def log_function_call(logger: logging.Logger):
         def process_data(data: dict) -> dict:
             return processed_data
     """
+
     def decorator(func):
         import functools
 
@@ -480,7 +499,7 @@ def log_function_call(logger: logging.Logger):
                 duration_ms = (datetime.now() - start_time).total_seconds() * 1000
                 logger.debug(
                     f"{func.__name__} が完了しました",
-                    extra={"duration_ms": duration_ms}
+                    extra={"duration_ms": duration_ms},
                 )
                 return result
             except Exception as e:
@@ -488,7 +507,7 @@ def log_function_call(logger: logging.Logger):
                 logger.error(
                     f"{func.__name__} でエラーが発生しました: {e}",
                     extra={"duration_ms": duration_ms},
-                    exc_info=True
+                    exc_info=True,
                 )
                 raise
 
@@ -501,7 +520,7 @@ def log_function_call(logger: logging.Logger):
                 duration_ms = (datetime.now() - start_time).total_seconds() * 1000
                 logger.debug(
                     f"{func.__name__} が完了しました",
-                    extra={"duration_ms": duration_ms}
+                    extra={"duration_ms": duration_ms},
                 )
                 return result
             except Exception as e:
@@ -509,11 +528,12 @@ def log_function_call(logger: logging.Logger):
                 logger.error(
                     f"{func.__name__} でエラーが発生しました: {e}",
                     extra={"duration_ms": duration_ms},
-                    exc_info=True
+                    exc_info=True,
                 )
                 raise
 
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper

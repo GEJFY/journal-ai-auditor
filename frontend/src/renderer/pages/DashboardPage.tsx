@@ -54,7 +54,11 @@ export default function DashboardPage() {
   const [fiscalYear] = useState(2024);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useQuery({
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    refetch: refetchSummary,
+  } = useQuery({
     queryKey: ['dashboard', 'summary', fiscalYear],
     queryFn: () => api.getDashboardSummary(fiscalYear),
   });
@@ -96,12 +100,14 @@ export default function DashboardPage() {
     );
   }
 
-  const riskPieData = risk ? [
-    { name: '高リスク', value: risk.risk_distribution.high, color: RISK_COLORS.high },
-    { name: '中リスク', value: risk.risk_distribution.medium, color: RISK_COLORS.medium },
-    { name: '低リスク', value: risk.risk_distribution.low, color: RISK_COLORS.low },
-    { name: '最小', value: risk.risk_distribution.minimal, color: RISK_COLORS.minimal },
-  ].filter(d => d.value > 0) : [];
+  const riskPieData = risk
+    ? [
+        { name: '高リスク', value: risk.risk_distribution.high, color: RISK_COLORS.high },
+        { name: '中リスク', value: risk.risk_distribution.medium, color: RISK_COLORS.medium },
+        { name: '低リスク', value: risk.risk_distribution.low, color: RISK_COLORS.low },
+        { name: '最小', value: risk.risk_distribution.minimal, color: RISK_COLORS.minimal },
+      ].filter((d) => d.value > 0)
+    : [];
 
   const benfordConformityLabel: Record<string, string> = {
     close: '適合',
@@ -122,13 +128,13 @@ export default function DashboardPage() {
       {/* Header */}
       <PageHeader
         title={`${fiscalYear}年度 分析ダッシュボード`}
-        subtitle={summary?.date_range ? `対象期間: ${summary.date_range.from} ～ ${summary.date_range.to}` : undefined}
+        subtitle={
+          summary?.date_range
+            ? `対象期間: ${summary.date_range.from} ～ ${summary.date_range.to}`
+            : undefined
+        }
         actions={
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="btn btn-secondary"
-          >
+          <button onClick={handleRefresh} disabled={isRefreshing} className="btn btn-secondary">
             <RefreshCw className={clsx('w-4 h-4', isRefreshing && 'animate-spin')} />
             更新
           </button>
@@ -142,9 +148,9 @@ export default function DashboardPage() {
             <div>
               <h3 className="text-lg font-semibold mb-2">エグゼクティブサマリー</h3>
               <p className="text-primary-100 max-w-2xl">
-                {fiscalYear}年度の仕訳データ {summary.total_entries.toLocaleString()}件を分析しました。
-                高リスク仕訳が {summary.high_risk_count.toLocaleString()}件 ({kpi.high_risk_pct.toFixed(1)}%)
-                検出されています。詳細な調査を推奨します。
+                {fiscalYear}年度の仕訳データ {summary.total_entries.toLocaleString()}
+                件を分析しました。 高リスク仕訳が {summary.high_risk_count.toLocaleString()}件 (
+                {kpi.high_risk_pct.toFixed(1)}%) 検出されています。詳細な調査を推奨します。
               </p>
             </div>
             <button className="btn bg-white/10 text-white hover:bg-white/20 border-0">
@@ -333,7 +339,10 @@ export default function DashboardPage() {
               { label: 'ユニークユーザー', value: (kpi?.unique_users || 0).toLocaleString() },
               { label: '平均リスクスコア', value: (kpi?.avg_risk_score || 0).toFixed(1) },
             ].map((item, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0">
+              <div
+                key={index}
+                className="flex justify-between items-center py-2 border-b border-neutral-100 last:border-0"
+              >
                 <span className="text-neutral-600">{item.label}</span>
                 <span className="font-semibold text-neutral-900">{item.value}</span>
               </div>
@@ -374,8 +383,18 @@ export default function DashboardPage() {
                         borderRadius: '8px',
                       }}
                     />
-                    <Bar dataKey="actual_pct" fill={CHART_COLORS.primary} radius={[2, 2, 0, 0]} name="実績" />
-                    <Bar dataKey="expected_pct" fill="#d4d4d4" radius={[2, 2, 0, 0]} name="期待値" />
+                    <Bar
+                      dataKey="actual_pct"
+                      fill={CHART_COLORS.primary}
+                      radius={[2, 2, 0, 0]}
+                      name="実績"
+                    />
+                    <Bar
+                      dataKey="expected_pct"
+                      fill="#d4d4d4"
+                      radius={[2, 2, 0, 0]}
+                      name="期待値"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
                 <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between">
@@ -414,9 +433,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium text-neutral-800 truncate">
                         {item.journal_id}
                       </p>
-                      <p className="text-xs text-neutral-500">
-                        ¥{item.amount.toLocaleString()}
-                      </p>
+                      <p className="text-xs text-neutral-500">¥{item.amount.toLocaleString()}</p>
                     </div>
                     <div className="ml-3">
                       <span className="badge badge-risk-critical">
@@ -430,9 +447,7 @@ export default function DashboardPage() {
               <div className="empty-state h-48">
                 <Shield className="empty-state-icon" />
                 <p className="empty-state-title">高リスク仕訳なし</p>
-                <p className="empty-state-description">
-                  検出された高リスク仕訳はありません
-                </p>
+                <p className="empty-state-description">検出された高リスク仕訳はありません</p>
               </div>
             )}
           </div>

@@ -1,8 +1,9 @@
 """Database layer unit tests using temporary DuckDB."""
 
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import pytest
 
 from app.db.duckdb import DuckDBManager
 
@@ -22,7 +23,6 @@ class TestDuckDBManager:
     def test_initialize_schema(self, temp_db):
         temp_db.initialize_schema()
         assert temp_db.table_exists("journal_entries")
-        assert temp_db.table_exists("audit_rules")
         assert temp_db.table_exists("audit_findings")
 
     def test_table_not_exists(self, temp_db):
@@ -71,9 +71,7 @@ class TestDuckDBManager:
                ('AF-001', 'WF-001', 'analysis', 2025, '発見1', 'HIGH'),
                ('AF-002', 'WF-001', 'analysis', 2025, '発見2', 'MEDIUM')""",
         )
-        df = temp_db.execute_df(
-            "SELECT * FROM audit_findings WHERE severity = 'HIGH'"
-        )
+        df = temp_db.execute_df("SELECT * FROM audit_findings WHERE severity = 'HIGH'")
         assert len(df) == 1
         assert df["finding_id"][0] == "AF-001"
 
@@ -81,24 +79,26 @@ class TestDuckDBManager:
         import polars as pl
 
         temp_db.initialize_schema()
-        df = pl.DataFrame({
-            "finding_id": ["AF-DF1", "AF-DF2"],
-            "workflow_id": ["WF-DF", "WF-DF"],
-            "agent_type": ["analysis", "review"],
-            "fiscal_year": [2025, 2025],
-            "finding_title": ["DF発見1", "DF発見2"],
-            "finding_description": [None, "説明"],
-            "severity": ["HIGH", "LOW"],
-            "category": [None, None],
-            "affected_amount": [0.0, 1000.0],
-            "affected_count": [0, 5],
-            "evidence": [None, None],
-            "recommendation": [None, None],
-            "status": ["open", "open"],
-            "reviewed_by": [None, None],
-            "reviewed_at": [None, None],
-            "created_at": [None, None],
-        })
+        df = pl.DataFrame(
+            {
+                "finding_id": ["AF-DF1", "AF-DF2"],
+                "workflow_id": ["WF-DF", "WF-DF"],
+                "agent_type": ["analysis", "review"],
+                "fiscal_year": [2025, 2025],
+                "finding_title": ["DF発見1", "DF発見2"],
+                "finding_description": [None, "説明"],
+                "severity": ["HIGH", "LOW"],
+                "category": [None, None],
+                "affected_amount": [0.0, 1000.0],
+                "affected_count": [0, 5],
+                "evidence": [None, None],
+                "recommendation": [None, None],
+                "status": ["open", "open"],
+                "reviewed_by": [None, None],
+                "reviewed_at": [None, None],
+                "created_at": [None, None],
+            }
+        )
         rows = temp_db.insert_df("audit_findings", df)
         assert rows == 2
         assert temp_db.get_table_count("audit_findings") == 2
@@ -116,10 +116,11 @@ class TestDuckDBManager:
         assert "amount" in columns
         assert "risk_score" in columns
 
-    def test_schema_has_audit_rules(self, temp_db):
+    def test_schema_has_aggregation_tables(self, temp_db):
         temp_db.initialize_schema()
-        # audit_rules should be populated with default rules
-        assert temp_db.table_exists("audit_rules")
+        # Aggregation tables are in DuckDB schema
+        assert temp_db.table_exists("agg_by_period_account")
+        assert temp_db.table_exists("agg_risk_summary")
 
     def test_connect_context_manager(self, temp_db):
         with temp_db.connect() as conn:

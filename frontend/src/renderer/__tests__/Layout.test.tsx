@@ -29,8 +29,9 @@ vi.mock('clsx', () => ({
   default: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
+import Layout from '../components/Layout';
+
 function renderLayout(path = '/') {
-  const Layout = require('../components/Layout').default;
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Layout isConnected={true}>
@@ -57,7 +58,8 @@ describe('Layout', () => {
 
   it('renders navigation items', () => {
     renderLayout();
-    expect(screen.getByText('ダッシュボード')).toBeInTheDocument();
+    // ダッシュボード is in both sidebar nav and header - use getAllByText
+    expect(screen.getAllByText('ダッシュボード').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('データ取込')).toBeInTheDocument();
     expect(screen.getByText('仕訳検索')).toBeInTheDocument();
     expect(screen.getByText('リスク分析')).toBeInTheDocument();
@@ -84,7 +86,6 @@ describe('Layout', () => {
   });
 
   it('shows disconnected status', () => {
-    const Layout = require('../components/Layout').default;
     render(
       <MemoryRouter>
         <Layout isConnected={false}>

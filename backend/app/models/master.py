@@ -1,6 +1,6 @@
 """Master data models."""
 
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +18,7 @@ class AccountBase(BaseModel):
         max_length=100,
         description="勘定科目名",
     )
-    account_name_en: Optional[str] = Field(
+    account_name_en: str | None = Field(
         None,
         max_length=100,
         description="勘定科目名（英語）",
@@ -41,7 +41,7 @@ class AccountBase(BaseModel):
         le=10,
         description="階層レベル",
     )
-    parent_code: Optional[str] = Field(
+    parent_code: str | None = Field(
         None,
         max_length=20,
         description="親科目コード",
@@ -84,17 +84,17 @@ class Department(BaseModel):
         max_length=100,
         description="部門名",
     )
-    dept_name_en: Optional[str] = Field(
+    dept_name_en: str | None = Field(
         None,
         max_length=100,
         description="部門名（英語）",
     )
-    segment: Optional[str] = Field(
+    segment: str | None = Field(
         None,
         max_length=20,
         description="セグメントコード",
     )
-    parent_dept: Optional[str] = Field(
+    parent_dept: str | None = Field(
         None,
         max_length=20,
         description="親部門コード",
@@ -133,21 +133,23 @@ class Vendor(BaseModel):
         max_length=200,
         description="取引先名",
     )
-    vendor_name_en: Optional[str] = Field(
+    vendor_name_en: str | None = Field(
         None,
         max_length=200,
         description="取引先名（英語）",
     )
-    vendor_type: Literal["CUSTOMER", "SUPPLIER", "INTERCOMPANY", "BANK", "OTHER"] = Field(
-        ...,
-        description="取引先区分",
+    vendor_type: Literal["CUSTOMER", "SUPPLIER", "INTERCOMPANY", "BANK", "OTHER"] = (
+        Field(
+            ...,
+            description="取引先区分",
+        )
     )
-    country: Optional[str] = Field(
+    country: str | None = Field(
         None,
         max_length=2,
         description="国コード (ISO 3166-1 alpha-2)",
     )
-    segment: Optional[str] = Field(
+    segment: str | None = Field(
         None,
         max_length=20,
         description="セグメント",
@@ -156,12 +158,12 @@ class Vendor(BaseModel):
         default=False,
         description="関連当事者フラグ",
     )
-    credit_limit: Optional[int] = Field(
+    credit_limit: int | None = Field(
         None,
         ge=0,
         description="与信限度額",
     )
-    payment_terms: Optional[int] = Field(
+    payment_terms: int | None = Field(
         None,
         ge=0,
         description="支払条件（日数）",
@@ -170,7 +172,7 @@ class Vendor(BaseModel):
         default=True,
         description="有効フラグ",
     )
-    risk_flag: Optional[str] = Field(
+    risk_flag: str | None = Field(
         None,
         max_length=50,
         description="リスクフラグ",
@@ -195,17 +197,17 @@ class User(BaseModel):
         max_length=100,
         description="ユーザー名",
     )
-    user_name_en: Optional[str] = Field(
+    user_name_en: str | None = Field(
         None,
         max_length=100,
         description="ユーザー名（英語）",
     )
-    dept_code: Optional[str] = Field(
+    dept_code: str | None = Field(
         None,
         max_length=20,
         description="所属部門コード",
     )
-    position: Optional[str] = Field(
+    position: str | None = Field(
         None,
         max_length=50,
         description="役職",
@@ -223,7 +225,7 @@ class User(BaseModel):
         default=False,
         description="承認権限フラグ",
     )
-    role: Optional[str] = Field(
+    role: str | None = Field(
         None,
         max_length=20,
         description="ロール",

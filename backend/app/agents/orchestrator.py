@@ -8,18 +8,16 @@ Coordinates the execution of multiple agents for complex audit tasks:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langgraph.graph import StateGraph, END
 
-from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.analysis import AnalysisAgent
-from app.agents.investigation import InvestigationAgent
+from app.agents.base import AgentConfig, AgentType
 from app.agents.documentation import DocumentationAgent
+from app.agents.investigation import InvestigationAgent
 from app.agents.qa import QAAgent
 from app.agents.review import ReviewAgent
-
 
 ORCHESTRATOR_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) のオーケストレーターです。
 複数の専門エージェントを調整して、複雑な監査タスクを実行します。
@@ -45,11 +43,11 @@ class WorkflowResult:
     workflow_id: str
     workflow_type: str
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     agent_results: dict[str, Any] = field(default_factory=dict)
-    final_output: Optional[str] = None
+    final_output: str | None = None
     success: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -57,7 +55,9 @@ class WorkflowResult:
             "workflow_id": self.workflow_id,
             "workflow_type": self.workflow_type,
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
             "agent_results": self.agent_results,
             "final_output": self.final_output,
             "success": self.success,
@@ -70,7 +70,7 @@ class AgentOrchestrator:
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
     ) -> None:
         """Initialize orchestrator.
 
@@ -105,6 +105,7 @@ class AgentOrchestrator:
             Workflow result with all agent outputs.
         """
         import uuid
+
         result = WorkflowResult(
             workflow_id=str(uuid.uuid4()),
             workflow_type="full_audit",
@@ -152,8 +153,11 @@ class AgentOrchestrator:
 
             # Step 4: 文書化 - 全エージェントの成果物を統合してレポート生成
             doc_context = self._build_documentation_context(
-                fiscal_year, analysis_result, investigation_findings,
-                all_findings, result.agent_results.get("review", {}),
+                fiscal_year,
+                analysis_result,
+                investigation_findings,
+                all_findings,
+                result.agent_results.get("review", {}),
             )
             doc_result = await self.documentation_agent.execute(
                 doc_context,
@@ -184,17 +188,21 @@ class AgentOrchestrator:
             summary = result.get("summary", {})
             if isinstance(summary, dict):
                 for item in summary.get("findings", []):
-                    findings.append({
-                        "source": source,
-                        "title": item if isinstance(item, str) else str(item),
-                        "severity": "MEDIUM",
-                    })
+                    findings.append(
+                        {
+                            "source": source,
+                            "title": item if isinstance(item, str) else str(item),
+                            "severity": "MEDIUM",
+                        }
+                    )
                 for item in summary.get("insights", []):
-                    findings.append({
-                        "source": source,
-                        "title": item if isinstance(item, str) else str(item),
-                        "severity": "LOW",
-                    })
+                    findings.append(
+                        {
+                            "source": source,
+                            "title": item if isinstance(item, str) else str(item),
+                            "severity": "LOW",
+                        }
+                    )
             # messagesキーがある場合
             if "messages" in result:
                 findings.extend(
@@ -220,18 +228,33 @@ class AgentOrchestrator:
             # 発見事項のパターンを探索
             for line in content.split("\n"):
                 line = line.strip()
-                if any(kw in line for kw in [
-                    "リスク", "異常", "不正", "違反", "逸脱", "重要",
-                    "発見", "懸念", "要注意", "高額",
-                ]):
-                    if len(line) > 10:
-                        findings.append({
+                if (
+                    any(
+                        kw in line
+                        for kw in [
+                            "リスク",
+                            "異常",
+                            "不正",
+                            "違反",
+                            "逸脱",
+                            "重要",
+                            "発見",
+                            "懸念",
+                            "要注意",
+                            "高額",
+                        ]
+                    )
+                    and len(line) > 10
+                ):
+                    findings.append(
+                        {
                             "source": source,
                             "title": line[:200],
-                            "severity": "HIGH" if any(
-                                k in line for k in ["不正", "重要", "高リスク"]
-                            ) else "MEDIUM",
-                        })
+                            "severity": "HIGH"
+                            if any(k in line for k in ["不正", "重要", "高リスク"])
+                            else "MEDIUM",
+                        }
+                    )
         return findings
 
     def _build_investigation_prompt(
@@ -338,7 +361,7 @@ class AgentOrchestrator:
         self,
         target_type: str,
         target_id: str,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> WorkflowResult:
         """Run an investigation workflow.
 
@@ -351,6 +374,7 @@ class AgentOrchestrator:
             Workflow result.
         """
         import uuid
+
         result = WorkflowResult(
             workflow_id=str(uuid.uuid4()),
             workflow_type="investigation",
@@ -384,7 +408,7 @@ class AgentOrchestrator:
     async def run_qa_session(
         self,
         question: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowResult:
         """Run an interactive Q&A session.
 
@@ -396,6 +420,7 @@ class AgentOrchestrator:
             Workflow result with answer.
         """
         import uuid
+
         result = WorkflowResult(
             workflow_id=str(uuid.uuid4()),
             workflow_type="qa",
@@ -423,7 +448,7 @@ class AgentOrchestrator:
         self,
         fiscal_year: int,
         doc_type: str = "summary",
-        findings: Optional[list[dict[str, Any]]] = None,
+        findings: list[dict[str, Any]] | None = None,
     ) -> WorkflowResult:
         """Run a documentation workflow.
 
@@ -436,6 +461,7 @@ class AgentOrchestrator:
             Workflow result with generated document.
         """
         import uuid
+
         result = WorkflowResult(
             workflow_id=str(uuid.uuid4()),
             workflow_type="documentation",
@@ -471,7 +497,7 @@ class AgentOrchestrator:
     async def route_request(
         self,
         request: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowResult:
         """Route a natural language request to the appropriate agent using LLM.
 
@@ -485,6 +511,7 @@ class AgentOrchestrator:
             Workflow result.
         """
         import uuid
+
         result = WorkflowResult(
             workflow_id=str(uuid.uuid4()),
             workflow_type="routed",
@@ -540,10 +567,12 @@ class AgentOrchestrator:
 
         try:
             llm = create_llm(self.config)
-            response = await llm.ainvoke([
-                SystemMessage(content=classification_prompt),
-                HumanMessage(content=request),
-            ])
+            response = await llm.ainvoke(
+                [
+                    SystemMessage(content=classification_prompt),
+                    HumanMessage(content=request),
+                ]
+            )
             category = response.content.strip().lower()
             valid = {"analysis", "investigation", "documentation", "review", "qa"}
             if category in valid:
@@ -559,9 +588,15 @@ class AgentOrchestrator:
         """キーワードベースのフォールバック分類."""
         request_lower = request.lower()
         rules = [
-            ("analysis", ["分析", "リスク", "傾向", "パターン", "異常", "統計", "分布"]),
+            (
+                "analysis",
+                ["分析", "リスク", "傾向", "パターン", "異常", "統計", "分布"],
+            ),
             ("investigation", ["調査", "深掘り", "追跡", "確認", "原因", "仕訳"]),
-            ("documentation", ["レポート", "報告書", "文書", "作成", "マネジメントレター"]),
+            (
+                "documentation",
+                ["レポート", "報告書", "文書", "作成", "マネジメントレター"],
+            ),
             ("review", ["レビュー", "評価", "優先", "是正", "改善"]),
         ]
         for category, keywords in rules:

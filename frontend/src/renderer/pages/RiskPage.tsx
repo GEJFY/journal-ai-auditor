@@ -6,13 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertTriangle,
-  AlertCircle,
-  Info,
-  ChevronRight,
-  Filter,
-} from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, ChevronRight, Filter } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -56,18 +50,13 @@ function RiskCard({ item, level }: RiskCardProps) {
         <div className="flex items-start gap-3">
           {icons[level]}
           <div>
-            <p className="font-medium text-gray-900 dark:text-white">
-              {item.journal_id}
-            </p>
+            <p className="font-medium text-gray-900 dark:text-white">{item.journal_id}</p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {item.description || '説明なし'}
             </p>
             <div className="flex flex-wrap gap-1 mt-2">
               {item.risk_factors.slice(0, 3).map((factor, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 bg-white dark:bg-gray-800 rounded text-xs"
-                >
+                <span key={i} className="px-2 py-0.5 bg-white dark:bg-gray-800 rounded text-xs">
                   {factor}
                 </span>
               ))}
@@ -81,9 +70,7 @@ function RiskCard({ item, level }: RiskCardProps) {
         </div>
         <div className="text-right">
           <div className="text-lg font-bold">{item.risk_score.toFixed(0)}</div>
-          <div className="text-sm text-gray-500">
-            ¥{item.amount.toLocaleString()}
-          </div>
+          <div className="text-sm text-gray-500">¥{item.amount.toLocaleString()}</div>
           <div className="text-xs text-gray-400">{item.date}</div>
         </div>
       </div>
@@ -113,24 +100,26 @@ export default function RiskPage() {
     );
   }
 
-  const distributionData = riskData ? [
-    { name: '高リスク', value: riskData.risk_distribution.high, color: RISK_COLORS.high },
-    { name: '中リスク', value: riskData.risk_distribution.medium, color: RISK_COLORS.medium },
-    { name: '低リスク', value: riskData.risk_distribution.low, color: RISK_COLORS.low },
-    { name: '最小', value: riskData.risk_distribution.minimal, color: RISK_COLORS.minimal },
-  ] : [];
+  const distributionData = riskData
+    ? [
+        { name: '高リスク', value: riskData.risk_distribution.high, color: RISK_COLORS.high },
+        { name: '中リスク', value: riskData.risk_distribution.medium, color: RISK_COLORS.medium },
+        { name: '低リスク', value: riskData.risk_distribution.low, color: RISK_COLORS.low },
+        { name: '最小', value: riskData.risk_distribution.minimal, color: RISK_COLORS.minimal },
+      ]
+    : [];
 
   const filteredItems = (() => {
     if (!riskData) return [];
     if (selectedLevel === 'all') {
       return [
-        ...riskData.high_risk.map(item => ({ ...item, level: 'high' as const })),
-        ...riskData.medium_risk.map(item => ({ ...item, level: 'medium' as const })),
-        ...riskData.low_risk.map(item => ({ ...item, level: 'low' as const })),
+        ...riskData.high_risk.map((item) => ({ ...item, level: 'high' as const })),
+        ...riskData.medium_risk.map((item) => ({ ...item, level: 'medium' as const })),
+        ...riskData.low_risk.map((item) => ({ ...item, level: 'low' as const })),
       ].sort((a, b) => b.risk_score - a.risk_score);
     }
     const items = riskData[`${selectedLevel}_risk` as keyof typeof riskData] as RiskItem[];
-    return items.map(item => ({ ...item, level: selectedLevel }));
+    return items.map((item) => ({ ...item, level: selectedLevel }));
   })();
 
   return (
@@ -138,9 +127,7 @@ export default function RiskPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            リスク分析
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">リスク分析</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {fiscalYear}年度の仕訳リスク評価
           </p>
@@ -150,9 +137,7 @@ export default function RiskPage() {
       {/* Distribution Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            リスク分布
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">リスク分布</h3>
           {distributionData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={distributionData} layout="vertical">
@@ -176,19 +161,21 @@ export default function RiskPage() {
 
         {/* Violation Summary */}
         <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            違反サマリー
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">違反サマリー</h3>
           {violationsData ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <p className="text-sm text-gray-500">総違反件数</p>
-                  <p className="text-2xl font-bold">{violationsData.total_count.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">
+                    {violationsData.total_count.toLocaleString()}
+                  </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <p className="text-sm text-gray-500">カテゴリ数</p>
-                  <p className="text-2xl font-bold">{Object.keys(violationsData.by_category).length}</p>
+                  <p className="text-2xl font-bold">
+                    {Object.keys(violationsData.by_category).length}
+                  </p>
                 </div>
               </div>
               <div>
@@ -215,7 +202,7 @@ export default function RiskPage() {
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-gray-500" />
         <span className="text-sm text-gray-500">フィルター:</span>
-        {(['all', 'high', 'medium', 'low'] as const).map(level => (
+        {(['all', 'high', 'medium', 'low'] as const).map((level) => (
           <button
             key={level}
             onClick={() => setSelectedLevel(level)}
@@ -225,7 +212,13 @@ export default function RiskPage() {
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
             }`}
           >
-            {level === 'all' ? 'すべて' : level === 'high' ? '高' : level === 'medium' ? '中' : '低'}
+            {level === 'all'
+              ? 'すべて'
+              : level === 'high'
+                ? '高'
+                : level === 'medium'
+                  ? '中'
+                  : '低'}
           </button>
         ))}
       </div>
@@ -250,9 +243,7 @@ export default function RiskPage() {
             )}
           </div>
         ) : (
-          <div className="card p-8 text-center text-gray-500">
-            該当するリスク項目がありません
-          </div>
+          <div className="card p-8 text-center text-gray-500">該当するリスク項目がありません</div>
         )}
       </div>
     </div>

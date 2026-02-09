@@ -13,17 +13,14 @@
 - TIM-010: Quarterly pattern anomaly
 """
 
-from datetime import datetime, time, timedelta
-from typing import Any
-
 import polars as pl
 
 from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -57,19 +54,19 @@ class WeekendHolidayRule(AuditRule):
         # Japanese holidays (simplified - should use a proper calendar)
         holiday_threshold = self.get_threshold("high_amount_weekend", 10_000_000)
 
-        # Filter weekend entries (Saturday=6, Sunday=7)
-        weekend = df.filter(
-            pl.col("entry_date").dt.weekday().is_in([5, 6])  # 0=Mon, 5=Sat, 6=Sun
-        )
+        # Filter weekend entries (Polars ISO weekday: 1=Mon, 6=Sat, 7=Sun)
+        weekend = df.filter(pl.col("entry_date").dt.weekday().is_in([6, 7]))
 
         # Only flag high-value weekend entries
-        high_value_weekend = weekend.filter(
-            pl.col("amount").abs() >= holiday_threshold
-        )
+        high_value_weekend = weekend.filter(pl.col("amount").abs() >= holiday_threshold)
 
         for row in high_value_weekend.iter_rows(named=True):
             entry_date = row.get("entry_date")
-            weekday_name = ["月", "火", "水", "木", "金", "土", "日"][entry_date.weekday()] if entry_date else "?"
+            weekday_name = (
+                ["月", "火", "水", "木", "金", "土", "日"][entry_date.weekday()]
+                if entry_date
+                else "?"
+            )
 
             violation = self._create_violation(
                 gl_detail_id=row["gl_detail_id"],
@@ -121,16 +118,16 @@ class LateNightEntryRule(AuditRule):
             return result
 
         start_hour = self.get_threshold("business_start", 7)  # 7:00
-        end_hour = self.get_threshold("business_end", 22)     # 22:00
+        end_hour = self.get_threshold("business_end", 22)  # 22:00
         min_amount = self.get_threshold("late_night_min", 1_000_000)
 
         # Filter late night entries
         late_night = with_time.filter(
             (
-                (pl.col("entry_time").dt.hour() < start_hour) |
-                (pl.col("entry_time").dt.hour() >= end_hour)
-            ) &
-            (pl.col("amount").abs() >= min_amount)
+                (pl.col("entry_time").dt.hour() < start_hour)
+                | (pl.col("entry_time").dt.hour() >= end_hour)
+            )
+            & (pl.col("amount").abs() >= min_amount)
         )
 
         for row in late_night.iter_rows(named=True):
@@ -178,15 +175,18 @@ class PeriodEndConcentrationRule(AuditRule):
         result = self._create_result()
         result.total_checked = len(df)
 
-        last_days = self.get_threshold("period_end_days", 3)
+        self.get_threshold("period_end_days", 3)
         min_amount = self.get_threshold("period_end_min_amount", 50_000_000)
 
         # Identify period-end entries (last N days of month)
         period_end = df.filter(
-            (pl.col("effective_date").dt.day() >= 28) |
-            (
-                (pl.col("effective_date").dt.day() <= 3) &
-                (pl.col("effective_date").dt.month() != pl.col("effective_date").dt.month().shift(1))
+            (pl.col("effective_date").dt.day() >= 28)
+            | (
+                (pl.col("effective_date").dt.day() <= 3)
+                & (
+                    pl.col("effective_date").dt.month()
+                    != pl.col("effective_date").dt.month().shift(1)
+                )
             )
         )
 
@@ -239,8 +239,7 @@ class BackdatedEntryRule(AuditRule):
 
         # Need both dates
         with_dates = df.filter(
-            pl.col("entry_date").is_not_null() &
-            pl.col("effective_date").is_not_null()
+            pl.col("entry_date").is_not_null() & pl.col("effective_date").is_not_null()
         )
         result.total_checked = len(with_dates)
 
@@ -248,14 +247,18 @@ class BackdatedEntryRule(AuditRule):
         min_amount = self.get_threshold("backdate_min_amount", 10_000_000)
 
         # Calculate delay
-        with_delay = with_dates.with_columns([
-            (pl.col("entry_date") - pl.col("effective_date")).dt.total_days().alias("delay_days")
-        ])
+        with_delay = with_dates.with_columns(
+            [
+                (pl.col("entry_date") - pl.col("effective_date"))
+                .dt.total_days()
+                .alias("delay_days")
+            ]
+        )
 
         # Find backdated entries
         backdated = with_delay.filter(
-            (pl.col("delay_days") > max_delay_days) &
-            (pl.col("amount").abs() >= min_amount)
+            (pl.col("delay_days") > max_delay_days)
+            & (pl.col("amount").abs() >= min_amount)
         )
 
         for row in backdated.iter_rows(named=True):
@@ -303,17 +306,20 @@ class FutureDatedEntryRule(AuditRule):
         result = self._create_result()
 
         with_dates = df.filter(
-            pl.col("entry_date").is_not_null() &
-            pl.col("effective_date").is_not_null()
+            pl.col("entry_date").is_not_null() & pl.col("effective_date").is_not_null()
         )
         result.total_checked = len(with_dates)
 
         max_future_days = self.get_threshold("max_future_days", 7)
 
         # Calculate future offset
-        with_offset = with_dates.with_columns([
-            (pl.col("effective_date") - pl.col("entry_date")).dt.total_days().alias("future_days")
-        ])
+        with_offset = with_dates.with_columns(
+            [
+                (pl.col("effective_date") - pl.col("entry_date"))
+                .dt.total_days()
+                .alias("future_days")
+            ]
+        )
 
         # Find future-dated entries
         future_dated = with_offset.filter(pl.col("future_days") > max_future_days)
@@ -362,8 +368,7 @@ class DateGapRule(AuditRule):
         result = self._create_result()
 
         with_dates = df.filter(
-            pl.col("entry_date").is_not_null() &
-            pl.col("effective_date").is_not_null()
+            pl.col("entry_date").is_not_null() & pl.col("effective_date").is_not_null()
         )
         result.total_checked = len(with_dates)
 
@@ -371,14 +376,18 @@ class DateGapRule(AuditRule):
         min_amount = self.get_threshold("gap_min_amount", 5_000_000)
 
         # Calculate absolute gap
-        with_gap = with_dates.with_columns([
-            (pl.col("entry_date") - pl.col("effective_date")).dt.total_days().abs().alias("gap_days")
-        ])
+        with_gap = with_dates.with_columns(
+            [
+                (pl.col("entry_date") - pl.col("effective_date"))
+                .dt.total_days()
+                .abs()
+                .alias("gap_days")
+            ]
+        )
 
         # Find large gaps
         large_gaps = with_gap.filter(
-            (pl.col("gap_days") > max_gap_days) &
-            (pl.col("amount").abs() >= min_amount)
+            (pl.col("gap_days") > max_gap_days) & (pl.col("amount").abs() >= min_amount)
         )
 
         for row in large_gaps.iter_rows(named=True):
@@ -429,29 +438,35 @@ class UnusualPostingPatternRule(AuditRule):
         result.total_checked = len(with_user)
 
         # Count entries per user per day
-        daily_count = with_user.group_by([
-            "prepared_by",
-            pl.col("entry_date").cast(pl.Date),
-        ]).agg([
-            pl.count().alias("entry_count"),
-            pl.col("amount").sum().alias("total_amount"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        daily_count = with_user.group_by(
+            [
+                "prepared_by",
+                pl.col("entry_date").cast(pl.Date),
+            ]
+        ).agg(
+            [
+                pl.count().alias("entry_count"),
+                pl.col("amount").sum().alias("total_amount"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         # Calculate statistics per user
-        user_stats = daily_count.group_by("prepared_by").agg([
-            pl.col("entry_count").mean().alias("avg_count"),
-            pl.col("entry_count").std().alias("std_count"),
-        ])
+        user_stats = daily_count.group_by("prepared_by").agg(
+            [
+                pl.col("entry_count").mean().alias("avg_count"),
+                pl.col("entry_count").std().alias("std_count"),
+            ]
+        )
 
         daily_with_stats = daily_count.join(user_stats, on="prepared_by", how="left")
 
         # Find unusual days
         unusual = daily_with_stats.filter(
-            (pl.col("std_count").is_not_null()) &
-            (pl.col("std_count") > 0) &
-            ((pl.col("entry_count") - pl.col("avg_count")) / pl.col("std_count") > 3)
+            (pl.col("std_count").is_not_null())
+            & (pl.col("std_count") > 0)
+            & ((pl.col("entry_count") - pl.col("avg_count")) / pl.col("std_count") > 3)
         )
 
         for row in unusual.iter_rows(named=True):
@@ -509,12 +524,12 @@ class FiscalYearBoundaryRule(AuditRule):
         # Filter fiscal year boundary entries
         boundary = df.filter(
             (
-                (pl.col("effective_date").dt.month() == fy_end_month) &
-                (pl.col("effective_date").dt.day() >= 28)
-            ) |
-            (
-                (pl.col("effective_date").dt.month() == fy_end_month + 1) &
-                (pl.col("effective_date").dt.day() <= boundary_days)
+                (pl.col("effective_date").dt.month() == fy_end_month)
+                & (pl.col("effective_date").dt.day() >= 28)
+            )
+            | (
+                (pl.col("effective_date").dt.month() == fy_end_month + 1)
+                & (pl.col("effective_date").dt.day() <= boundary_days)
             )
         )
 
@@ -529,7 +544,9 @@ class FiscalYearBoundaryRule(AuditRule):
                 details={
                     "effective_date": str(eff_date),
                     "amount": row["amount"],
-                    "is_year_end": eff_date.month == fy_end_month if eff_date else False,
+                    "is_year_end": eff_date.month == fy_end_month
+                    if eff_date
+                    else False,
                 },
             )
             result.violations.append(violation)
@@ -565,24 +582,27 @@ class ApprovalTimingRule(AuditRule):
         result = self._create_result()
 
         with_approval = df.filter(
-            pl.col("entry_date").is_not_null() &
-            pl.col("approved_date").is_not_null()
+            pl.col("entry_date").is_not_null() & pl.col("approved_date").is_not_null()
         )
         result.total_checked = len(with_approval)
 
         min_hours = self.get_threshold("min_approval_hours", 1)  # Too fast
-        max_days = self.get_threshold("max_approval_days", 30)   # Too slow
+        max_days = self.get_threshold("max_approval_days", 30)  # Too slow
         min_amount = self.get_threshold("approval_min_amount", 10_000_000)
 
         # Calculate approval delay
-        with_delay = with_approval.with_columns([
-            (pl.col("approved_date") - pl.col("entry_date")).dt.total_hours().alias("approval_hours")
-        ])
+        with_delay = with_approval.with_columns(
+            [
+                (pl.col("approved_date") - pl.col("entry_date"))
+                .dt.total_hours()
+                .alias("approval_hours")
+            ]
+        )
 
         # Too fast approvals (high value, approved in less than 1 hour)
         too_fast = with_delay.filter(
-            (pl.col("approval_hours") < min_hours) &
-            (pl.col("amount").abs() >= min_amount)
+            (pl.col("approval_hours") < min_hours)
+            & (pl.col("amount").abs() >= min_amount)
         )
 
         for row in too_fast.iter_rows(named=True):
@@ -601,9 +621,7 @@ class ApprovalTimingRule(AuditRule):
             result.violations.append(violation)
 
         # Too slow approvals
-        too_slow = with_delay.filter(
-            pl.col("approval_hours") > max_days * 24
-        )
+        too_slow = with_delay.filter(pl.col("approval_hours") > max_days * 24)
 
         for row in too_slow.iter_rows(named=True):
             days = row["approval_hours"] / 24
@@ -652,41 +670,55 @@ class QuarterlyPatternRule(AuditRule):
         result.total_checked = len(df)
 
         # Assign quarter (Japanese FY: Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar)
-        with_quarter = df.with_columns([
-            pl.when(pl.col("effective_date").dt.month().is_in([4, 5, 6]))
-            .then(pl.lit(1))
-            .when(pl.col("effective_date").dt.month().is_in([7, 8, 9]))
-            .then(pl.lit(2))
-            .when(pl.col("effective_date").dt.month().is_in([10, 11, 12]))
-            .then(pl.lit(3))
-            .otherwise(pl.lit(4))
-            .alias("quarter")
-        ])
+        with_quarter = df.with_columns(
+            [
+                pl.when(pl.col("effective_date").dt.month().is_in([4, 5, 6]))
+                .then(pl.lit(1))
+                .when(pl.col("effective_date").dt.month().is_in([7, 8, 9]))
+                .then(pl.lit(2))
+                .when(pl.col("effective_date").dt.month().is_in([10, 11, 12]))
+                .then(pl.lit(3))
+                .otherwise(pl.lit(4))
+                .alias("quarter")
+            ]
+        )
 
         # Calculate quarterly totals by account
-        quarterly = with_quarter.group_by([
-            "gl_account_number",
-            "fiscal_year",
-            "quarter",
-        ]).agg([
-            pl.col("amount").sum().alias("quarter_total"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        quarterly = with_quarter.group_by(
+            [
+                "gl_account_number",
+                "fiscal_year",
+                "quarter",
+            ]
+        ).agg(
+            [
+                pl.col("amount").sum().alias("quarter_total"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         # Calculate average and std per account
-        stats = quarterly.group_by("gl_account_number").agg([
-            pl.col("quarter_total").mean().alias("avg_total"),
-            pl.col("quarter_total").std().alias("std_total"),
-        ])
+        stats = quarterly.group_by("gl_account_number").agg(
+            [
+                pl.col("quarter_total").mean().alias("avg_total"),
+                pl.col("quarter_total").std().alias("std_total"),
+            ]
+        )
 
         quarterly_with_stats = quarterly.join(stats, on="gl_account_number", how="left")
 
         # Find unusual quarters
         unusual = quarterly_with_stats.filter(
-            (pl.col("std_total").is_not_null()) &
-            (pl.col("std_total") > 0) &
-            (((pl.col("quarter_total") - pl.col("avg_total")).abs() / pl.col("std_total")) > 2)
+            (pl.col("std_total").is_not_null())
+            & (pl.col("std_total") > 0)
+            & (
+                (
+                    (pl.col("quarter_total") - pl.col("avg_total")).abs()
+                    / pl.col("std_total")
+                )
+                > 2
+            )
         )
 
         for row in unusual.iter_rows(named=True):

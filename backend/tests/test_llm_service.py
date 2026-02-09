@@ -1,13 +1,13 @@
 """LLM service unit tests with mock providers."""
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
+import pytest
+
+from app.core.config import LLM_MODELS, RECOMMENDED_MODELS
 from app.services.llm.models import LLMConfig, LLMResponse, ModelInfo
 from app.services.llm.service import LLMService
-from app.core.config import LLM_MODELS, RECOMMENDED_MODELS
-
 
 # --------------------------------------------------
 # LLMConfig tests
@@ -27,8 +27,14 @@ class TestLLMConfig:
 
     def test_all_providers_valid(self):
         providers = [
-            "anthropic", "openai", "google", "bedrock",
-            "azure", "azure_foundry", "vertex_ai", "ollama",
+            "anthropic",
+            "openai",
+            "google",
+            "bedrock",
+            "azure",
+            "azure_foundry",
+            "vertex_ai",
+            "ollama",
         ]
         for p in providers:
             config = LLMConfig(provider=p, model="test")
@@ -177,8 +183,14 @@ class TestModelCatalog:
 
     def test_all_providers_in_catalog(self):
         expected = [
-            "anthropic", "openai", "google", "bedrock",
-            "azure_foundry", "vertex_ai", "azure", "ollama",
+            "anthropic",
+            "openai",
+            "google",
+            "bedrock",
+            "azure_foundry",
+            "vertex_ai",
+            "azure",
+            "ollama",
         ]
         for p in expected:
             assert p in LLM_MODELS, f"Provider {p} missing from LLM_MODELS"
@@ -223,3 +235,290 @@ class TestModelCatalog:
         result = LLMService.get_recommended_models()
         assert "local_dev" in result
         assert result["local_dev"]["provider"] == "ollama"
+
+
+# --------------------------------------------------
+# Generate method tests for all providers
+# --------------------------------------------------
+
+
+class TestGenerateAnthropic:
+    """Test _generate_anthropic method."""
+
+    def test_generate_anthropic_success(self):
+        config = LLMConfig(provider="anthropic", model="claude-sonnet-4-5")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="Anthropicの回答")]
+        mock_response.model = "claude-sonnet-4-5"
+        mock_response.usage.input_tokens = 50
+        mock_response.usage.output_tokens = 100
+        mock_client.messages.create.return_value = mock_response
+        service._client = mock_client
+
+        result = service.generate("テストプロンプト", system="システムプロンプト")
+        assert result.content == "Anthropicの回答"
+        assert result.provider == "anthropic"
+        assert result.input_tokens == 50
+        assert result.output_tokens == 100
+
+    def test_generate_anthropic_no_system(self):
+        config = LLMConfig(provider="anthropic", model="claude-opus-4-6")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="回答")]
+        mock_response.model = "claude-opus-4-6"
+        mock_response.usage.input_tokens = 10
+        mock_response.usage.output_tokens = 20
+        mock_client.messages.create.return_value = mock_response
+        service._client = mock_client
+
+        result = service.generate("プロンプト")
+        assert result.content == "回答"
+        # system="" が渡される
+        call_args = mock_client.messages.create.call_args
+        assert call_args.kwargs["system"] == ""
+
+
+class TestGenerateOpenAI:
+    """Test _generate_openai method."""
+
+    def test_generate_openai_success(self):
+        config = LLMConfig(provider="openai", model="gpt-5")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock(message=MagicMock(content="OpenAIの回答"))]
+        mock_response.model = "gpt-5"
+        mock_response.usage.prompt_tokens = 30
+        mock_response.usage.completion_tokens = 60
+        mock_client.chat.completions.create.return_value = mock_response
+        service._client = mock_client
+
+        result = service.generate("テスト", system="システム")
+        assert result.content == "OpenAIの回答"
+        assert result.provider == "openai"
+        assert result.input_tokens == 30
+        assert result.output_tokens == 60
+
+    def test_generate_openai_with_system_message(self):
+        config = LLMConfig(provider="openai", model="gpt-5-mini")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock(message=MagicMock(content="回答"))]
+        mock_response.model = "gpt-5-mini"
+        mock_response.usage.prompt_tokens = 10
+        mock_response.usage.completion_tokens = 20
+        mock_client.chat.completions.create.return_value = mock_response
+        service._client = mock_client
+
+        service.generate("プロンプト", system="システム")
+        call_args = mock_client.chat.completions.create.call_args
+        messages = call_args.kwargs["messages"]
+        assert messages[0]["role"] == "system"
+        assert messages[1]["role"] == "user"
+
+
+class TestGenerateGoogle:
+    """Test _generate_google method."""
+
+    def test_generate_google_success(self):
+        config = LLMConfig(provider="google", model="gemini-2.5-pro")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = "Googleの回答"
+        mock_response.usage_metadata.prompt_token_count = 20
+        mock_response.usage_metadata.candidates_token_count = 40
+        mock_client.models.generate_content.return_value = mock_response
+        service._client = mock_client
+
+        with patch("google.genai.types") as mock_types:
+            mock_types.GenerateContentConfig.return_value = MagicMock()
+            result = service.generate("テスト", system="システム")
+
+        assert result.content == "Googleの回答"
+        assert result.provider == "google"
+        assert result.input_tokens == 20
+        assert result.output_tokens == 40
+
+
+class TestGenerateBedrock:
+    """Test _generate_bedrock method."""
+
+    def test_generate_bedrock_anthropic_model(self):
+        config = LLMConfig(
+            provider="bedrock",
+            model="us.anthropic.claude-opus-4-6-20260201-v1:0",
+        )
+        service = LLMService(config=config)
+
+        import json as json_mod
+
+        mock_client = MagicMock()
+        response_body = {
+            "content": [{"text": "Bedrock Anthropicの回答"}],
+            "usage": {"input_tokens": 15, "output_tokens": 30},
+        }
+        mock_body = MagicMock()
+        mock_body.read.return_value = json_mod.dumps(response_body).encode()
+        mock_client.invoke_model.return_value = {"body": mock_body}
+        service._client = mock_client
+
+        result = service.generate("テスト", system="システム")
+        assert result.content == "Bedrock Anthropicの回答"
+        assert result.provider == "bedrock"
+        assert result.input_tokens == 15
+        assert result.output_tokens == 30
+
+    def test_generate_bedrock_nova_model(self):
+        config = LLMConfig(provider="bedrock", model="amazon.nova-pro-v1:0")
+        service = LLMService(config=config)
+
+        import json as json_mod
+
+        mock_client = MagicMock()
+        response_body = {
+            "results": [{"outputText": "Nova Proの回答"}],
+        }
+        mock_body = MagicMock()
+        mock_body.read.return_value = json_mod.dumps(response_body).encode()
+        mock_client.invoke_model.return_value = {"body": mock_body}
+        service._client = mock_client
+
+        result = service.generate("テスト")
+        assert result.content == "Nova Proの回答"
+        assert result.provider == "bedrock"
+        assert result.usage == {}
+
+
+class TestGenerateAzure:
+    """Test _generate_azure method."""
+
+    def test_generate_azure_success(self):
+        config = LLMConfig(provider="azure", model="gpt-4o")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock(message=MagicMock(content="Azureの回答"))]
+        mock_response.model = "gpt-4o"
+        mock_response.usage.prompt_tokens = 25
+        mock_response.usage.completion_tokens = 50
+        mock_client.chat.completions.create.return_value = mock_response
+        service._client = mock_client
+
+        with patch("app.services.llm.service.settings") as mock_s:
+            mock_s.azure_openai_deployment = "my-deployment"
+            result = service.generate("テスト", system="システム")
+
+        assert result.content == "Azureの回答"
+        assert result.provider == "azure"
+        assert result.input_tokens == 25
+
+
+class TestGenerateAzureFoundry:
+    """Test _generate_azure_foundry method."""
+
+    def test_generate_azure_foundry_gpt5(self):
+        config = LLMConfig(provider="azure_foundry", model="gpt-5.2")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock(message=MagicMock(content="Foundryの回答"))]
+        mock_response.model = "gpt-5.2"
+        mock_response.usage.prompt_tokens = 20
+        mock_response.usage.completion_tokens = 40
+        mock_client.chat.completions.create.return_value = mock_response
+        service._client = mock_client
+
+        with patch("app.services.llm.service.settings") as mock_s:
+            mock_s.azure_foundry_deployment = "gpt52-deploy"
+            result = service.generate("テスト")
+
+        assert result.content == "Foundryの回答"
+        assert result.provider == "azure_foundry"
+
+    def test_generate_azure_foundry_claude(self):
+        config = LLMConfig(provider="azure_foundry", model="claude-sonnet-4-5")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [
+            MagicMock(message=MagicMock(content="Claude on Foundry"))
+        ]
+        mock_response.model = "claude-sonnet-4-5"
+        mock_response.usage.prompt_tokens = 15
+        mock_response.usage.completion_tokens = 35
+        mock_client.chat.completions.create.return_value = mock_response
+        service._client = mock_client
+
+        with patch("app.services.llm.service.settings") as mock_s:
+            mock_s.azure_foundry_deployment = None
+            result = service.generate("テスト")
+
+        assert result.content == "Claude on Foundry"
+        assert result.provider == "azure_foundry"
+
+
+class TestGenerateVertexAI:
+    """Test _generate_vertex_ai method."""
+
+    def test_generate_vertex_ai_success(self):
+        config = LLMConfig(provider="vertex_ai", model="gemini-3-pro")
+        service = LLMService(config=config)
+
+        mock_model_instance = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = "Vertex AIの回答"
+        mock_response.usage_metadata.prompt_token_count = 25
+        mock_response.usage_metadata.candidates_token_count = 50
+        mock_model_instance.generate_content.return_value = mock_response
+
+        mock_generative_model = MagicMock(return_value=mock_model_instance)
+        service._client = {
+            "vertexai": MagicMock(),
+            "GenerativeModel": mock_generative_model,
+        }
+
+        result = service.generate("テスト", system="システム")
+        assert result.content == "Vertex AIの回答"
+        assert result.provider == "vertex_ai"
+        assert result.input_tokens == 25
+        assert result.output_tokens == 50
+        # GenerativeModelにsystem_instruction引数が渡される
+        mock_generative_model.assert_called_once_with(
+            "gemini-3-pro", system_instruction="システム"
+        )
+
+
+class TestGenerateLatency:
+    """Test latency measurement."""
+
+    def test_latency_is_recorded(self):
+        config = LLMConfig(provider="ollama", model="phi4")
+        service = LLMService(config=config)
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "message": {"content": "回答"},
+            "prompt_eval_count": 5,
+            "eval_count": 10,
+        }
+        mock_response.raise_for_status = MagicMock()
+        mock_client.post.return_value = mock_response
+        service._client = mock_client
+
+        result = service.generate("テスト")
+        assert result.latency_ms >= 0

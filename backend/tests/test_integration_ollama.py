@@ -4,9 +4,8 @@ These tests require Ollama to be running locally.
 Skip automatically if Ollama is not available.
 """
 
-import os
-import pytest
 import httpx
+import pytest
 
 from app.services.llm.models import LLMConfig
 from app.services.llm.service import LLMService
@@ -85,12 +84,15 @@ class TestOllamaAgentIntegration:
             max_tokens=100,
         )
         with pytest.MonkeyPatch.context() as mp:
-            mp.setattr("app.agents.base.settings.ollama_base_url", "http://localhost:11434")
+            mp.setattr(
+                "app.agents.base.settings.ollama_base_url", "http://localhost:11434"
+            )
             llm = create_llm(config)
             assert llm is not None
 
     def test_llm_invoke(self):
         from langchain_core.messages import HumanMessage
+
         from app.agents.base import AgentConfig, AgentType, create_llm
 
         model = get_ollama_model()
@@ -101,7 +103,9 @@ class TestOllamaAgentIntegration:
             max_tokens=50,
         )
         with pytest.MonkeyPatch.context() as mp:
-            mp.setattr("app.agents.base.settings.ollama_base_url", "http://localhost:11434")
+            mp.setattr(
+                "app.agents.base.settings.ollama_base_url", "http://localhost:11434"
+            )
             llm = create_llm(config)
             response = llm.invoke([HumanMessage(content="Say hello")])
             assert response.content

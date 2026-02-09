@@ -8,8 +8,8 @@ Provides REST API for:
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -25,7 +25,7 @@ def get_db() -> DuckDBManager:
     return DuckDBManager()
 
 
-class ReportFormat(str, Enum):
+class ReportFormat(StrEnum):
     """Report output formats."""
 
     JSON = "json"
@@ -34,7 +34,7 @@ class ReportFormat(str, Enum):
     PDF = "pdf"
 
 
-class ReportType(str, Enum):
+class ReportType(StrEnum):
     """Report types."""
 
     SUMMARY = "summary"
@@ -51,9 +51,9 @@ class ReportRequest(BaseModel):
 
     report_type: ReportType
     fiscal_year: int
-    period_from: Optional[int] = None
-    period_to: Optional[int] = None
-    accounts: Optional[list[str]] = None
+    period_from: int | None = None
+    period_to: int | None = None
+    accounts: list[str] | None = None
     include_details: bool = True
     format: ReportFormat = ReportFormat.JSON
 
@@ -289,13 +289,15 @@ async def _generate_detailed_report(
         cat = row[0]
         if cat not in violations_by_category:
             violations_by_category[cat] = []
-        violations_by_category[cat].append({
-            "rule_id": row[1],
-            "rule_name": row[2],
-            "severity": row[3],
-            "count": row[4],
-            "total_amount": row[5] or 0,
-        })
+        violations_by_category[cat].append(
+            {
+                "rule_id": row[1],
+                "rule_name": row[2],
+                "severity": row[3],
+                "count": row[4],
+                "total_amount": row[5] or 0,
+            }
+        )
 
     # Get high risk entries
     high_risk_query = """
@@ -381,13 +383,19 @@ async def _generate_executive_report(
     # Risk assessment
     if risk_pct > 5:
         overall_assessment = "要注意"
-        assessment_detail = "高リスク仕訳の割合が5%を超えています。詳細な調査が必要です。"
+        assessment_detail = (
+            "高リスク仕訳の割合が5%を超えています。詳細な調査が必要です。"
+        )
     elif risk_pct > 2:
         overall_assessment = "注意"
-        assessment_detail = "一部注意を要する仕訳があります。優先順位を付けて確認してください。"
+        assessment_detail = (
+            "一部注意を要する仕訳があります。優先順位を付けて確認してください。"
+        )
     else:
         overall_assessment = "概ね良好"
-        assessment_detail = "重大な問題は検出されていませんが、高リスク仕訳の確認を推奨します。"
+        assessment_detail = (
+            "重大な問題は検出されていませんが、高リスク仕訳の確認を推奨します。"
+        )
 
     return {
         "metadata": metadata.model_dump(),
@@ -587,8 +595,15 @@ async def _generate_benford_report(
 ) -> dict[str, Any]:
     """Generate Benford's Law analysis report."""
     expected = {
-        1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-        6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+        1: 0.301,
+        2: 0.176,
+        3: 0.125,
+        4: 0.097,
+        5: 0.079,
+        6: 0.067,
+        7: 0.058,
+        8: 0.051,
+        9: 0.046,
     }
 
     query = """
@@ -611,13 +626,15 @@ async def _generate_benford_report(
         digit, count = row[0], row[1]
         actual = count / total
         exp = expected.get(digit, 0)
-        distribution.append({
-            "digit": digit,
-            "count": count,
-            "actual_pct": round(actual * 100, 2),
-            "expected_pct": round(exp * 100, 2),
-            "deviation": round((actual - exp) * 100, 2),
-        })
+        distribution.append(
+            {
+                "digit": digit,
+                "count": count,
+                "actual_pct": round(actual * 100, 2),
+                "expected_pct": round(exp * 100, 2),
+                "deviation": round((actual - exp) * 100, 2),
+            }
+        )
 
     mad = sum(abs(d["deviation"]) for d in distribution) / 900 if distribution else 0
 
@@ -632,7 +649,9 @@ async def _generate_benford_report(
         interpretation = "ベンフォードの法則からやや乖離があります"
     else:
         conformity = "nonconforming"
-        interpretation = "ベンフォードの法則から大きく乖離しています。詳細な調査を推奨します"
+        interpretation = (
+            "ベンフォードの法則から大きく乖離しています。詳細な調査を推奨します"
+        )
 
     return {
         "metadata": metadata.model_dump(),
@@ -732,7 +751,7 @@ async def get_report_templates() -> dict[str, Any]:
 
 @router.get("/history")
 async def get_report_history(
-    fiscal_year: Optional[int] = Query(None),
+    fiscal_year: int | None = Query(None),
     limit: int = Query(20, le=100),
 ) -> dict[str, Any]:
     """Get report generation history.

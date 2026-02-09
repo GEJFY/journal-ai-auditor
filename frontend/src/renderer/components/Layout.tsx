@@ -49,7 +49,7 @@ const navGroups: NavGroup[] = [
         path: '/',
         label: 'ダッシュボード',
         icon: <LayoutDashboard size={20} />,
-        description: '全体の分析状況を確認'
+        description: '全体の分析状況を確認',
       },
     ],
   },
@@ -60,13 +60,13 @@ const navGroups: NavGroup[] = [
         path: '/import',
         label: 'データ取込',
         icon: <Upload size={20} />,
-        description: '仕訳データをインポート'
+        description: '仕訳データをインポート',
       },
       {
         path: '/search',
         label: '仕訳検索',
         icon: <Search size={20} />,
-        description: '仕訳データを検索'
+        description: '仕訳データを検索',
       },
     ],
   },
@@ -77,25 +77,25 @@ const navGroups: NavGroup[] = [
         path: '/risk',
         label: 'リスク分析',
         icon: <Shield size={20} />,
-        description: 'リスクスコアと違反一覧'
+        description: 'リスクスコアと違反一覧',
       },
       {
         path: '/timeseries',
         label: '時系列分析',
         icon: <TrendingUp size={20} />,
-        description: '月次・期間トレンド分析'
+        description: '月次・期間トレンド分析',
       },
       {
         path: '/accounts',
         label: '勘定科目分析',
         icon: <FileText size={20} />,
-        description: '勘定科目別の分析'
+        description: '勘定科目別の分析',
       },
       {
         path: '/ai-analysis',
         label: 'AI分析',
         icon: <Bot size={20} />,
-        description: 'AIによる自動分析'
+        description: 'AIによる自動分析',
       },
     ],
   },
@@ -106,7 +106,7 @@ const navGroups: NavGroup[] = [
         path: '/reports',
         label: 'レポート生成',
         icon: <ClipboardList size={20} />,
-        description: '監査レポートを作成'
+        description: '監査レポートを作成',
       },
     ],
   },
@@ -121,10 +121,9 @@ export default function Layout({ children, isConnected }: LayoutProps) {
   const [showHelp, setShowHelp] = useState(false);
 
   // Find current page info
-  const currentPage = navGroups
-    .flatMap(g => g.items)
-    .find(item => item.path === location.pathname)
-    || bottomNavItems.find(item => item.path === location.pathname);
+  const currentPage =
+    navGroups.flatMap((g) => g.items).find((item) => item.path === location.pathname) ||
+    bottomNavItems.find((item) => item.path === location.pathname);
 
   return (
     <div className="flex h-screen bg-neutral-50">
@@ -137,9 +136,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               <Activity className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-xl font-bold text-primary-900 tracking-tight">
-                JAIA
-              </span>
+              <span className="text-xl font-bold text-primary-900 tracking-tight">JAIA</span>
               <p className="text-[10px] text-neutral-400 font-medium tracking-wide">
                 Journal Entry Analyzer
               </p>
@@ -163,12 +160,14 @@ export default function Layout({ children, isConnected }: LayoutProps) {
                     )}
                     title={item.description}
                   >
-                    <span className={clsx(
-                      'transition-colors',
-                      location.pathname === item.path
-                        ? 'text-primary-700'
-                        : 'text-neutral-400 group-hover:text-neutral-600'
-                    )}>
+                    <span
+                      className={clsx(
+                        'transition-colors',
+                        location.pathname === item.path
+                          ? 'text-primary-700'
+                          : 'text-neutral-400 group-hover:text-neutral-600'
+                      )}
+                    >
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
@@ -185,17 +184,14 @@ export default function Layout({ children, isConnected }: LayoutProps) {
             <Link
               key={item.path}
               to={item.path}
-              className={clsx(
-                'nav-item',
-                location.pathname === item.path && 'nav-item-active'
-              )}
+              className={clsx('nav-item', location.pathname === item.path && 'nav-item-active')}
             >
-              <span className={clsx(
-                'transition-colors',
-                location.pathname === item.path
-                  ? 'text-primary-700'
-                  : 'text-neutral-400'
-              )}>
+              <span
+                className={clsx(
+                  'transition-colors',
+                  location.pathname === item.path ? 'text-primary-700' : 'text-neutral-400'
+                )}
+              >
                 {item.icon}
               </span>
               <span>{item.label}</span>
@@ -210,9 +206,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               <div
                 className={clsx(
                   'w-2.5 h-2.5 rounded-full ring-2 ring-offset-1',
-                  isConnected
-                    ? 'bg-green-500 ring-green-200'
-                    : 'bg-red-500 ring-red-200'
+                  isConnected ? 'bg-green-500 ring-green-200' : 'bg-red-500 ring-red-200'
                 )}
               />
               <span className="text-xs font-medium text-neutral-500">
@@ -233,9 +227,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               {currentPage?.label || 'JAIA'}
             </h1>
             {currentPage?.description && (
-              <p className="text-sm text-neutral-500 mt-0.5">
-                {currentPage.description}
-              </p>
+              <p className="text-sm text-neutral-500 mt-0.5">{currentPage.description}</p>
             )}
           </div>
 
@@ -267,9 +259,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
 
         {/* Content */}
         <div className="flex-1 overflow-auto">
-          <div className="page-container animate-fade-in">
-            {children}
-          </div>
+          <div className="page-container animate-fade-in">{children}</div>
         </div>
       </main>
 
@@ -278,7 +268,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
         <div className="fixed inset-0 bg-black/20 z-50" onClick={() => setShowHelp(false)}>
           <div
             className="absolute right-0 top-0 h-full w-96 bg-white shadow-dropdown p-6 animate-slide-up"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-neutral-900">ヘルプ</h2>
@@ -293,8 +283,10 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               <div className="card p-4">
                 <h3 className="font-medium text-neutral-800 mb-2">クイックスタート</h3>
                 <p className="text-sm text-neutral-600">
-                  1. データ取込からCSVファイルをアップロード<br/>
-                  2. ダッシュボードで結果を確認<br/>
+                  1. データ取込からCSVファイルをアップロード
+                  <br />
+                  2. ダッシュボードで結果を確認
+                  <br />
                   3. リスク分析で詳細を調査
                 </p>
               </div>

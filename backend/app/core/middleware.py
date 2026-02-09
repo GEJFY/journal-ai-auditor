@@ -20,11 +20,10 @@ FastAPIアプリケーションに適用するミドルウェアを定義しま�
 
 import time
 import traceback
-import hashlib
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Callable, Dict, List, Optional, Set
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -32,19 +31,16 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.logging import (
-    get_logger,
-    set_request_id,
-    get_request_id,
-    audit_log,
-    perf_log,
-    security_log,
-)
 from app.core.exceptions import (
     JAIAException,
-    RateLimitError,
-    IPBlockedError,
-    SuspiciousActivityError,
+)
+from app.core.logging import (
+    audit_log,
+    get_logger,
+    get_request_id,
+    perf_log,
+    security_log,
+    set_request_id,
 )
 
 logger = get_logger(__name__)
@@ -54,6 +50,7 @@ logger = get_logger(__name__)
 # セキュリティ設定
 # =============================================================================
 
+
 class SecurityConfig:
     """セキュリティ設定を管理するクラス"""
 
@@ -62,17 +59,22 @@ class SecurityConfig:
     RATE_LIMIT_WINDOW_SECONDS = 60  # 時間ウィンドウ（秒）
 
     # IPブロック設定
-    BLOCKED_IPS: Set[str] = set()  # 永久ブロックIP
+    BLOCKED_IPS: set[str] = set()  # 永久ブロックIP
     TEMP_BLOCK_THRESHOLD = 10  # 一時ブロックまでの違反回数
     TEMP_BLOCK_DURATION_MINUTES = 15  # 一時ブロック期間（分）
 
     # 疑わしいパターン
     SUSPICIOUS_PATTERNS = [
-        "../", "..\\",  # ディレクトリトラバーサル
-        "<script", "</script>",  # XSS
-        "' OR ", "\" OR ",  # SQL Injection
-        "${", "#{",  # Template Injection
-        "{{", "}}",  # SSTI
+        "../",
+        "..\\",  # ディレクトリトラバーサル
+        "<script",
+        "</script>",  # XSS
+        "' OR ",
+        '" OR ',  # SQL Injection
+        "${",
+        "#{",  # Template Injection
+        "{{",
+        "}}",  # SSTI
     ]
 
     # セキュリティヘッダー
@@ -99,6 +101,7 @@ class SecurityConfig:
 # レート制限ミドルウェア
 # =============================================================================
 
+
 class RateLimiter:
     """
     スライディングウィンドウ方式のレート制限。
@@ -114,7 +117,7 @@ class RateLimiter:
     ):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self.requests: Dict[str, List[float]] = defaultdict(list)
+        self.requests: dict[str, list[float]] = defaultdict(list)
         self.lock = Lock()
 
     def is_allowed(self, client_id: str) -> bool:
@@ -133,8 +136,7 @@ class RateLimiter:
         with self.lock:
             # 古いリクエストを削除
             self.requests[client_id] = [
-                ts for ts in self.requests[client_id]
-                if ts > window_start
+                ts for ts in self.requests[client_id] if ts > window_start
             ]
 
             # リクエスト数をチェック
@@ -151,10 +153,9 @@ class RateLimiter:
         window_start = now - self.window_seconds
 
         with self.lock:
-            current_count = len([
-                ts for ts in self.requests[client_id]
-                if ts > window_start
-            ])
+            current_count = len(
+                [ts for ts in self.requests[client_id] if ts > window_start]
+            )
             return max(0, self.max_requests - current_count)
 
     def get_reset_time(self, client_id: str) -> int:
@@ -179,9 +180,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     過剰なリクエストを拒否します。
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         path = request.url.path
 
         # ホワイトリストパスはスキップ
@@ -197,7 +196,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "event_type": "rate_limit_exceeded",
                     "client_ip": client_ip,
                     "path": path,
-                }
+                },
             )
 
             return JSONResponse(
@@ -210,13 +209,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     },
                     "meta": {
                         "retry_after": rate_limiter.get_reset_time(client_ip),
-                    }
+                    },
                 },
                 headers={
                     "Retry-After": str(rate_limiter.get_reset_time(client_ip)),
                     "X-RateLimit-Limit": str(rate_limiter.max_requests),
                     "X-RateLimit-Remaining": "0",
-                }
+                },
             )
 
         response = await call_next(request)
@@ -250,6 +249,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 # IP制限ミドルウェア
 # =============================================================================
 
+
 class IPBlockManager:
     """
     IPブロック管理クラス。
@@ -259,9 +259,9 @@ class IPBlockManager:
     """
 
     def __init__(self):
-        self.permanent_blocks: Set[str] = SecurityConfig.BLOCKED_IPS.copy()
-        self.temp_blocks: Dict[str, datetime] = {}
-        self.violation_counts: Dict[str, int] = defaultdict(int)
+        self.permanent_blocks: set[str] = SecurityConfig.BLOCKED_IPS.copy()
+        self.temp_blocks: dict[str, datetime] = {}
+        self.violation_counts: dict[str, int] = defaultdict(int)
         self.lock = Lock()
 
     def is_blocked(self, ip: str) -> bool:
@@ -298,7 +298,7 @@ class IPBlockManager:
                         "client_ip": ip,
                         "violation_count": self.violation_counts[ip],
                         "block_duration_minutes": SecurityConfig.TEMP_BLOCK_DURATION_MINUTES,
-                    }
+                    },
                 )
 
     def add_permanent_block(self, ip: str) -> None:
@@ -310,7 +310,7 @@ class IPBlockManager:
                 extra={
                     "event_type": "ip_permanent_blocked",
                     "client_ip": ip,
-                }
+                },
             )
 
     def remove_block(self, ip: str) -> None:
@@ -332,9 +332,7 @@ class IPBlockMiddleware(BaseHTTPMiddleware):
     ブロックリストに登録されたIPからのリクエストを拒否します。
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         client_ip = self._get_client_ip(request)
 
         if ip_block_manager.is_blocked(client_ip):
@@ -344,7 +342,7 @@ class IPBlockMiddleware(BaseHTTPMiddleware):
                     "event_type": "blocked_ip_access",
                     "client_ip": client_ip,
                     "path": request.url.path,
-                }
+                },
             )
 
             return JSONResponse(
@@ -354,8 +352,8 @@ class IPBlockMiddleware(BaseHTTPMiddleware):
                     "error": {
                         "error_code": "IP_BLOCKED",
                         "message": "アクセスが制限されています。",
-                    }
-                }
+                    },
+                },
             )
 
         return await call_next(request)
@@ -377,6 +375,7 @@ class IPBlockMiddleware(BaseHTTPMiddleware):
 # セキュリティヘッダーミドルウェア
 # =============================================================================
 
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     セキュリティヘッダーを追加するミドルウェア。
@@ -385,9 +384,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     攻撃を防ぐためのセキュリティヘッダーを追加します。
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
 
         # セキュリティヘッダーを追加
@@ -401,6 +398,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # 疑わしいリクエスト検出ミドルウェア
 # =============================================================================
 
+
 class SuspiciousActivityMiddleware(BaseHTTPMiddleware):
     """
     疑わしいリクエストを検出するミドルウェア。
@@ -409,9 +407,7 @@ class SuspiciousActivityMiddleware(BaseHTTPMiddleware):
     攻撃パターンを検出し、ログに記録します。
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         client_ip = self._get_client_ip(request)
         path = request.url.path
         query_string = str(request.url.query) if request.url.query else ""
@@ -429,7 +425,7 @@ class SuspiciousActivityMiddleware(BaseHTTPMiddleware):
                         "path": path,
                         "query_string": query_string,
                         "pattern_matched": pattern,
-                    }
+                    },
                 )
 
                 # 違反を記録
@@ -442,8 +438,8 @@ class SuspiciousActivityMiddleware(BaseHTTPMiddleware):
                         "error": {
                             "error_code": "SUSPICIOUS_REQUEST",
                             "message": "不正なリクエストが検出されました。",
-                        }
-                    }
+                        },
+                    },
                 )
 
         return await call_next(request)
@@ -469,9 +465,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     リクエストIDによるトレーサビリティを提供します。
     """
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         リクエストを処理し、ログを出力します。
 
@@ -503,7 +497,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 "path": path,
                 "query_string": query_string,
                 "client_ip": client_ip,
-            }
+            },
         )
 
         # リクエスト処理
@@ -519,7 +513,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 extra={
                     "method": method,
                     "path": path,
-                }
+                },
             )
             raise
 
@@ -540,7 +534,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 "status_code": status_code,
                 "duration_ms": duration_ms,
                 "client_ip": client_ip,
-            }
+            },
         )
 
         # パフォーマンスログ
@@ -551,15 +545,13 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 "path": path,
                 "status_code": status_code,
                 "duration_ms": duration_ms,
-            }
+            },
         )
 
         return response
 
 
-async def jaia_exception_handler(
-    request: Request, exc: JAIAException
-) -> JSONResponse:
+async def jaia_exception_handler(request: Request, exc: JAIAException) -> JSONResponse:
     """
     JAIA例外をJSONレスポンスに変換するハンドラ。
 
@@ -578,7 +570,7 @@ async def jaia_exception_handler(
         extra={
             "error_code": exc.error_code,
             "detail": exc.detail,
-        }
+        },
     )
 
     return JSONResponse(
@@ -589,15 +581,13 @@ async def jaia_exception_handler(
             "meta": {
                 "request_id": request_id,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
+            },
         },
-        headers={"X-Request-ID": request_id}
+        headers={"X-Request-ID": request_id},
     )
 
 
-async def generic_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     一般的な例外をJSONレスポンスに変換するハンドラ。
 
@@ -611,16 +601,13 @@ async def generic_exception_handler(
     request_id = get_request_id()
 
     # エラーログを出力（スタックトレース含む）
-    logger.error(
-        f"Unhandled Exception: {exc}",
-        exc_info=True
-    )
+    logger.error(f"Unhandled Exception: {exc}", exc_info=True)
 
     # 本番環境ではスタックトレースを隠す
     if settings.debug:
         detail = {
             "exception_type": type(exc).__name__,
-            "traceback": traceback.format_exc()
+            "traceback": traceback.format_exc(),
         }
     else:
         detail = {}
@@ -631,15 +618,17 @@ async def generic_exception_handler(
             "success": False,
             "error": {
                 "error_code": "INTERNAL_ERROR",
-                "message": "内部エラーが発生しました" if not settings.debug else str(exc),
+                "message": "内部エラーが発生しました"
+                if not settings.debug
+                else str(exc),
                 "detail": detail,
             },
             "meta": {
                 "request_id": request_id,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
+            },
         },
-        headers={"X-Request-ID": request_id}
+        headers={"X-Request-ID": request_id},
     )
 
 
@@ -712,9 +701,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
         "/api/v1/settings",
     ]
 
-    async def dispatch(
-        self, request: Request, call_next: Callable
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         リクエストを処理し、必要に応じて監査ログを出力します。
 
@@ -743,7 +730,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
                     "method": method,
                     "path": path,
                     "client_ip": client_ip,
-                }
+                },
             )
 
         response = await call_next(request)
@@ -757,7 +744,7 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
                     "method": method,
                     "path": path,
                     "status_code": response.status_code,
-                }
+                },
             )
 
         return response

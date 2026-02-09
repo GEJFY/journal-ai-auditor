@@ -1,8 +1,8 @@
 """LLM Data Models."""
 
 from dataclasses import dataclass, field
-from typing import Literal, Any
 from datetime import datetime
+from typing import Any, Literal
 
 
 @dataclass
@@ -10,8 +10,14 @@ class LLMConfig:
     """Configuration for LLM calls."""
 
     provider: Literal[
-        "anthropic", "openai", "google", "bedrock",
-        "azure", "azure_foundry", "vertex_ai", "ollama",
+        "anthropic",
+        "openai",
+        "google",
+        "bedrock",
+        "azure",
+        "azure_foundry",
+        "vertex_ai",
+        "ollama",
     ]
     model: str
     temperature: float = 0.0

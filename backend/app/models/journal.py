@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, time
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -51,7 +51,7 @@ class JournalEntryBase(BaseModel):
         ...,
         description="入力日",
     )
-    entry_time: Optional[time] = Field(
+    entry_time: time | None = Field(
         None,
         description="入力時刻",
     )
@@ -75,7 +75,7 @@ class JournalEntryBase(BaseModel):
         max_length=3,
         description="通貨コード (ISO 4217)",
     )
-    functional_amount: Optional[Decimal] = Field(
+    functional_amount: Decimal | None = Field(
         None,
         max_digits=18,
         decimal_places=2,
@@ -87,52 +87,52 @@ class JournalEntryBase(BaseModel):
     )
 
     # Description
-    je_line_description: Optional[str] = Field(
+    je_line_description: str | None = Field(
         None,
         max_length=500,
         description="摘要",
     )
 
     # Source and Classification
-    source: Optional[str] = Field(
+    source: str | None = Field(
         None,
         max_length=50,
         description="発生源（MANUAL, SALES, PURCHASE等）",
     )
-    vendor_code: Optional[str] = Field(
+    vendor_code: str | None = Field(
         None,
         max_length=50,
         description="取引先コード",
     )
-    dept_code: Optional[str] = Field(
+    dept_code: str | None = Field(
         None,
         max_length=50,
         description="部門コード",
     )
 
     # Approval
-    prepared_by: Optional[str] = Field(
+    prepared_by: str | None = Field(
         None,
         max_length=50,
         description="起票者ID",
     )
-    approved_by: Optional[str] = Field(
+    approved_by: str | None = Field(
         None,
         max_length=50,
         description="承認者ID",
     )
-    approved_date: Optional[date] = Field(
+    approved_date: date | None = Field(
         None,
         description="承認日",
     )
 
     # Audit Trail
-    last_modified_by: Optional[str] = Field(
+    last_modified_by: str | None = Field(
         None,
         max_length=50,
         description="最終更新者ID",
     )
-    last_modified_date: Optional[datetime] = Field(
+    last_modified_date: datetime | None = Field(
         None,
         description="最終更新日時",
     )
@@ -173,18 +173,18 @@ class JournalEntryInDB(JournalEntry):
     """Journal entry as stored in database with analysis fields."""
 
     # Analysis results
-    risk_score: Optional[Decimal] = Field(
+    risk_score: Decimal | None = Field(
         None,
         ge=0,
         le=100,
         description="リスクスコア (0-100)",
     )
-    anomaly_flags: Optional[str] = Field(
+    anomaly_flags: str | None = Field(
         None,
         max_length=100,
         description="異常フラグ（カンマ区切り）",
     )
-    rule_violations: Optional[str] = Field(
+    rule_violations: str | None = Field(
         None,
         max_length=200,
         description="ルール違反（カンマ区切り）",
@@ -204,36 +204,36 @@ class JournalHeader(BaseModel):
     accounting_period: int
     effective_date: date
     entry_date: date
-    source: Optional[str]
-    prepared_by: Optional[str]
-    approved_by: Optional[str]
-    approved_date: Optional[date]
+    source: str | None
+    prepared_by: str | None
+    approved_by: str | None
+    approved_date: date | None
     line_count: int
     total_debit: Decimal
     total_credit: Decimal
     is_balanced: bool
-    description: Optional[str]
+    description: str | None
 
 
 class JournalSearchParams(BaseModel):
     """Parameters for journal entry search."""
 
-    fiscal_year: Optional[int] = None
-    period_from: Optional[int] = Field(None, ge=1, le=13)
-    period_to: Optional[int] = Field(None, ge=1, le=13)
-    date_from: Optional[date] = None
-    date_to: Optional[date] = None
-    accounts: Optional[list[str]] = None
-    departments: Optional[list[str]] = None
-    vendors: Optional[list[str]] = None
-    prepared_by: Optional[list[str]] = None
-    approved_by: Optional[list[str]] = None
-    min_amount: Optional[Decimal] = None
-    max_amount: Optional[Decimal] = None
-    description_contains: Optional[str] = None
-    source: Optional[list[str]] = None
-    risk_score_min: Optional[Decimal] = None
-    has_anomaly: Optional[bool] = None
-    has_violation: Optional[bool] = None
+    fiscal_year: int | None = None
+    period_from: int | None = Field(None, ge=1, le=13)
+    period_to: int | None = Field(None, ge=1, le=13)
+    date_from: date | None = None
+    date_to: date | None = None
+    accounts: list[str] | None = None
+    departments: list[str] | None = None
+    vendors: list[str] | None = None
+    prepared_by: list[str] | None = None
+    approved_by: list[str] | None = None
+    min_amount: Decimal | None = None
+    max_amount: Decimal | None = None
+    description_contains: str | None = None
+    source: list[str] | None = None
+    risk_score_min: Decimal | None = None
+    has_anomaly: bool | None = None
+    has_violation: bool | None = None
     limit: int = Field(default=100, le=10000)
     offset: int = Field(default=0, ge=0)

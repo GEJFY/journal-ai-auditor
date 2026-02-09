@@ -877,8 +877,9 @@ class PPTGenerator:
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      LLM Providers                              │
-│  llm/bedrock, vertex, azure_openai, anthropic                  │
+│                   LLM Providers (8種類)                          │
+│  anthropic, openai, google, bedrock, azure_foundry,            │
+│  vertex_ai, azure, ollama                                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

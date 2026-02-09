@@ -7,7 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import polars as pl
 
@@ -26,7 +26,7 @@ class EngineResult:
     """Result of rule engine execution."""
 
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     total_entries: int = 0
     total_rules: int = 0
     rules_executed: int = 0
@@ -42,7 +42,9 @@ class EngineResult:
         """Convert to dictionary."""
         return {
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
             "total_entries": self.total_entries,
             "total_rules": self.total_rules,
             "rules_executed": self.rules_executed,
@@ -67,7 +69,7 @@ class RuleEngine:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
+        db: DuckDBManager | None = None,
         max_workers: int = 4,
     ) -> None:
         """Initialize rule engine.
@@ -99,7 +101,7 @@ class RuleEngine:
         for rule in rule_set.rules:
             self._rules[rule.rule_id] = rule
 
-    def get_rule(self, rule_id: str) -> Optional[AuditRule]:
+    def get_rule(self, rule_id: str) -> AuditRule | None:
         """Get a rule by ID.
 
         Args:
@@ -132,10 +134,10 @@ class RuleEngine:
 
     def load_journal_entries(
         self,
-        fiscal_year: Optional[int] = None,
-        business_unit_code: Optional[str] = None,
-        period: Optional[int] = None,
-        limit: Optional[int] = None,
+        fiscal_year: int | None = None,
+        business_unit_code: str | None = None,
+        period: int | None = None,
+        limit: int | None = None,
     ) -> pl.DataFrame:
         """Load journal entries from database.
 
@@ -208,7 +210,7 @@ class RuleEngine:
     def execute_rules(
         self,
         df: pl.DataFrame,
-        rules: Optional[list[AuditRule]] = None,
+        rules: list[AuditRule] | None = None,
         parallel: bool = True,
     ) -> EngineResult:
         """Execute multiple rules against data.
@@ -250,7 +252,8 @@ class RuleEngine:
                 # Count by category
                 cat = rule_result.category.value
                 result.violations_by_category[cat] = (
-                    result.violations_by_category.get(cat, 0) + rule_result.violations_found
+                    result.violations_by_category.get(cat, 0)
+                    + rule_result.violations_found
                 )
 
                 # Count by severity
@@ -283,8 +286,7 @@ class RuleEngine:
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = {
-                executor.submit(self.execute_rule, rule, df): rule
-                for rule in rules
+                executor.submit(self.execute_rule, rule, df): rule for rule in rules
             }
 
             for future in as_completed(futures):
@@ -294,10 +296,10 @@ class RuleEngine:
 
     def execute_all(
         self,
-        fiscal_year: Optional[int] = None,
-        business_unit_code: Optional[str] = None,
-        period: Optional[int] = None,
-        categories: Optional[list[RuleCategory]] = None,
+        fiscal_year: int | None = None,
+        business_unit_code: str | None = None,
+        period: int | None = None,
+        categories: list[RuleCategory] | None = None,
     ) -> EngineResult:
         """Execute all rules against database data.
 
@@ -325,7 +327,9 @@ class RuleEngine:
         # Execute rules
         return self.execute_rules(df, rules)
 
-    def store_violations(self, violations: list[RuleViolation], batch_size: int = 50000) -> int:
+    def store_violations(
+        self, violations: list[RuleViolation], batch_size: int = 50000
+    ) -> int:
         """Store violations in database.
 
         Args:
@@ -344,7 +348,7 @@ class RuleEngine:
 
         # Process in batches for better performance
         for i in range(0, len(violations), batch_size):
-            batch = violations[i:i + batch_size]
+            batch = violations[i : i + batch_size]
 
             # Convert to DataFrame with proper type handling
             records = []
@@ -441,7 +445,7 @@ class RuleEngine:
 
     def get_violation_summary(
         self,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> dict[str, Any]:
         """Get violation summary from database.
 

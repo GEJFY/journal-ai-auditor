@@ -8,10 +8,8 @@
 - ML-005: Ensemble (combined methods)
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import polars as pl
@@ -24,8 +22,8 @@ from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -69,39 +67,52 @@ class FeatureExtractor:
             Tuple of (feature matrix, original DataFrame with row alignment).
         """
         # Add derived features
-        df = df.with_columns([
-            # Log of amount for better scaling
-            (pl.col("amount").abs() + 1).log().alias("amount_log"),
-
-            # Time features
-            pl.col("effective_date").dt.day().alias("day_of_month"),
-            pl.col("effective_date").dt.weekday().alias("day_of_week"),
-            (pl.col("effective_date").dt.weekday() >= 5).cast(pl.Int32).alias("is_weekend"),
-            (pl.col("effective_date").dt.day() >= 28).cast(pl.Int32).alias("is_month_end"),
-        ])
+        df = df.with_columns(
+            [
+                # Log of amount for better scaling
+                (pl.col("amount").abs() + 1).log().alias("amount_log"),
+                # Time features
+                pl.col("effective_date").dt.day().alias("day_of_month"),
+                pl.col("effective_date").dt.weekday().alias("day_of_week"),
+                (pl.col("effective_date").dt.weekday() >= 5)
+                .cast(pl.Int32)
+                .alias("is_weekend"),
+                (pl.col("effective_date").dt.day() >= 28)
+                .cast(pl.Int32)
+                .alias("is_month_end"),
+            ]
+        )
 
         # Hour of day (if available)
         if "entry_time" in df.columns:
-            df = df.with_columns([
-                pl.when(pl.col("entry_time").is_not_null())
-                .then(pl.col("entry_time").dt.hour())
-                .otherwise(12)
-                .alias("hour_of_day")
-            ])
+            df = df.with_columns(
+                [
+                    pl.when(pl.col("entry_time").is_not_null())
+                    .then(pl.col("entry_time").dt.hour())
+                    .otherwise(12)
+                    .alias("hour_of_day")
+                ]
+            )
         else:
             df = df.with_columns([pl.lit(12).alias("hour_of_day")])
 
         # Entry delay
         if "entry_date" in df.columns and "effective_date" in df.columns:
-            df = df.with_columns([
-                pl.when(
-                    pl.col("entry_date").is_not_null() &
-                    pl.col("effective_date").is_not_null()
-                )
-                .then((pl.col("entry_date") - pl.col("effective_date")).dt.total_days())
-                .otherwise(0)
-                .alias("entry_delay_days")
-            ])
+            df = df.with_columns(
+                [
+                    pl.when(
+                        pl.col("entry_date").is_not_null()
+                        & pl.col("effective_date").is_not_null()
+                    )
+                    .then(
+                        (
+                            pl.col("entry_date") - pl.col("effective_date")
+                        ).dt.total_days()
+                    )
+                    .otherwise(0)
+                    .alias("entry_delay_days")
+                ]
+            )
         else:
             df = df.with_columns([pl.lit(0).alias("entry_delay_days")])
 
@@ -118,17 +129,19 @@ class FeatureExtractor:
 
         # Add one-hot encoding for source
         if "source" in df.columns:
-            source_dummies = df.select(
-                pl.col("source").to_dummies(separator="_")
-            )
+            source_dummies = df.select(pl.col("source").to_dummies(separator="_"))
             df = pl.concat([df, source_dummies], how="horizontal")
-            feature_cols.extend([c for c in source_dummies.columns])
+            feature_cols.extend(list(source_dummies.columns))
 
         # Add DC indicator
         if "debit_credit_indicator" in df.columns:
-            df = df.with_columns([
-                (pl.col("debit_credit_indicator") == "D").cast(pl.Int32).alias("is_debit")
-            ])
+            df = df.with_columns(
+                [
+                    (pl.col("debit_credit_indicator") == "D")
+                    .cast(pl.Int32)
+                    .alias("is_debit")
+                ]
+            )
             feature_cols.append("is_debit")
 
         # Extract feature matrix
@@ -176,7 +189,7 @@ class IsolationForestRule(AuditRule):
         self.contamination = contamination
         self.n_estimators = n_estimators
         self.feature_extractor = FeatureExtractor()
-        self.model: Optional[IsolationForest] = None
+        self.model: IsolationForest | None = None
 
     @property
     def rule_id(self) -> str:
@@ -227,7 +240,9 @@ class IsolationForestRule(AuditRule):
 
             for idx in anomaly_indices:
                 row = df_with_features.row(idx, named=True)
-                anomaly_score = -scores[idx]  # Convert to positive (higher = more anomalous)
+                anomaly_score = -scores[
+                    idx
+                ]  # Convert to positive (higher = more anomalous)
 
                 violation = self._create_violation(
                     gl_detail_id=row["gl_detail_id"],
@@ -282,7 +297,9 @@ class LocalOutlierFactorRule(AuditRule):
 
     @property
     def description(self) -> str:
-        return "Local Outlier Factorアルゴリズムによる局所密度ベース異常検知を実行します。"
+        return (
+            "Local Outlier Factorアルゴリズムによる局所密度ベース異常検知を実行します。"
+        )
 
     @property
     def default_severity(self) -> RuleSeverity:

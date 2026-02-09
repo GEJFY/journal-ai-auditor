@@ -24,8 +24,6 @@ Aggregation tables (17 total):
 """
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Optional
 
 from app.db import DuckDBManager
 
@@ -38,13 +36,13 @@ class AggregationResult:
     rows_affected: int
     execution_time_ms: float
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class AggregationService:
     """Service for updating aggregation tables."""
 
-    def __init__(self, db: Optional[DuckDBManager] = None) -> None:
+    def __init__(self, db: DuckDBManager | None = None) -> None:
         """Initialize aggregation service.
 
         Args:
@@ -52,7 +50,7 @@ class AggregationService:
         """
         self.db = db or DuckDBManager()
 
-    def update_all(self, fiscal_year: Optional[int] = None) -> list[AggregationResult]:
+    def update_all(self, fiscal_year: int | None = None) -> list[AggregationResult]:
         """Update all aggregation tables.
 
         Args:
@@ -109,6 +107,7 @@ class AggregationService:
             AggregationResult with execution details.
         """
         import time
+
         start = time.perf_counter()
 
         try:
@@ -134,7 +133,7 @@ class AggregationService:
                 error=str(e),
             )
 
-    def _update_period_account(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_period_account(self, fiscal_year: int | None) -> AggregationResult:
         """Update period x account aggregation."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -158,7 +157,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_by_period_account", query)
 
-    def _update_daily(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_daily(self, fiscal_year: int | None) -> AggregationResult:
         """Update daily aggregation."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -182,7 +181,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_by_date", query)
 
-    def _update_by_user(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_by_user(self, fiscal_year: int | None) -> AggregationResult:
         """Update user activity aggregation."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -207,7 +206,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_by_user", query)
 
-    def _update_by_department(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_by_department(self, fiscal_year: int | None) -> AggregationResult:
         """Update department aggregation."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -228,7 +227,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_by_department", query)
 
-    def _update_by_vendor(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_by_vendor(self, fiscal_year: int | None) -> AggregationResult:
         """Update vendor aggregation."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -249,7 +248,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_by_vendor", query)
 
-    def _update_high_risk(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_high_risk(self, fiscal_year: int | None) -> AggregationResult:
         """Update high risk summary."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -280,7 +279,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_high_risk", query)
 
-    def _update_rule_violations(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_rule_violations(self, fiscal_year: int | None) -> AggregationResult:
         """Update rule violation counts."""
         fy_filter = f"AND je.fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -301,7 +300,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_rule_violations", query)
 
-    def _update_trend_mom(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_trend_mom(self, fiscal_year: int | None) -> AggregationResult:
         """Update month-over-month trend."""
         fy_filter = f"WHERE fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -342,7 +341,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_trend_mom", query)
 
-    def _update_trend_yoy(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_trend_yoy(self, fiscal_year: int | None) -> AggregationResult:
         """Update year-over-year trend."""
         query = """
             INSERT INTO agg_trend_yoy
@@ -379,7 +378,9 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_trend_yoy", query)
 
-    def _update_benford_distribution(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_benford_distribution(
+        self, fiscal_year: int | None
+    ) -> AggregationResult:
         """Update Benford's Law distribution."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -413,7 +414,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_benford_distribution", query)
 
-    def _update_amount_distribution(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_amount_distribution(self, fiscal_year: int | None) -> AggregationResult:
         """Update amount distribution buckets."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -448,7 +449,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_amount_distribution", query)
 
-    def _update_time_distribution(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_time_distribution(self, fiscal_year: int | None) -> AggregationResult:
         """Update time-based distribution."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -471,7 +472,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_time_distribution", query)
 
-    def _update_approval_patterns(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_approval_patterns(self, fiscal_year: int | None) -> AggregationResult:
         """Update approval pattern summary."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -498,7 +499,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_approval_patterns", query)
 
-    def _update_account_activity(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_account_activity(self, fiscal_year: int | None) -> AggregationResult:
         """Update account activity metrics."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -524,7 +525,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_account_activity", query)
 
-    def _update_anomaly_summary(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_anomaly_summary(self, fiscal_year: int | None) -> AggregationResult:
         """Update anomaly detection summary."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -547,7 +548,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_anomaly_summary", query)
 
-    def _update_ml_scores(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_ml_scores(self, fiscal_year: int | None) -> AggregationResult:
         """Update ML score distribution."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 
@@ -581,7 +582,7 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_ml_scores", query)
 
-    def _update_dashboard_kpi(self, fiscal_year: Optional[int]) -> AggregationResult:
+    def _update_dashboard_kpi(self, fiscal_year: int | None) -> AggregationResult:
         """Update dashboard KPI summary."""
         fy_filter = f"WHERE fiscal_year = {fiscal_year}" if fiscal_year else ""
 

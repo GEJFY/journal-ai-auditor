@@ -4,35 +4,36 @@ Provides abstract base class and common utilities for all audit rules.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 import polars as pl
 
 
-class RuleSeverity(str, Enum):
+class RuleSeverity(StrEnum):
     """Severity level of rule violations."""
 
     CRITICAL = "critical"  # 重大: 不正の強い疑い
-    HIGH = "high"          # 高: 要調査
-    MEDIUM = "medium"      # 中: 要確認
-    LOW = "low"            # 低: 注意
-    INFO = "info"          # 情報: 参考
+    HIGH = "high"  # 高: 要調査
+    MEDIUM = "medium"  # 中: 要確認
+    LOW = "low"  # 低: 注意
+    INFO = "info"  # 情報: 参考
 
 
-class RuleCategory(str, Enum):
+class RuleCategory(StrEnum):
     """Category of audit rules."""
 
-    AMOUNT = "amount"           # 金額ルール
-    TIME = "time"               # 時間ルール
-    ACCOUNT = "account"         # 勘定ルール
-    APPROVAL = "approval"       # 承認ルール
-    DESCRIPTION = "description" # 摘要ルール
-    PATTERN = "pattern"         # パターンルール
-    TREND = "trend"             # トレンドルール
-    ML = "ml"                   # 機械学習ルール
+    AMOUNT = "amount"  # 金額ルール
+    TIME = "time"  # 時間ルール
+    ACCOUNT = "account"  # 勘定ルール
+    APPROVAL = "approval"  # 承認ルール
+    DESCRIPTION = "description"  # 摘要ルール
+    PATTERN = "pattern"  # パターンルール
+    TREND = "trend"  # トレンドルール
+    ML = "ml"  # 機械学習ルール
 
 
 @dataclass
@@ -78,7 +79,7 @@ class RuleResult:
     violations_found: int = 0
     violations: list[RuleViolation] = field(default_factory=list)
     execution_time_ms: float = 0.0
-    error: Optional[str] = None
+    error: str | None = None
 
     @property
     def success(self) -> bool:
@@ -123,8 +124,8 @@ class AuditRule(ABC):
     def __init__(
         self,
         enabled: bool = True,
-        severity_override: Optional[RuleSeverity] = None,
-        threshold_overrides: Optional[dict[str, Any]] = None,
+        severity_override: RuleSeverity | None = None,
+        threshold_overrides: dict[str, Any] | None = None,
     ) -> None:
         """Initialize rule.
 
@@ -209,8 +210,8 @@ class AuditRule(ABC):
         gl_detail_id: str,
         journal_id: str,
         message: str,
-        details: Optional[dict[str, Any]] = None,
-        score_impact: Optional[float] = None,
+        details: dict[str, Any] | None = None,
+        score_impact: float | None = None,
     ) -> RuleViolation:
         """Create a violation record.
 
@@ -272,7 +273,7 @@ class RuleSet:
         """
         self._rules[rule.rule_id] = rule
 
-    def get_rule(self, rule_id: str) -> Optional[AuditRule]:
+    def get_rule(self, rule_id: str) -> AuditRule | None:
         """Get a rule by ID.
 
         Args:
@@ -306,5 +307,5 @@ class RuleSet:
     def __len__(self) -> int:
         return len(self._rules)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[AuditRule]:
         return iter(self._rules.values())

@@ -2,8 +2,8 @@
  * DashboardPage Tests
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -15,10 +15,38 @@ vi.mock('../lib/api', () => ({
       total_amount: 1000000000,
       high_risk_count: 150,
       unique_users: 25,
+      debit_total: 500000000,
+      credit_total: 500000000,
+      unique_accounts: 100,
+      unique_journals: 5000,
+      date_range: { from: '2024-04-01', to: '2025-03-31' },
+      anomaly_count: 30,
     }),
-    getDashboardTimeseries: vi.fn().mockResolvedValue([]),
-    getDashboardRisk: vi.fn().mockResolvedValue([]),
-    getDashboardBenford: vi.fn().mockResolvedValue({ actual: [], expected: [] }),
+    getTimeSeries: vi.fn().mockResolvedValue({ data: [], aggregation: 'monthly' }),
+    getKPI: vi.fn().mockResolvedValue({
+      fiscal_year: 2024,
+      total_entries: 50000,
+      total_journals: 5000,
+      total_amount: 1000000000,
+      unique_users: 25,
+      unique_accounts: 100,
+      high_risk_count: 150,
+      high_risk_pct: 3.0,
+      avg_risk_score: 25.5,
+      self_approval_count: 10,
+    }),
+    getRiskAnalysis: vi.fn().mockResolvedValue({
+      high_risk: [],
+      medium_risk: [],
+      low_risk: [],
+      risk_distribution: { high: 5, medium: 15, low: 80, minimal: 100 },
+    }),
+    getBenford: vi.fn().mockResolvedValue({
+      distribution: [],
+      total_count: 0,
+      mad: 0,
+      conformity: 'close',
+    }),
   },
 }));
 
@@ -38,9 +66,9 @@ vi.mock('recharts', () => ({
   Bar: () => null,
 }));
 
+import DashboardPage from '../pages/DashboardPage';
+
 function renderDashboard() {
-  // Lazy import to ensure mocks are in place
-  const DashboardPage = require('../pages/DashboardPage').default;
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -54,20 +82,24 @@ function renderDashboard() {
 }
 
 describe('DashboardPage', () => {
-  it('renders page header', () => {
+  it('renders page header', async () => {
     renderDashboard();
-    expect(screen.getByText(/ダッシュボード/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/ダッシュボード/)).toBeInTheDocument();
+    });
   });
 
-  it('renders stat cards section', () => {
+  it('renders stat cards section', async () => {
     renderDashboard();
-    // The page should have a refresh or data-related element
-    expect(document.querySelector('[class*="grid"]')).toBeTruthy();
+    await waitFor(() => {
+      expect(document.querySelector('[class*="grid"]')).toBeTruthy();
+    });
   });
 
-  it('renders chart sections', () => {
+  it('renders chart sections', async () => {
     renderDashboard();
-    // Charts are mocked, but containers should exist
-    expect(document.querySelector('[class*="card"]')).toBeTruthy();
+    await waitFor(() => {
+      expect(document.querySelector('[class*="card"]')).toBeTruthy();
+    });
   });
 });

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -59,7 +59,7 @@ class RuleViolation(BaseModel):
     message: str = Field(
         description="違反メッセージ",
     )
-    evidence: Optional[dict] = Field(
+    evidence: dict[str, Any] | None = Field(
         default=None,
         description="証拠データ",
     )
@@ -70,13 +70,13 @@ class AnalysisSession(BaseModel):
 
     session_id: str
     started_at: datetime
-    ended_at: Optional[datetime] = None
+    ended_at: datetime | None = None
     status: Literal["running", "completed", "failed", "cancelled"] = "running"
     fiscal_year: int
-    filters: Optional[dict] = None
+    filters: dict[str, Any] | None = None
     total_entries_analyzed: int = 0
     total_insights: int = 0
-    summary: Optional[str] = None
+    summary: str | None = None
 
 
 class Insight(BaseModel):
@@ -84,17 +84,15 @@ class Insight(BaseModel):
 
     insight_id: str
     session_id: str
-    category: Literal[
-        "ANOMALY", "TREND", "RISK", "COMPLIANCE", "EFFICIENCY", "OTHER"
-    ]
+    category: Literal["ANOMALY", "TREND", "RISK", "COMPLIANCE", "EFFICIENCY", "OTHER"]
     title: str
     description: str
     severity: Literal["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"] = "INFO"
-    evidence: Optional[dict] = None
+    evidence: dict[str, Any] | None = None
     affected_journals: list[str] = Field(default_factory=list)
     affected_count: int = 0
     affected_amount: Decimal = Decimal("0")
-    recommendation: Optional[str] = None
+    recommendation: str | None = None
     created_at: datetime
 
 
@@ -109,8 +107,8 @@ class AggregatedMetrics(BaseModel):
 
     # Account metrics
     unique_accounts: int = 0
-    top_debit_accounts: list[dict] = Field(default_factory=list)
-    top_credit_accounts: list[dict] = Field(default_factory=list)
+    top_debit_accounts: list[dict[str, Any]] = Field(default_factory=list)
+    top_credit_accounts: list[dict[str, Any]] = Field(default_factory=list)
 
     # Risk metrics
     high_risk_count: int = 0

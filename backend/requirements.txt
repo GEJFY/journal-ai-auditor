@@ -54,6 +54,7 @@ xlrd>=2.0.1
 # Report Generation
 python-pptx>=1.0.2
 reportlab>=4.2.5
+matplotlib>=3.8.0
 
 # Testing (dev)
 pytest>=8.3.0
