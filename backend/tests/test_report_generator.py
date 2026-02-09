@@ -42,22 +42,44 @@ MOCK_FINDINGS = [
 MOCK_BENFORD_DIGITS = [
     {"digit": d, "actual_pct": round(a * 100, 2), "expected_pct": round(e * 100, 2)}
     for d, a, e in [
-        (1, 0.305, 0.301), (2, 0.172, 0.176), (3, 0.128, 0.125),
-        (4, 0.095, 0.097), (5, 0.081, 0.079), (6, 0.068, 0.067),
-        (7, 0.055, 0.058), (8, 0.050, 0.051), (9, 0.046, 0.046),
+        (1, 0.305, 0.301),
+        (2, 0.172, 0.176),
+        (3, 0.128, 0.125),
+        (4, 0.095, 0.097),
+        (5, 0.081, 0.079),
+        (6, 0.068, 0.067),
+        (7, 0.055, 0.058),
+        (8, 0.050, 0.051),
+        (9, 0.046, 0.046),
     ]
 ]
 
-MOCK_BENFORD_SUMMARY = {"mad": 0.008, "conformity": "acceptable", "conformity_label": "許容範囲"}
+MOCK_BENFORD_SUMMARY = {
+    "mad": 0.008,
+    "conformity": "acceptable",
+    "conformity_label": "許容範囲",
+}
 
 MOCK_MONTHLY_TREND = [
-    {"period": m, "entry_count": 800 + m * 50, "total_amount": 400_000_000, "high_risk_count": 3 + m}
+    {
+        "period": m,
+        "entry_count": 800 + m * 50,
+        "total_amount": 400_000_000,
+        "high_risk_count": 3 + m,
+    }
     for m in range(4, 16)
 ]
 
 
-def _apply_mock_data(generator, stats=None, risk_dist=None, findings=None,
-                     benford_digits=None, benford_summary=None, trend=None):
+def _apply_mock_data(
+    generator,
+    stats=None,
+    risk_dist=None,
+    findings=None,
+    benford_digits=None,
+    benford_summary=None,
+    trend=None,
+):
     """テスト用にジェネレータのキャッシュデータを直接設定。"""
     generator._stats = stats or MOCK_STATS
     generator._risk_dist = risk_dist or MOCK_RISK_DIST
@@ -141,7 +163,11 @@ class TestPPTReportGenerator:
             risk_dist=MOCK_RISK_DIST_EMPTY,
             findings=[],
             benford_digits=[],
-            benford_summary={"mad": 0.0, "conformity": "close", "conformity_label": "N/A"},
+            benford_summary={
+                "mad": 0.0,
+                "conformity": "close",
+                "conformity_label": "N/A",
+            },
             trend=[],
         )
 
@@ -283,7 +309,11 @@ class TestPDFReportGenerator:
             risk_dist=MOCK_RISK_DIST_EMPTY,
             findings=[],
             benford_digits=[],
-            benford_summary={"mad": 0.0, "conformity": "close", "conformity_label": "N/A"},
+            benford_summary={
+                "mad": 0.0,
+                "conformity": "close",
+                "conformity_label": "N/A",
+            },
             trend=[],
         )
 

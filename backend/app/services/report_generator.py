@@ -47,8 +47,15 @@ plt.rcParams["axes.unicode_minus"] = False
 
 # ベンフォードの法則 理論値
 BENFORD_EXPECTED = {
-    1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-    6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+    1: 0.301,
+    2: 0.176,
+    3: 0.125,
+    4: 0.097,
+    5: 0.079,
+    6: 0.067,
+    7: 0.058,
+    8: 0.051,
+    9: 0.046,
 }
 
 
@@ -228,12 +235,14 @@ class PPTReportGenerator:
             actual = count / total
             expected = BENFORD_EXPECTED.get(digit_num, 0)
             mad += abs(actual - expected)
-            digits.append({
-                "digit": digit_num,
-                "count": count,
-                "actual_pct": round(actual * 100, 2),
-                "expected_pct": round(expected * 100, 2),
-            })
+            digits.append(
+                {
+                    "digit": digit_num,
+                    "count": count,
+                    "actual_pct": round(actual * 100, 2),
+                    "expected_pct": round(expected * 100, 2),
+                }
+            )
         mad = mad / 9
 
         if mad <= 0.006:
@@ -282,8 +291,10 @@ class PPTReportGenerator:
         """Add branded header bar at top of slide."""
         bar = slide.shapes.add_shape(
             MSO_SHAPE.RECTANGLE,
-            Inches(0), Inches(0),
-            Inches(13.333), Inches(0.08),
+            Inches(0),
+            Inches(0),
+            Inches(13.333),
+            Inches(0.08),
         )
         bar.fill.solid()
         bar.fill.fore_color.rgb = self.PRIMARY
@@ -294,7 +305,10 @@ class PPTReportGenerator:
         self._add_header_bar(slide)
 
         title_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(0.25), Inches(11.833), Inches(0.8),
+            Inches(0.75),
+            Inches(0.25),
+            Inches(11.833),
+            Inches(0.8),
         )
         tf = title_box.text_frame
         p = tf.paragraphs[0]
@@ -307,7 +321,10 @@ class PPTReportGenerator:
     def _add_slide_number(self, slide: Any, num: int, total: int = 10) -> None:
         """Add slide number at bottom right."""
         num_box = slide.shapes.add_textbox(
-            Inches(12), Inches(7.0), Inches(1), Inches(0.35),
+            Inches(12),
+            Inches(7.0),
+            Inches(1),
+            Inches(0.35),
         )
         tf = num_box.text_frame
         p = tf.paragraphs[0]
@@ -317,15 +334,24 @@ class PPTReportGenerator:
         p.alignment = PP_ALIGN.RIGHT
 
     def _add_kpi_card(
-        self, slide: Any,
-        x: float, y: float, w: float, h: float,
-        label: str, value: str, accent_color: RGBColor,
+        self,
+        slide: Any,
+        x: float,
+        y: float,
+        w: float,
+        h: float,
+        label: str,
+        value: str,
+        accent_color: RGBColor,
     ) -> None:
         """Add a KPI card with colored top border."""
         # カード背景
         card = slide.shapes.add_shape(
             MSO_SHAPE.ROUNDED_RECTANGLE,
-            Inches(x), Inches(y), Inches(w), Inches(h),
+            Inches(x),
+            Inches(y),
+            Inches(w),
+            Inches(h),
         )
         card.fill.solid()
         card.fill.fore_color.rgb = self.WHITE
@@ -335,8 +361,10 @@ class PPTReportGenerator:
         # カラーアクセントバー（上部）
         accent_bar = slide.shapes.add_shape(
             MSO_SHAPE.RECTANGLE,
-            Inches(x + 0.05), Inches(y + 0.05),
-            Inches(w - 0.1), Inches(0.06),
+            Inches(x + 0.05),
+            Inches(y + 0.05),
+            Inches(w - 0.1),
+            Inches(0.06),
         )
         accent_bar.fill.solid()
         accent_bar.fill.fore_color.rgb = accent_color
@@ -344,7 +372,10 @@ class PPTReportGenerator:
 
         # 数値
         val_box = slide.shapes.add_textbox(
-            Inches(x + 0.1), Inches(y + 0.35), Inches(w - 0.2), Inches(0.8),
+            Inches(x + 0.1),
+            Inches(y + 0.35),
+            Inches(w - 0.2),
+            Inches(0.8),
         )
         tf = val_box.text_frame
         tf.word_wrap = True
@@ -357,7 +388,10 @@ class PPTReportGenerator:
 
         # ラベル
         lbl_box = slide.shapes.add_textbox(
-            Inches(x + 0.1), Inches(y + 1.2), Inches(w - 0.2), Inches(0.5),
+            Inches(x + 0.1),
+            Inches(y + 1.2),
+            Inches(w - 0.2),
+            Inches(0.5),
         )
         tf = lbl_box.text_frame
         tf.word_wrap = True
@@ -369,12 +403,19 @@ class PPTReportGenerator:
         p.font.name = self.FONT_JP
 
     def _add_traffic_light(
-        self, slide: Any, x: float, y: float, color: RGBColor,
+        self,
+        slide: Any,
+        x: float,
+        y: float,
+        color: RGBColor,
     ) -> None:
         """Add a traffic light indicator (colored circle)."""
         circle = slide.shapes.add_shape(
             MSO_SHAPE.OVAL,
-            Inches(x), Inches(y), Inches(0.5), Inches(0.5),
+            Inches(x),
+            Inches(y),
+            Inches(0.5),
+            Inches(0.5),
         )
         circle.fill.solid()
         circle.fill.fore_color.rgb = color
@@ -411,7 +452,10 @@ class PPTReportGenerator:
         # 背景バー（装飾）
         bg_bar = slide.shapes.add_shape(
             MSO_SHAPE.RECTANGLE,
-            Inches(0), Inches(0), Inches(13.333), Inches(2.5),
+            Inches(0),
+            Inches(0),
+            Inches(13.333),
+            Inches(2.5),
         )
         bg_bar.fill.solid()
         bg_bar.fill.fore_color.rgb = self.PRIMARY
@@ -419,7 +463,10 @@ class PPTReportGenerator:
 
         # JAIA ロゴテキスト
         logo_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(0.5), Inches(4), Inches(0.6),
+            Inches(0.75),
+            Inches(0.5),
+            Inches(4),
+            Inches(0.6),
         )
         tf = logo_box.text_frame
         p = tf.paragraphs[0]
@@ -435,7 +482,10 @@ class PPTReportGenerator:
 
         # メインタイトル
         title_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(3.2), Inches(11.833), Inches(1.2),
+            Inches(0.75),
+            Inches(3.2),
+            Inches(11.833),
+            Inches(1.2),
         )
         tf = title_box.text_frame
         p = tf.paragraphs[0]
@@ -447,7 +497,10 @@ class PPTReportGenerator:
 
         # サブタイトル
         subtitle_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(4.5), Inches(11.833), Inches(0.8),
+            Inches(0.75),
+            Inches(4.5),
+            Inches(11.833),
+            Inches(0.8),
         )
         tf = subtitle_box.text_frame
         p = tf.paragraphs[0]
@@ -458,12 +511,17 @@ class PPTReportGenerator:
 
         # 日付・作成者
         date_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(5.8), Inches(11.833), Inches(0.8),
+            Inches(0.75),
+            Inches(5.8),
+            Inches(11.833),
+            Inches(0.8),
         )
         tf = date_box.text_frame
         p = tf.paragraphs[0]
         now = datetime.now()
-        p.text = f"作成日: {now.strftime('%Y年%m月%d日')}　作成者: {self.config.prepared_by}"
+        p.text = (
+            f"作成日: {now.strftime('%Y年%m月%d日')}　作成者: {self.config.prepared_by}"
+        )
         p.font.size = Pt(13)
         p.font.color.rgb = self.SECONDARY
         p.font.name = self.FONT_JP
@@ -481,7 +539,10 @@ class PPTReportGenerator:
         self._add_traffic_light(slide, 0.75, 1.5, color)
 
         eval_box = slide.shapes.add_textbox(
-            Inches(1.45), Inches(1.45), Inches(4), Inches(0.65),
+            Inches(1.45),
+            Inches(1.45),
+            Inches(4),
+            Inches(0.65),
         )
         tf = eval_box.text_frame
         p = tf.paragraphs[0]
@@ -492,7 +553,10 @@ class PPTReportGenerator:
         p.font.name = self.FONT_JP
 
         detail_box = slide.shapes.add_textbox(
-            Inches(1.45), Inches(2.1), Inches(4.5), Inches(0.5),
+            Inches(1.45),
+            Inches(2.1),
+            Inches(4.5),
+            Inches(0.5),
         )
         tf = detail_box.text_frame
         p = tf.paragraphs[0]
@@ -503,20 +567,48 @@ class PPTReportGenerator:
 
         # 検証概要（左側下）
         overview_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(3.0), Inches(5.5), Inches(4),
+            Inches(0.75),
+            Inches(3.0),
+            Inches(5.5),
+            Inches(4),
         )
         tf = overview_box.text_frame
         tf.word_wrap = True
 
         lines = [
             ("検証概要", True, Pt(16), self.PRIMARY),
-            (f"検証対象仕訳件数: {stats.get('total_entries', 0):,}件", False, Pt(14), self.SECONDARY),
-            (f"総取引金額: ¥{stats.get('total_amount', 0):,.0f}", False, Pt(14), self.SECONDARY),
-            (f"対象期間: {stats.get('date_from', '')} ～ {stats.get('date_to', '')}", False, Pt(14), self.SECONDARY),
+            (
+                f"検証対象仕訳件数: {stats.get('total_entries', 0):,}件",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
+            (
+                f"総取引金額: ¥{stats.get('total_amount', 0):,.0f}",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
+            (
+                f"対象期間: {stats.get('date_from', '')} ～ {stats.get('date_to', '')}",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
             ("", False, Pt(8), self.SECONDARY),
             ("リスク評価", True, Pt(16), self.PRIMARY),
-            (f"高リスク仕訳: {stats.get('high_risk_count', 0):,}件 ({stats.get('high_risk_pct', 0):.1f}%)", False, Pt(14), self.SECONDARY),
-            (f"平均リスクスコア: {stats.get('avg_risk_score', 0):.1f}点", False, Pt(14), self.SECONDARY),
+            (
+                f"高リスク仕訳: {stats.get('high_risk_count', 0):,}件 ({stats.get('high_risk_pct', 0):.1f}%)",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
+            (
+                f"平均リスクスコア: {stats.get('avg_risk_score', 0):.1f}点",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
         ]
 
         for i, (text, bold, size, clr) in enumerate(lines):
@@ -531,8 +623,12 @@ class PPTReportGenerator:
         # リスク分布ミニチャート（右側）- ドーナツ
         dist = self._risk_dist
         categories = ["高リスク", "中リスク", "低リスク", "最小リスク"]
-        values = [dist.get("high", 0), dist.get("medium", 0),
-                  dist.get("low", 0), dist.get("minimal", 0)]
+        values = [
+            dist.get("high", 0),
+            dist.get("medium", 0),
+            dist.get("low", 0),
+            dist.get("minimal", 0),
+        ]
 
         if sum(values) > 0:
             chart_data = CategoryChartData()
@@ -541,7 +637,10 @@ class PPTReportGenerator:
 
             chart_frame = slide.shapes.add_chart(
                 XL_CHART_TYPE.DOUGHNUT,
-                Inches(7), Inches(1.5), Inches(5.5), Inches(5),
+                Inches(7),
+                Inches(1.5),
+                Inches(5.5),
+                Inches(5),
                 chart_data,
             )
             chart = chart_frame.chart
@@ -552,8 +651,12 @@ class PPTReportGenerator:
             # ドーナツの色を設定
             plot = chart.plots[0]
             series = plot.series[0]
-            risk_colors = [self.COLOR_HIGH, self.COLOR_MEDIUM,
-                           self.COLOR_LOW, self.COLOR_MINIMAL]
+            risk_colors = [
+                self.COLOR_HIGH,
+                self.COLOR_MEDIUM,
+                self.COLOR_LOW,
+                self.COLOR_MINIMAL,
+            ]
             for i, clr in enumerate(risk_colors):
                 point = series.points[i]
                 point.format.fill.solid()
@@ -572,7 +675,11 @@ class PPTReportGenerator:
             ("検証仕訳件数", f"{stats.get('total_entries', 0):,}", self.ACCENT),
             ("仕訳帳票数", f"{stats.get('total_journals', 0):,}", self.ACCENT),
             ("高リスク件数", f"{stats.get('high_risk_count', 0):,}", self.COLOR_HIGH),
-            ("平均リスクスコア", f"{stats.get('avg_risk_score', 0):.1f}", self.COLOR_MEDIUM),
+            (
+                "平均リスクスコア",
+                f"{stats.get('avg_risk_score', 0):.1f}",
+                self.COLOR_MEDIUM,
+            ),
         ]
 
         x_start = 0.75
@@ -584,16 +691,34 @@ class PPTReportGenerator:
 
         # 下段: 追加指標テーブル
         info_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(4.0), Inches(11.833), Inches(3),
+            Inches(0.75),
+            Inches(4.0),
+            Inches(11.833),
+            Inches(3),
         )
         tf = info_box.text_frame
         tf.word_wrap = True
 
         extra_lines = [
             ("詳細指標", True, Pt(16), self.PRIMARY),
-            (f"総取引金額: ¥{stats.get('total_amount', 0):,.0f}", False, Pt(14), self.SECONDARY),
-            (f"対象期間: {stats.get('date_from', '')} ～ {stats.get('date_to', '')}", False, Pt(14), self.SECONDARY),
-            (f"高リスク比率: {stats.get('high_risk_pct', 0):.2f}%", False, Pt(14), self.SECONDARY),
+            (
+                f"総取引金額: ¥{stats.get('total_amount', 0):,.0f}",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
+            (
+                f"対象期間: {stats.get('date_from', '')} ～ {stats.get('date_to', '')}",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
+            (
+                f"高リスク比率: {stats.get('high_risk_pct', 0):.2f}%",
+                False,
+                Pt(14),
+                self.SECONDARY,
+            ),
         ]
         for i, (text, bold, size, clr) in enumerate(extra_lines):
             p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
@@ -612,10 +737,18 @@ class PPTReportGenerator:
 
         dist = self._risk_dist
         total = sum(dist.values()) or 1
-        categories = ["高リスク (60点以上)", "中リスク (40-59点)",
-                       "低リスク (20-39点)", "最小リスク (20点未満)"]
-        values = [dist.get("high", 0), dist.get("medium", 0),
-                  dist.get("low", 0), dist.get("minimal", 0)]
+        categories = [
+            "高リスク (60点以上)",
+            "中リスク (40-59点)",
+            "低リスク (20-39点)",
+            "最小リスク (20点未満)",
+        ]
+        values = [
+            dist.get("high", 0),
+            dist.get("medium", 0),
+            dist.get("low", 0),
+            dist.get("minimal", 0),
+        ]
 
         if sum(values) > 0:
             # ドーナツチャート（左側）
@@ -625,7 +758,10 @@ class PPTReportGenerator:
 
             chart_frame = slide.shapes.add_chart(
                 XL_CHART_TYPE.DOUGHNUT,
-                Inches(0.5), Inches(1.3), Inches(7), Inches(5.8),
+                Inches(0.5),
+                Inches(1.3),
+                Inches(7),
+                Inches(5.8),
                 chart_data,
             )
             chart = chart_frame.chart
@@ -635,8 +771,12 @@ class PPTReportGenerator:
 
             plot = chart.plots[0]
             series = plot.series[0]
-            risk_colors = [self.COLOR_HIGH, self.COLOR_MEDIUM,
-                           self.COLOR_LOW, self.COLOR_MINIMAL]
+            risk_colors = [
+                self.COLOR_HIGH,
+                self.COLOR_MEDIUM,
+                self.COLOR_LOW,
+                self.COLOR_MINIMAL,
+            ]
             for i, clr in enumerate(risk_colors):
                 point = series.points[i]
                 point.format.fill.solid()
@@ -644,7 +784,10 @@ class PPTReportGenerator:
 
         # 右側テキスト: 数値詳細
         detail_box = slide.shapes.add_textbox(
-            Inches(8), Inches(1.5), Inches(4.8), Inches(5.5),
+            Inches(8),
+            Inches(1.5),
+            Inches(4.8),
+            Inches(5.5),
         )
         tf = detail_box.text_frame
         tf.word_wrap = True
@@ -698,7 +841,10 @@ class PPTReportGenerator:
 
             chart_frame = slide.shapes.add_chart(
                 XL_CHART_TYPE.BAR_CLUSTERED,
-                Inches(0.5), Inches(1.3), Inches(8.5), Inches(5.8),
+                Inches(0.5),
+                Inches(1.3),
+                Inches(8.5),
+                Inches(5.8),
                 chart_data,
             )
             chart = chart_frame.chart
@@ -723,7 +869,10 @@ class PPTReportGenerator:
 
             # 右側テキスト: トップ3の詳細
             detail_box = slide.shapes.add_textbox(
-                Inches(9.3), Inches(1.5), Inches(3.7), Inches(5.5),
+                Inches(9.3),
+                Inches(1.5),
+                Inches(3.7),
+                Inches(5.5),
             )
             tf = detail_box.text_frame
             tf.word_wrap = True
@@ -749,7 +898,10 @@ class PPTReportGenerator:
                 p.font.name = self.FONT_JP
         else:
             no_data_box = slide.shapes.add_textbox(
-                Inches(2), Inches(3), Inches(9), Inches(2),
+                Inches(2),
+                Inches(3),
+                Inches(9),
+                Inches(2),
             )
             tf = no_data_box.text_frame
             p = tf.paragraphs[0]
@@ -781,7 +933,10 @@ class PPTReportGenerator:
 
             chart_frame = slide.shapes.add_chart(
                 XL_CHART_TYPE.COLUMN_CLUSTERED,
-                Inches(0.5), Inches(1.3), Inches(8.5), Inches(5),
+                Inches(0.5),
+                Inches(1.3),
+                Inches(8.5),
+                Inches(5),
                 chart_data,
             )
             chart = chart_frame.chart
@@ -810,7 +965,10 @@ class PPTReportGenerator:
 
         # 右側: 適合度サマリー
         summary_box = slide.shapes.add_textbox(
-            Inches(9.3), Inches(1.5), Inches(3.7), Inches(5.5),
+            Inches(9.3),
+            Inches(1.5),
+            Inches(3.7),
+            Inches(5.5),
         )
         tf = summary_box.text_frame
         tf.word_wrap = True
@@ -825,7 +983,12 @@ class PPTReportGenerator:
             ("適合度分析結果", True, Pt(16), self.PRIMARY),
             ("", False, Pt(6), self.SECONDARY),
             (f"MAD: {summary.get('mad', 0):.4f}", False, Pt(15), self.SECONDARY),
-            (f"評価: {summary.get('conformity_label', '未評価')}", True, Pt(15), conformity_color),
+            (
+                f"評価: {summary.get('conformity_label', '未評価')}",
+                True,
+                Pt(15),
+                conformity_color,
+            ),
             ("", False, Pt(10), self.SECONDARY),
             ("【判定基準】", True, Pt(12), self.PRIMARY),
             ("0.006以下: 非常に良い適合", False, Pt(11), self.SECONDARY),
@@ -864,7 +1027,10 @@ class PPTReportGenerator:
 
             chart_frame = slide.shapes.add_chart(
                 XL_CHART_TYPE.LINE_MARKERS,
-                Inches(0.5), Inches(1.3), Inches(9), Inches(5.5),
+                Inches(0.5),
+                Inches(1.3),
+                Inches(9),
+                Inches(5.5),
                 chart_data,
             )
             chart = chart_frame.chart
@@ -889,7 +1055,10 @@ class PPTReportGenerator:
             max_risk_month = max(trend, key=lambda t: t["high_risk_count"])
 
             comment_box = slide.shapes.add_textbox(
-                Inches(9.8), Inches(1.5), Inches(3.2), Inches(5.5),
+                Inches(9.8),
+                Inches(1.5),
+                Inches(3.2),
+                Inches(5.5),
             )
             tf = comment_box.text_frame
             tf.word_wrap = True
@@ -900,8 +1069,18 @@ class PPTReportGenerator:
                 (f"仕訳最多月: {max_month['period']}月", False, Pt(12), self.SECONDARY),
                 (f"  ({max_month['entry_count']:,}件)", False, Pt(11), self.SECONDARY),
                 ("", False, Pt(4), self.SECONDARY),
-                (f"高リスク最多月: {max_risk_month['period']}月", False, Pt(12), self.COLOR_HIGH),
-                (f"  ({max_risk_month['high_risk_count']:,}件)", False, Pt(11), self.COLOR_HIGH),
+                (
+                    f"高リスク最多月: {max_risk_month['period']}月",
+                    False,
+                    Pt(12),
+                    self.COLOR_HIGH,
+                ),
+                (
+                    f"  ({max_risk_month['high_risk_count']:,}件)",
+                    False,
+                    Pt(11),
+                    self.COLOR_HIGH,
+                ),
                 ("", False, Pt(8), self.SECONDARY),
                 ("期末月への仕訳集中は", False, Pt(11), self.SECONDARY),
                 ("決算調整の可能性を", False, Pt(11), self.SECONDARY),
@@ -917,7 +1096,10 @@ class PPTReportGenerator:
                 p.font.name = self.FONT_JP
         else:
             no_data_box = slide.shapes.add_textbox(
-                Inches(2), Inches(3), Inches(9), Inches(2),
+                Inches(2),
+                Inches(3),
+                Inches(9),
+                Inches(2),
             )
             tf = no_data_box.text_frame
             p = tf.paragraphs[0]
@@ -936,7 +1118,10 @@ class PPTReportGenerator:
         recs = self._generate_recommendations()
 
         content_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(1.5), Inches(11.833), Inches(5.5),
+            Inches(0.75),
+            Inches(1.5),
+            Inches(11.833),
+            Inches(5.5),
         )
         tf = content_box.text_frame
         tf.word_wrap = True
@@ -974,7 +1159,10 @@ class PPTReportGenerator:
         steps = self._generate_next_steps()
 
         content_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(1.5), Inches(11.833), Inches(5.5),
+            Inches(0.75),
+            Inches(1.5),
+            Inches(11.833),
+            Inches(5.5),
         )
         tf = content_box.text_frame
         tf.word_wrap = True
@@ -1017,7 +1205,10 @@ class PPTReportGenerator:
 
         # 左列: ルールベース
         left_box = slide.shapes.add_textbox(
-            Inches(0.75), Inches(1.5), Inches(3.8), Inches(5.5),
+            Inches(0.75),
+            Inches(1.5),
+            Inches(3.8),
+            Inches(5.5),
         )
         tf = left_box.text_frame
         tf.word_wrap = True
@@ -1045,7 +1236,10 @@ class PPTReportGenerator:
 
         # 中央列: ML手法
         mid_box = slide.shapes.add_textbox(
-            Inches(5), Inches(1.5), Inches(3.8), Inches(5.5),
+            Inches(5),
+            Inches(1.5),
+            Inches(3.8),
+            Inches(5.5),
         )
         tf = mid_box.text_frame
         tf.word_wrap = True
@@ -1071,7 +1265,10 @@ class PPTReportGenerator:
 
         # 右列: 統計分析
         right_box = slide.shapes.add_textbox(
-            Inches(9.2), Inches(1.5), Inches(3.8), Inches(5.5),
+            Inches(9.2),
+            Inches(1.5),
+            Inches(3.8),
+            Inches(5.5),
         )
         tf = right_box.text_frame
         tf.word_wrap = True
@@ -1108,44 +1305,58 @@ class PPTReportGenerator:
         high_risk_count = stats.get("high_risk_count", 0)
 
         if high_risk_pct > 5:
-            recs.append({
-                "title": f"高リスク仕訳の緊急調査（{high_risk_count:,}件）",
-                "detail": f"高リスク比率が{high_risk_pct:.1f}%と高水準です。即座に個別調査を実施してください。",
-                "color": self.COLOR_HIGH,
-            })
+            recs.append(
+                {
+                    "title": f"高リスク仕訳の緊急調査（{high_risk_count:,}件）",
+                    "detail": f"高リスク比率が{high_risk_pct:.1f}%と高水準です。即座に個別調査を実施してください。",
+                    "color": self.COLOR_HIGH,
+                }
+            )
         elif high_risk_count > 0:
-            recs.append({
-                "title": f"高リスク仕訳の調査（{high_risk_count:,}件）",
-                "detail": "担当者へのヒアリングと証憑確認を実施してください。",
-                "color": self.COLOR_MEDIUM,
-            })
+            recs.append(
+                {
+                    "title": f"高リスク仕訳の調査（{high_risk_count:,}件）",
+                    "detail": "担当者へのヒアリングと証憑確認を実施してください。",
+                    "color": self.COLOR_MEDIUM,
+                }
+            )
 
         if benford.get("conformity") in ("nonconforming", "marginally_acceptable"):
             mad = benford.get("mad", 0)
-            recs.append({
-                "title": "ベンフォード分析の追加調査",
-                "detail": f"MAD={mad:.4f}で{benford.get('conformity_label', '')}。データ操作の可能性を調査してください。",
-                "color": self.COLOR_HIGH if benford.get("conformity") == "nonconforming" else self.COLOR_MEDIUM,
-            })
+            recs.append(
+                {
+                    "title": "ベンフォード分析の追加調査",
+                    "detail": f"MAD={mad:.4f}で{benford.get('conformity_label', '')}。データ操作の可能性を調査してください。",
+                    "color": self.COLOR_HIGH
+                    if benford.get("conformity") == "nonconforming"
+                    else self.COLOR_MEDIUM,
+                }
+            )
 
         if findings:
             top = findings[0]
-            recs.append({
-                "title": "最多違反パターンの原因分析",
-                "detail": f"「{top['rule_name']}」({top['count']:,}件)について根本原因を究明してください。",
-                "color": self.SECONDARY,
-            })
+            recs.append(
+                {
+                    "title": "最多違反パターンの原因分析",
+                    "detail": f"「{top['rule_name']}」({top['count']:,}件)について根本原因を究明してください。",
+                    "color": self.SECONDARY,
+                }
+            )
 
-        recs.append({
-            "title": "内部統制の改善提案",
-            "detail": "検出された問題点に対する改善策を策定してください。",
-            "color": self.SECONDARY,
-        })
-        recs.append({
-            "title": "定期的モニタリングの継続",
-            "detail": "AI監査ツールによる継続的なモニタリング体制を構築してください。",
-            "color": self.SECONDARY,
-        })
+        recs.append(
+            {
+                "title": "内部統制の改善提案",
+                "detail": "検出された問題点に対する改善策を策定してください。",
+                "color": self.SECONDARY,
+            }
+        )
+        recs.append(
+            {
+                "title": "定期的モニタリングの継続",
+                "detail": "AI監査ツールによる継続的なモニタリング体制を構築してください。",
+                "color": self.SECONDARY,
+            }
+        )
 
         return recs
 
@@ -1158,41 +1369,53 @@ class PPTReportGenerator:
 
         high_risk = stats.get("high_risk_count", 0)
         if high_risk > 0:
-            steps.append({
-                "priority": "高",
-                "task": f"高リスク仕訳 {high_risk:,}件の個別調査",
-                "deadline": "2週間以内",
-            })
+            steps.append(
+                {
+                    "priority": "高",
+                    "task": f"高リスク仕訳 {high_risk:,}件の個別調査",
+                    "deadline": "2週間以内",
+                }
+            )
 
         if benford.get("conformity") in ("nonconforming", "marginally_acceptable"):
-            steps.append({
-                "priority": "高",
-                "task": "ベンフォード分析結果の深掘り調査",
-                "deadline": "1ヶ月以内",
-            })
+            steps.append(
+                {
+                    "priority": "高",
+                    "task": "ベンフォード分析結果の深掘り調査",
+                    "deadline": "1ヶ月以内",
+                }
+            )
 
         if findings:
-            steps.append({
-                "priority": "中",
-                "task": f"違反パターン上位{min(len(findings), 5)}件の原因分析",
-                "deadline": "1ヶ月以内",
-            })
+            steps.append(
+                {
+                    "priority": "中",
+                    "task": f"違反パターン上位{min(len(findings), 5)}件の原因分析",
+                    "deadline": "1ヶ月以内",
+                }
+            )
 
-        steps.append({
-            "priority": "中",
-            "task": "内部統制改善提案の策定",
-            "deadline": "四半期内",
-        })
-        steps.append({
-            "priority": "低",
-            "task": "経営陣への報告書提出",
-            "deadline": "1ヶ月以内",
-        })
-        steps.append({
-            "priority": "低",
-            "task": "是正措置の実施確認",
-            "deadline": "四半期内",
-        })
+        steps.append(
+            {
+                "priority": "中",
+                "task": "内部統制改善提案の策定",
+                "deadline": "四半期内",
+            }
+        )
+        steps.append(
+            {
+                "priority": "低",
+                "task": "経営陣への報告書提出",
+                "deadline": "1ヶ月以内",
+            }
+        )
+        steps.append(
+            {
+                "priority": "低",
+                "task": "是正措置の実施確認",
+                "deadline": "四半期内",
+            }
+        )
 
         return steps
 
@@ -1300,7 +1523,10 @@ class PDFReportGenerator:
             ["検証対象仕訳件数", f"{stats.get('total_entries', 0):,}件"],
             ["仕訳帳票数", f"{stats.get('total_journals', 0):,}件"],
             ["総取引金額", f"¥{stats.get('total_amount', 0):,.0f}"],
-            ["高リスク仕訳", f"{stats.get('high_risk_count', 0):,}件 ({stats.get('high_risk_pct', 0):.1f}%)"],
+            [
+                "高リスク仕訳",
+                f"{stats.get('high_risk_count', 0):,}件 ({stats.get('high_risk_pct', 0):.1f}%)",
+            ],
             ["平均リスクスコア", f"{stats.get('avg_risk_score', 0):.1f}点"],
             ["対象期間", f"{stats.get('date_from', '')} ～ {stats.get('date_to', '')}"],
         ]
@@ -1312,12 +1538,30 @@ class PDFReportGenerator:
         dist = self._risk_dist
         dist_data = [
             ["リスクレベル", "件数", "割合"],
-            ["高リスク (60点以上)", f"{dist.get('high', 0):,}", f"{self._pct(dist.get('high', 0))}%"],
-            ["中リスク (40-59点)", f"{dist.get('medium', 0):,}", f"{self._pct(dist.get('medium', 0))}%"],
-            ["低リスク (20-39点)", f"{dist.get('low', 0):,}", f"{self._pct(dist.get('low', 0))}%"],
-            ["最小リスク (20点未満)", f"{dist.get('minimal', 0):,}", f"{self._pct(dist.get('minimal', 0))}%"],
+            [
+                "高リスク (60点以上)",
+                f"{dist.get('high', 0):,}",
+                f"{self._pct(dist.get('high', 0))}%",
+            ],
+            [
+                "中リスク (40-59点)",
+                f"{dist.get('medium', 0):,}",
+                f"{self._pct(dist.get('medium', 0))}%",
+            ],
+            [
+                "低リスク (20-39点)",
+                f"{dist.get('low', 0):,}",
+                f"{self._pct(dist.get('low', 0))}%",
+            ],
+            [
+                "最小リスク (20点未満)",
+                f"{dist.get('minimal', 0):,}",
+                f"{self._pct(dist.get('minimal', 0))}%",
+            ],
         ]
-        story.append(self._create_table(dist_data, header=True, col_widths=[60, 40, 30]))
+        story.append(
+            self._create_table(dist_data, header=True, col_widths=[60, 40, 30])
+        )
         story.append(Spacer(1, 10))
 
         # リスク分布円グラフ
@@ -1347,9 +1591,7 @@ class PDFReportGenerator:
 
         # 4. Monthly Trend with chart
         story.append(PageBreak())
-        story.append(
-            Paragraph("4. 月次トレンド分析", self.styles["JapaneseHeading"])
-        )
+        story.append(Paragraph("4. 月次トレンド分析", self.styles["JapaneseHeading"]))
         trend_chart = self._create_trend_line_chart()
         if trend_chart:
             story.append(Image(trend_chart, width=150 * mm, height=80 * mm))
@@ -1362,7 +1604,9 @@ class PDFReportGenerator:
             findings_data = [["順位", "ルール名", "違反件数"]]
             for i, f in enumerate(findings[:10], 1):
                 findings_data.append([str(i), f["rule_name"], f"{f['count']:,}"])
-            story.append(self._create_table(findings_data, header=True, col_widths=[15, 95, 30]))
+            story.append(
+                self._create_table(findings_data, header=True, col_widths=[15, 95, 30])
+            )
         else:
             story.append(
                 Paragraph(
@@ -1376,9 +1620,7 @@ class PDFReportGenerator:
         story.append(Paragraph("6. 推奨事項", self.styles["JapaneseHeading"]))
         recs = self._generate_recommendations()
         for i, rec in enumerate(recs, 1):
-            story.append(
-                Paragraph(f"{i}. {rec}", self.styles["JapaneseBody"])
-            )
+            story.append(Paragraph(f"{i}. {rec}", self.styles["JapaneseBody"]))
             story.append(Spacer(1, 5))
 
         # Build PDF
@@ -1488,11 +1730,13 @@ class PDFReportGenerator:
             actual = count / total
             expected = BENFORD_EXPECTED.get(digit_num, 0)
             mad += abs(actual - expected)
-            digits.append({
-                "digit": digit_num,
-                "actual_pct": round(actual * 100, 2),
-                "expected_pct": round(expected * 100, 2),
-            })
+            digits.append(
+                {
+                    "digit": digit_num,
+                    "actual_pct": round(actual * 100, 2),
+                    "expected_pct": round(expected * 100, 2),
+                }
+            )
         mad = mad / 9
 
         if mad <= 0.006:
@@ -1521,8 +1765,12 @@ class PDFReportGenerator:
         """
         result = self.db.execute(query, [self.config.fiscal_year])
         return [
-            {"period": row[0], "entry_count": row[1],
-             "total_amount": row[2], "high_risk_count": row[3]}
+            {
+                "period": row[0],
+                "entry_count": row[1],
+                "total_amount": row[2],
+                "high_risk_count": row[3],
+            }
             for row in result
         ]
 
@@ -1532,18 +1780,30 @@ class PDFReportGenerator:
         """Create risk distribution pie chart."""
         dist = self._risk_dist
         labels = ["高リスク", "中リスク", "低リスク", "最小リスク"]
-        values = [dist.get("high", 0), dist.get("medium", 0),
-                  dist.get("low", 0), dist.get("minimal", 0)]
-        colors = [self.COLORS["high"], self.COLORS["medium"],
-                  self.COLORS["low"], self.COLORS["minimal"]]
+        values = [
+            dist.get("high", 0),
+            dist.get("medium", 0),
+            dist.get("low", 0),
+            dist.get("minimal", 0),
+        ]
+        colors = [
+            self.COLORS["high"],
+            self.COLORS["medium"],
+            self.COLORS["low"],
+            self.COLORS["minimal"],
+        ]
 
         if sum(values) == 0:
             return None
 
         fig, ax = plt.subplots(figsize=(8, 5))
         wedges, texts, autotexts = ax.pie(
-            values, labels=labels, colors=colors, autopct="%1.1f%%",
-            startangle=90, pctdistance=0.75,
+            values,
+            labels=labels,
+            colors=colors,
+            autopct="%1.1f%%",
+            startangle=90,
+            pctdistance=0.75,
             wedgeprops={"width": 0.4, "edgecolor": "white", "linewidth": 2},
         )
         for t in texts:
@@ -1557,8 +1817,14 @@ class PDFReportGenerator:
         fig.tight_layout()
 
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight",
-                    facecolor="white", edgecolor="none")
+        fig.savefig(
+            buf,
+            format="png",
+            dpi=150,
+            bbox_inches="tight",
+            facecolor="white",
+            edgecolor="none",
+        )
         buf.seek(0)
         plt.close(fig)
         return buf
@@ -1578,17 +1844,27 @@ class PDFReportGenerator:
         x_pos = range(len(x))
 
         ax.bar(
-            [p - bar_width / 2 for p in x_pos], actual, bar_width,
-            label="実績 (%)", color=self.COLORS["accent"], edgecolor="white",
+            [p - bar_width / 2 for p in x_pos],
+            actual,
+            bar_width,
+            label="実績 (%)",
+            color=self.COLORS["accent"],
+            edgecolor="white",
         )
         ax.bar(
-            [p + bar_width / 2 for p in x_pos], expected, bar_width,
-            label="理論値 (%)", color=self.COLORS["gray"], edgecolor="white",
+            [p + bar_width / 2 for p in x_pos],
+            expected,
+            bar_width,
+            label="理論値 (%)",
+            color=self.COLORS["gray"],
+            edgecolor="white",
         )
 
         ax.set_xlabel("先頭桁", fontsize=11)
         ax.set_ylabel("%", fontsize=11)
-        ax.set_title("ベンフォードの法則: 実績 vs 理論値", fontsize=14, fontweight="bold")
+        ax.set_title(
+            "ベンフォードの法則: 実績 vs 理論値", fontsize=14, fontweight="bold"
+        )
         ax.set_xticks(list(x_pos))
         ax.set_xticklabels(x)
         ax.legend(fontsize=10)
@@ -1596,8 +1872,14 @@ class PDFReportGenerator:
         fig.tight_layout()
 
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight",
-                    facecolor="white", edgecolor="none")
+        fig.savefig(
+            buf,
+            format="png",
+            dpi=150,
+            bbox_inches="tight",
+            facecolor="white",
+            edgecolor="none",
+        )
         buf.seek(0)
         plt.close(fig)
         return buf
@@ -1614,19 +1896,31 @@ class PDFReportGenerator:
 
         fig, ax1 = plt.subplots(figsize=(9, 5))
 
-        ax1.plot(months, counts, "o-", color=self.COLORS["accent"],
-                 linewidth=2, markersize=6, label="仕訳件数")
+        ax1.plot(
+            months,
+            counts,
+            "o-",
+            color=self.COLORS["accent"],
+            linewidth=2,
+            markersize=6,
+            label="仕訳件数",
+        )
         ax1.set_xlabel("月", fontsize=11)
         ax1.set_ylabel("仕訳件数", color=self.COLORS["accent"], fontsize=11)
         ax1.tick_params(axis="y", labelcolor=self.COLORS["accent"])
-        ax1.yaxis.set_major_formatter(mticker.FuncFormatter(
-            lambda x, _p: f"{x:,.0f}"
-        ))
+        ax1.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _p: f"{x:,.0f}"))
 
         # 高リスク件数（第2軸）
         ax2 = ax1.twinx()
-        ax2.plot(months, high_risk, "s--", color=self.COLORS["high"],
-                 linewidth=1.5, markersize=5, label="高リスク件数")
+        ax2.plot(
+            months,
+            high_risk,
+            "s--",
+            color=self.COLORS["high"],
+            linewidth=1.5,
+            markersize=5,
+            label="高リスク件数",
+        )
         ax2.set_ylabel("高リスク件数", color=self.COLORS["high"], fontsize=11)
         ax2.tick_params(axis="y", labelcolor=self.COLORS["high"])
 
@@ -1635,15 +1929,22 @@ class PDFReportGenerator:
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left", fontsize=10)
 
-        ax1.set_title("月次トレンド: 仕訳件数 & 高リスク件数",
-                       fontsize=14, fontweight="bold")
+        ax1.set_title(
+            "月次トレンド: 仕訳件数 & 高リスク件数", fontsize=14, fontweight="bold"
+        )
         ax1.grid(axis="y", alpha=0.3)
         plt.xticks(rotation=45 if len(months) > 6 else 0)
         fig.tight_layout()
 
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight",
-                    facecolor="white", edgecolor="none")
+        fig.savefig(
+            buf,
+            format="png",
+            dpi=150,
+            bbox_inches="tight",
+            facecolor="white",
+            edgecolor="none",
+        )
         buf.seek(0)
         plt.close(fig)
         return buf
@@ -1656,7 +1957,9 @@ class PDFReportGenerator:
         return f"{count / total * 100:.1f}"
 
     def _create_table(
-        self, data: list[list[str]], header: bool = False,
+        self,
+        data: list[list[str]],
+        header: bool = False,
         col_widths: list[int] | None = None,
     ) -> Table:
         """Create formatted table."""
