@@ -7,7 +7,6 @@ API エンドポイント ユニットテスト
 
 import io
 
-
 # =========================================================
 # Import Data API テスト
 # =========================================================
@@ -62,9 +61,7 @@ class TestDashboardAPI:
     """
 
     def test_summary(self, client):
-        response = client.get(
-            "/api/v1/dashboard/summary", params={"fiscal_year": 2024}
-        )
+        response = client.get("/api/v1/dashboard/summary", params={"fiscal_year": 2024})
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -94,9 +91,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_kpi(self, client):
-        response = client.get(
-            "/api/v1/dashboard/kpi", params={"fiscal_year": 2024}
-        )
+        response = client.get("/api/v1/dashboard/kpi", params={"fiscal_year": 2024})
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -104,9 +99,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_benford(self, client):
-        response = client.get(
-            "/api/v1/dashboard/benford", params={"fiscal_year": 2024}
-        )
+        response = client.get("/api/v1/dashboard/benford", params={"fiscal_year": 2024})
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)
@@ -114,9 +107,7 @@ class TestDashboardAPI:
             assert response.status_code == 500
 
     def test_risk(self, client):
-        response = client.get(
-            "/api/v1/dashboard/risk", params={"fiscal_year": 2024}
-        )
+        response = client.get("/api/v1/dashboard/risk", params={"fiscal_year": 2024})
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, dict)

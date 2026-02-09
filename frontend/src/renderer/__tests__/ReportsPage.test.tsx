@@ -67,7 +67,7 @@ describe('ReportsPage', () => {
   it('renders report template section', async () => {
     renderWithQuery(<ReportsPage />);
     await waitFor(() => {
-      expect(screen.getByText(/テンプレート|レポート種類/)).toBeTruthy();
+      expect(screen.getAllByText(/テンプレート|レポート種類/).length).toBeGreaterThanOrEqual(1);
     });
   });
 
