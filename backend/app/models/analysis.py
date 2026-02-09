@@ -84,9 +84,7 @@ class Insight(BaseModel):
 
     insight_id: str
     session_id: str
-    category: Literal[
-        "ANOMALY", "TREND", "RISK", "COMPLIANCE", "EFFICIENCY", "OTHER"
-    ]
+    category: Literal["ANOMALY", "TREND", "RISK", "COMPLIANCE", "EFFICIENCY", "OTHER"]
     title: str
     description: str
     severity: Literal["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"] = "INFO"

@@ -42,7 +42,9 @@ class EngineResult:
         """Convert to dictionary."""
         return {
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
             "total_entries": self.total_entries,
             "total_rules": self.total_rules,
             "rules_executed": self.rules_executed,
@@ -250,7 +252,8 @@ class RuleEngine:
                 # Count by category
                 cat = rule_result.category.value
                 result.violations_by_category[cat] = (
-                    result.violations_by_category.get(cat, 0) + rule_result.violations_found
+                    result.violations_by_category.get(cat, 0)
+                    + rule_result.violations_found
                 )
 
                 # Count by severity
@@ -283,8 +286,7 @@ class RuleEngine:
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = {
-                executor.submit(self.execute_rule, rule, df): rule
-                for rule in rules
+                executor.submit(self.execute_rule, rule, df): rule for rule in rules
             }
 
             for future in as_completed(futures):
@@ -325,7 +327,9 @@ class RuleEngine:
         # Execute rules
         return self.execute_rules(df, rules)
 
-    def store_violations(self, violations: list[RuleViolation], batch_size: int = 50000) -> int:
+    def store_violations(
+        self, violations: list[RuleViolation], batch_size: int = 50000
+    ) -> int:
         """Store violations in database.
 
         Args:
@@ -344,7 +348,7 @@ class RuleEngine:
 
         # Process in batches for better performance
         for i in range(0, len(violations), batch_size):
-            batch = violations[i:i + batch_size]
+            batch = violations[i : i + batch_size]
 
             # Convert to DataFrame with proper type handling
             records = []

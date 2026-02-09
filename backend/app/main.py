@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     startup_time = datetime.now()
     logger.info(
         f"{settings.app_name} v{settings.app_version} を起動します",
-        extra={"environment": settings.environment}
+        extra={"environment": settings.environment},
     )
 
     # 監査ログに記録
@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             "event_type": "application_startup",
             "app_version": settings.app_version,
             "environment": settings.environment,
-        }
+        },
     )
 
     # データディレクトリの確保
@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     startup_duration = (datetime.now() - startup_time).total_seconds()
     logger.info(
         f"{settings.app_name} の起動が完了しました",
-        extra={"startup_duration_seconds": startup_duration}
+        extra={"startup_duration_seconds": startup_duration},
     )
 
     yield
@@ -107,7 +107,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "アプリケーションシャットダウン",
         extra={
             "event_type": "application_shutdown",
-        }
+        },
     )
 
     logger.info(f"{settings.app_name} のシャットダウンが完了しました")
@@ -206,6 +206,7 @@ app = create_app()
 # ========================================
 # ルートエンドポイント
 # ========================================
+
 
 @app.get("/health", tags=["System"])
 async def health_check() -> dict:

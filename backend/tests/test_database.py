@@ -72,9 +72,7 @@ class TestDuckDBManager:
                ('AF-001', 'WF-001', 'analysis', 2025, '発見1', 'HIGH'),
                ('AF-002', 'WF-001', 'analysis', 2025, '発見2', 'MEDIUM')""",
         )
-        df = temp_db.execute_df(
-            "SELECT * FROM audit_findings WHERE severity = 'HIGH'"
-        )
+        df = temp_db.execute_df("SELECT * FROM audit_findings WHERE severity = 'HIGH'")
         assert len(df) == 1
         assert df["finding_id"][0] == "AF-001"
 
@@ -82,24 +80,26 @@ class TestDuckDBManager:
         import polars as pl
 
         temp_db.initialize_schema()
-        df = pl.DataFrame({
-            "finding_id": ["AF-DF1", "AF-DF2"],
-            "workflow_id": ["WF-DF", "WF-DF"],
-            "agent_type": ["analysis", "review"],
-            "fiscal_year": [2025, 2025],
-            "finding_title": ["DF発見1", "DF発見2"],
-            "finding_description": [None, "説明"],
-            "severity": ["HIGH", "LOW"],
-            "category": [None, None],
-            "affected_amount": [0.0, 1000.0],
-            "affected_count": [0, 5],
-            "evidence": [None, None],
-            "recommendation": [None, None],
-            "status": ["open", "open"],
-            "reviewed_by": [None, None],
-            "reviewed_at": [None, None],
-            "created_at": [None, None],
-        })
+        df = pl.DataFrame(
+            {
+                "finding_id": ["AF-DF1", "AF-DF2"],
+                "workflow_id": ["WF-DF", "WF-DF"],
+                "agent_type": ["analysis", "review"],
+                "fiscal_year": [2025, 2025],
+                "finding_title": ["DF発見1", "DF発見2"],
+                "finding_description": [None, "説明"],
+                "severity": ["HIGH", "LOW"],
+                "category": [None, None],
+                "affected_amount": [0.0, 1000.0],
+                "affected_count": [0, 5],
+                "evidence": [None, None],
+                "recommendation": [None, None],
+                "status": ["open", "open"],
+                "reviewed_by": [None, None],
+                "reviewed_at": [None, None],
+                "created_at": [None, None],
+            }
+        )
         rows = temp_db.insert_df("audit_findings", df)
         assert rows == 2
         assert temp_db.get_table_count("audit_findings") == 2

@@ -91,7 +91,7 @@ class AnalysisAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "summarize",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("summarize", END)
@@ -179,12 +179,17 @@ class AnalysisAgent(BaseAgent):
 }}"""
 
         try:
-            response = self.llm.invoke([
-                SystemMessage(content="あなたは監査所見を構造化するアシスタントです。必ず有効なJSONで回答してください。"),
-                HumanMessage(content=extraction_prompt),
-            ])
+            response = self.llm.invoke(
+                [
+                    SystemMessage(
+                        content="あなたは監査所見を構造化するアシスタントです。必ず有効なJSONで回答してください。"
+                    ),
+                    HumanMessage(content=extraction_prompt),
+                ]
+            )
 
             import json
+
             content = response.content.strip()
             # Extract JSON from markdown code block if present
             if "```json" in content:
@@ -216,7 +221,13 @@ class AnalysisAgent(BaseAgent):
                     elif stripped.startswith("- ") and current_section:
                         item = stripped[2:].strip()
                         if current_section == "findings":
-                            findings.append({"title": item, "description": item, "severity": "medium"})
+                            findings.append(
+                                {
+                                    "title": item,
+                                    "description": item,
+                                    "severity": "medium",
+                                }
+                            )
                         elif current_section == "insights":
                             insights.append(item)
                         elif current_section == "recommendations":
@@ -292,7 +303,9 @@ class AnalysisAgent(BaseAgent):
         Returns:
             Analysis result.
         """
-        account_desc = f"勘定科目{account_prefix}xxx" if account_prefix else "全勘定科目"
+        account_desc = (
+            f"勘定科目{account_prefix}xxx" if account_prefix else "全勘定科目"
+        )
         task = f"""
 {fiscal_year}年度の{account_desc}について、会計期間ごとの比較分析を行ってください。
 
@@ -302,8 +315,11 @@ class AnalysisAgent(BaseAgent):
 3. 期末集中の有無
 4. 異常な期間の特定
 """
-        result = await self.execute(task, {
-            "fiscal_year": fiscal_year,
-            "account_prefix": account_prefix,
-        })
+        result = await self.execute(
+            task,
+            {
+                "fiscal_year": fiscal_year,
+                "account_prefix": account_prefix,
+            },
+        )
         return result.to_dict()

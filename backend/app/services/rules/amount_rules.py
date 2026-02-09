@@ -18,7 +18,6 @@
 - AMT-015: Unusual write-offs
 """
 
-
 import polars as pl
 
 from app.services.rules.base import (
@@ -111,8 +110,8 @@ class RoundAmountRule(AuditRule):
 
         # Filter large round amounts (divisible by 100万)
         round_amounts = df.filter(
-            (pl.col("amount").abs() >= min_amount) &
-            (pl.col("amount").abs() % 1_000_000 == 0)
+            (pl.col("amount").abs() >= min_amount)
+            & (pl.col("amount").abs() % 1_000_000 == 0)
         )
 
         for row in round_amounts.iter_rows(named=True):
@@ -162,7 +161,7 @@ class JustBelowThresholdRule(AuditRule):
         # Common approval thresholds
         thresholds = self.get_threshold(
             "approval_thresholds",
-            [1_000_000, 5_000_000, 10_000_000, 50_000_000, 100_000_000]
+            [1_000_000, 5_000_000, 10_000_000, 50_000_000, 100_000_000],
         )
         margin_ratio = self.get_threshold("margin_ratio", 0.05)  # 5% below
 
@@ -171,8 +170,7 @@ class JustBelowThresholdRule(AuditRule):
             threshold * 0.999  # Just below
 
             suspicious = df.filter(
-                (pl.col("amount").abs() >= lower) &
-                (pl.col("amount").abs() < threshold)
+                (pl.col("amount").abs() >= lower) & (pl.col("amount").abs() < threshold)
             )
 
             for row in suspicious.iter_rows(named=True):
@@ -226,7 +224,7 @@ class SuspiciousPatternRule(AuditRule):
         # Sequential digits (12345, 54321)
         if len(amt_str) >= 5:
             digits = [int(d) for d in amt_str]
-            diffs = [digits[i+1] - digits[i] for i in range(len(digits)-1)]
+            diffs = [digits[i + 1] - digits[i] for i in range(len(digits) - 1)]
             if all(d == 1 for d in diffs) or all(d == -1 for d in diffs):
                 return True, "sequential"
 
@@ -290,11 +288,13 @@ class AmountDistributionRule(AuditRule):
         result.total_checked = len(df)
 
         # Calculate statistics by account
-        stats = df.group_by("gl_account_number").agg([
-            pl.col("amount").abs().mean().alias("mean"),
-            pl.col("amount").abs().std().alias("std"),
-            pl.col("amount").abs().quantile(0.99).alias("p99"),
-        ])
+        stats = df.group_by("gl_account_number").agg(
+            [
+                pl.col("amount").abs().mean().alias("mean"),
+                pl.col("amount").abs().std().alias("std"),
+                pl.col("amount").abs().quantile(0.99).alias("p99"),
+            ]
+        )
 
         # Join back and find anomalies
         df_with_stats = df.join(stats, on="gl_account_number", how="left")
@@ -302,9 +302,12 @@ class AmountDistributionRule(AuditRule):
         # Entries beyond 3 standard deviations
         std_threshold = self.get_threshold("std_threshold", 3.0)
         anomalies = df_with_stats.filter(
-            (pl.col("std").is_not_null()) &
-            (pl.col("std") > 0) &
-            ((pl.col("amount").abs() - pl.col("mean")) / pl.col("std") > std_threshold)
+            (pl.col("std").is_not_null())
+            & (pl.col("std") > 0)
+            & (
+                (pl.col("amount").abs() - pl.col("mean")) / pl.col("std")
+                > std_threshold
+            )
         )
 
         for row in anomalies.iter_rows(named=True):
@@ -356,23 +359,30 @@ class StatisticalOutlierRule(AuditRule):
         iqr_multiplier = self.get_threshold("iqr_multiplier", 1.5)
 
         # Calculate IQR by account
-        stats = df.group_by("gl_account_number").agg([
-            pl.col("amount").abs().quantile(0.25).alias("q1"),
-            pl.col("amount").abs().quantile(0.75).alias("q3"),
-        ])
-        stats = stats.with_columns([
-            (pl.col("q3") - pl.col("q1")).alias("iqr"),
-        ])
+        stats = df.group_by("gl_account_number").agg(
+            [
+                pl.col("amount").abs().quantile(0.25).alias("q1"),
+                pl.col("amount").abs().quantile(0.75).alias("q3"),
+            ]
+        )
+        stats = stats.with_columns(
+            [
+                (pl.col("q3") - pl.col("q1")).alias("iqr"),
+            ]
+        )
 
         df_with_stats = df.join(stats, on="gl_account_number", how="left")
 
         # Find outliers
         outliers = df_with_stats.filter(
-            (pl.col("iqr").is_not_null()) &
-            (pl.col("iqr") > 0) &
-            (
-                (pl.col("amount").abs() < pl.col("q1") - iqr_multiplier * pl.col("iqr")) |
-                (pl.col("amount").abs() > pl.col("q3") + iqr_multiplier * pl.col("iqr"))
+            (pl.col("iqr").is_not_null())
+            & (pl.col("iqr") > 0)
+            & (
+                (pl.col("amount").abs() < pl.col("q1") - iqr_multiplier * pl.col("iqr"))
+                | (
+                    pl.col("amount").abs()
+                    > pl.col("q3") + iqr_multiplier * pl.col("iqr")
+                )
             )
         )
 
@@ -423,16 +433,15 @@ class LargeAdjustingEntryRule(AuditRule):
 
         threshold = self.get_threshold("adjusting_threshold", 50_000_000)
         adjustment_sources = self.get_threshold(
-            "adjustment_sources",
-            ["MANUAL", "ADJUST", "修正", "調整", "振替"]
+            "adjustment_sources", ["MANUAL", "ADJUST", "修正", "調整", "振替"]
         )
 
         # Filter adjusting entries
         adjusting = df.filter(
-            (pl.col("amount").abs() >= threshold) &
-            (
-                pl.col("source").is_in(adjustment_sources) |
-                pl.col("je_line_description").str.contains("(?i)修正|調整|振替")
+            (pl.col("amount").abs() >= threshold)
+            & (
+                pl.col("source").is_in(adjustment_sources)
+                | pl.col("je_line_description").str.contains("(?i)修正|調整|振替")
             )
         )
 
@@ -484,8 +493,8 @@ class SignificantReversalRule(AuditRule):
         reversal_keywords = ["取消", "戻し", "逆仕訳", "REV", "REVERSE"]
 
         reversals = df.filter(
-            (pl.col("amount").abs() >= threshold) &
-            pl.col("je_line_description").str.contains("|".join(reversal_keywords))
+            (pl.col("amount").abs() >= threshold)
+            & pl.col("je_line_description").str.contains("|".join(reversal_keywords))
         )
 
         for row in reversals.iter_rows(named=True):
@@ -535,21 +544,25 @@ class SplitTransactionRule(AuditRule):
         self.get_threshold("window_days", 3)
 
         # Group by user, account, and similar dates
-        grouped = df.group_by([
-            "prepared_by",
-            "gl_account_number",
-            pl.col("effective_date").cast(pl.Date),
-        ]).agg([
-            pl.col("amount").sum().alias("total_amount"),
-            pl.col("amount").count().alias("entry_count"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        grouped = df.group_by(
+            [
+                "prepared_by",
+                "gl_account_number",
+                pl.col("effective_date").cast(pl.Date),
+            ]
+        ).agg(
+            [
+                pl.col("amount").sum().alias("total_amount"),
+                pl.col("amount").count().alias("entry_count"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         # Find potential splits
         splits = grouped.filter(
-            (pl.col("total_amount").abs() >= threshold) &
-            (pl.col("entry_count") >= 3)  # Multiple entries
+            (pl.col("total_amount").abs() >= threshold)
+            & (pl.col("entry_count") >= 3)  # Multiple entries
         )
 
         for row in splits.iter_rows(named=True):
@@ -599,23 +612,29 @@ class DebitCreditImbalanceRule(AuditRule):
         tolerance = self.get_threshold("balance_tolerance", 0.01)  # 1銭
 
         # Calculate balance by journal
-        balance = df.group_by("journal_id").agg([
-            pl.when(pl.col("debit_credit_indicator") == "D")
-            .then(pl.col("amount"))
-            .otherwise(0)
-            .sum()
-            .alias("total_debit"),
-            pl.when(pl.col("debit_credit_indicator") == "C")
-            .then(pl.col("amount"))
-            .otherwise(0)
-            .sum()
-            .alias("total_credit"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-        ])
+        balance = df.group_by("journal_id").agg(
+            [
+                pl.when(pl.col("debit_credit_indicator") == "D")
+                .then(pl.col("amount"))
+                .otherwise(0)
+                .sum()
+                .alias("total_debit"),
+                pl.when(pl.col("debit_credit_indicator") == "C")
+                .then(pl.col("amount"))
+                .otherwise(0)
+                .sum()
+                .alias("total_credit"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+            ]
+        )
 
-        balance = balance.with_columns([
-            (pl.col("total_debit") - pl.col("total_credit")).abs().alias("difference"),
-        ])
+        balance = balance.with_columns(
+            [
+                (pl.col("total_debit") - pl.col("total_credit"))
+                .abs()
+                .alias("difference"),
+            ]
+        )
 
         result.total_checked = len(balance)
 
@@ -668,9 +687,9 @@ class ForeignCurrencyAnomalyRule(AuditRule):
 
         # Filter foreign currency entries
         fx_entries = df.filter(
-            (pl.col("amount_currency").is_not_null()) &
-            (pl.col("amount_currency") != "JPY") &
-            (pl.col("functional_amount").is_not_null())
+            (pl.col("amount_currency").is_not_null())
+            & (pl.col("amount_currency") != "JPY")
+            & (pl.col("functional_amount").is_not_null())
         )
 
         result.total_checked = len(fx_entries)
@@ -679,23 +698,33 @@ class ForeignCurrencyAnomalyRule(AuditRule):
             return result
 
         # Calculate implied rate
-        fx_with_rate = fx_entries.with_columns([
-            (pl.col("functional_amount") / pl.col("amount")).alias("implied_rate"),
-        ])
+        fx_with_rate = fx_entries.with_columns(
+            [
+                (pl.col("functional_amount") / pl.col("amount")).alias("implied_rate"),
+            ]
+        )
 
         # Get statistics by currency
-        stats = fx_with_rate.group_by("amount_currency").agg([
-            pl.col("implied_rate").mean().alias("avg_rate"),
-            pl.col("implied_rate").std().alias("std_rate"),
-        ])
+        stats = fx_with_rate.group_by("amount_currency").agg(
+            [
+                pl.col("implied_rate").mean().alias("avg_rate"),
+                pl.col("implied_rate").std().alias("std_rate"),
+            ]
+        )
 
         fx_with_stats = fx_with_rate.join(stats, on="amount_currency", how="left")
 
         # Find rate anomalies (beyond 2 std)
         anomalies = fx_with_stats.filter(
-            (pl.col("std_rate").is_not_null()) &
-            (pl.col("std_rate") > 0) &
-            (((pl.col("implied_rate") - pl.col("avg_rate")).abs() / pl.col("std_rate")) > 2)
+            (pl.col("std_rate").is_not_null())
+            & (pl.col("std_rate") > 0)
+            & (
+                (
+                    (pl.col("implied_rate") - pl.col("avg_rate")).abs()
+                    / pl.col("std_rate")
+                )
+                > 2
+            )
         )
 
         for row in anomalies.iter_rows(named=True):
@@ -748,7 +777,7 @@ class TaxIrregularityRule(AuditRule):
         # Tax account patterns
         tax_accounts = self.get_threshold(
             "tax_accounts",
-            ["255", "516", "717"]  # 仮払消費税、仮受消費税など
+            ["255", "516", "717"],  # 仮払消費税、仮受消費税など
         )
         tax_rate = self.get_threshold("tax_rate", 0.10)  # 10%
         self.get_threshold("tax_tolerance", 1.0)  # 1円
@@ -818,34 +847,46 @@ class ExpenseRatioRule(AuditRule):
         result.total_checked = len(expenses)
 
         # Calculate by account and period
-        by_period = expenses.group_by([
-            "gl_account_number",
-            "accounting_period",
-        ]).agg([
-            pl.col("amount").sum().alias("period_total"),
-        ])
+        by_period = expenses.group_by(
+            [
+                "gl_account_number",
+                "accounting_period",
+            ]
+        ).agg(
+            [
+                pl.col("amount").sum().alias("period_total"),
+            ]
+        )
 
         # Calculate average by account
-        avg_by_account = by_period.group_by("gl_account_number").agg([
-            pl.col("period_total").mean().alias("avg_total"),
-            pl.col("period_total").std().alias("std_total"),
-        ])
+        avg_by_account = by_period.group_by("gl_account_number").agg(
+            [
+                pl.col("period_total").mean().alias("avg_total"),
+                pl.col("period_total").std().alias("std_total"),
+            ]
+        )
 
         by_period = by_period.join(avg_by_account, on="gl_account_number", how="left")
 
         # Find periods with unusual expense
         anomalies = by_period.filter(
-            (pl.col("std_total").is_not_null()) &
-            (pl.col("std_total") > 0) &
-            (((pl.col("period_total") - pl.col("avg_total")).abs() / pl.col("std_total")) > 2)
+            (pl.col("std_total").is_not_null())
+            & (pl.col("std_total") > 0)
+            & (
+                (
+                    (pl.col("period_total") - pl.col("avg_total")).abs()
+                    / pl.col("std_total")
+                )
+                > 2
+            )
         )
 
         for row in anomalies.iter_rows(named=True):
             deviation = (row["period_total"] - row["avg_total"]) / row["std_total"]
             # Find sample entries for this account/period
             sample = expenses.filter(
-                (pl.col("gl_account_number") == row["gl_account_number"]) &
-                (pl.col("accounting_period") == row["accounting_period"])
+                (pl.col("gl_account_number") == row["gl_account_number"])
+                & (pl.col("accounting_period") == row["accounting_period"])
             ).head(1)
 
             if len(sample) > 0:
@@ -896,27 +937,29 @@ class RevenueRecognitionRule(AuditRule):
 
         revenue_prefix = self.get_threshold("revenue_prefix", "5")  # 5xx = 売上
 
-        revenue = df.filter(
-            pl.col("gl_account_number").str.starts_with(revenue_prefix)
-        )
+        revenue = df.filter(pl.col("gl_account_number").str.starts_with(revenue_prefix))
 
         result.total_checked = len(revenue)
 
         # Calculate revenue by period
-        by_period = revenue.group_by("accounting_period").agg([
-            pl.col("amount").sum().alias("period_total"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        by_period = revenue.group_by("accounting_period").agg(
+            [
+                pl.col("amount").sum().alias("period_total"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         total_revenue = by_period["period_total"].sum()
         if total_revenue == 0:
             return result
 
         # Calculate concentration in specific periods
-        by_period = by_period.with_columns([
-            (pl.col("period_total") / total_revenue * 100).alias("pct"),
-        ])
+        by_period = by_period.with_columns(
+            [
+                (pl.col("period_total") / total_revenue * 100).alias("pct"),
+            ]
+        )
 
         # Flag periods with >25% of annual revenue (unusual concentration)
         concentration_threshold = self.get_threshold("concentration_threshold", 25.0)
@@ -969,8 +1012,8 @@ class UnusualWriteOffRule(AuditRule):
         threshold = self.get_threshold("writeoff_threshold", 10_000_000)
 
         writeoffs = df.filter(
-            (pl.col("amount").abs() >= threshold) &
-            pl.col("je_line_description").str.contains("|".join(writeoff_keywords))
+            (pl.col("amount").abs() >= threshold)
+            & pl.col("je_line_description").str.contains("|".join(writeoff_keywords))
         )
 
         result.total_checked = len(writeoffs)

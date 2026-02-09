@@ -54,7 +54,6 @@ from app.core.logging import (
 __all__ = [
     # 設定
     "settings",
-
     # ロギング
     "setup_logging",
     "get_logger",
@@ -64,7 +63,6 @@ __all__ = [
     "set_request_id",
     "LogContext",
     "log_function_call",
-
     # 例外
     "JAIAException",
     "ValidationError",

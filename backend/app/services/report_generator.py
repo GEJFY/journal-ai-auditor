@@ -159,13 +159,13 @@ class PPTReportGenerator:
         # Summary text
         summary_text = f"""
 検証概要:
-• 検証対象仕訳件数: {stats.get('total_entries', 0):,}件
-• 総取引金額: ¥{stats.get('total_amount', 0):,.0f}
-• 対象期間: {stats.get('date_from', '')} ～ {stats.get('date_to', '')}
+• 検証対象仕訳件数: {stats.get("total_entries", 0):,}件
+• 総取引金額: ¥{stats.get("total_amount", 0):,.0f}
+• 対象期間: {stats.get("date_from", "")} ～ {stats.get("date_to", "")}
 
 リスク評価:
-• 高リスク仕訳: {stats.get('high_risk_count', 0):,}件 ({stats.get('high_risk_pct', 0):.1f}%)
-• 平均リスクスコア: {stats.get('avg_risk_score', 0):.1f}点
+• 高リスク仕訳: {stats.get("high_risk_count", 0):,}件 ({stats.get("high_risk_pct", 0):.1f}%)
+• 平均リスクスコア: {stats.get("avg_risk_score", 0):.1f}点
 
 総合評価: {self._get_overall_assessment(stats)}
 """
@@ -233,10 +233,10 @@ class PPTReportGenerator:
         content = f"""
 リスクレベル別仕訳件数:
 
-■ 高リスク (60点以上):   {dist.get('high', 0):,}件
-■ 中リスク (40-59点):    {dist.get('medium', 0):,}件
-■ 低リスク (20-39点):    {dist.get('low', 0):,}件
-■ 最小リスク (20点未満): {dist.get('minimal', 0):,}件
+■ 高リスク (60点以上):   {dist.get("high", 0):,}件
+■ 中リスク (40-59点):    {dist.get("medium", 0):,}件
+■ 低リスク (20-39点):    {dist.get("low", 0):,}件
+■ 最小リスク (20点未満): {dist.get("minimal", 0):,}件
 
 高リスク仕訳には優先的な調査が必要です。
 """
@@ -289,8 +289,8 @@ class PPTReportGenerator:
         content = f"""
 ベンフォードの法則との適合度分析:
 
-• MAD (平均絶対偏差): {benford.get('mad', 0):.4f}
-• 適合度評価: {benford.get('conformity_label', '未評価')}
+• MAD (平均絶対偏差): {benford.get("mad", 0):.4f}
+• 適合度評価: {benford.get("conformity_label", "未評価")}
 
 【解釈】
 ベンフォードの法則は、自然発生的な数値データの先頭桁分布を示す法則です。
@@ -527,8 +527,15 @@ class PPTReportGenerator:
     def _get_benford_analysis(self) -> dict[str, Any]:
         """Get Benford analysis results."""
         expected = {
-            1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-            6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+            1: 0.301,
+            2: 0.176,
+            3: 0.125,
+            4: 0.097,
+            5: 0.079,
+            6: 0.067,
+            7: 0.058,
+            8: 0.051,
+            9: 0.046,
         }
 
         query = """
@@ -598,25 +605,31 @@ class PDFReportGenerator:
 
     def _setup_styles(self) -> None:
         """Setup custom styles."""
-        self.styles.add(ParagraphStyle(
-            name='JapaneseTitle',
-            fontSize=24,
-            leading=30,
-            alignment=1,  # Center
-            spaceAfter=20,
-        ))
-        self.styles.add(ParagraphStyle(
-            name='JapaneseHeading',
-            fontSize=16,
-            leading=20,
-            spaceBefore=15,
-            spaceAfter=10,
-        ))
-        self.styles.add(ParagraphStyle(
-            name='JapaneseBody',
-            fontSize=10,
-            leading=14,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="JapaneseTitle",
+                fontSize=24,
+                leading=30,
+                alignment=1,  # Center
+                spaceAfter=20,
+            )
+        )
+        self.styles.add(
+            ParagraphStyle(
+                name="JapaneseHeading",
+                fontSize=16,
+                leading=20,
+                spaceBefore=15,
+                spaceAfter=10,
+            )
+        )
+        self.styles.add(
+            ParagraphStyle(
+                name="JapaneseBody",
+                fontSize=10,
+                leading=14,
+            )
+        )
 
     def generate(self) -> bytes:
         """Generate PDF report.
@@ -628,27 +641,28 @@ class PDFReportGenerator:
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            rightMargin=20*mm,
-            leftMargin=20*mm,
-            topMargin=20*mm,
-            bottomMargin=20*mm,
+            rightMargin=20 * mm,
+            leftMargin=20 * mm,
+            topMargin=20 * mm,
+            bottomMargin=20 * mm,
         )
 
         story = []
 
         # Title
-        story.append(Paragraph(
-            self.config.report_title,
-            self.styles['JapaneseTitle']
-        ))
-        story.append(Paragraph(
-            f"{self.config.fiscal_year}年度 {self.config.company_name}",
-            self.styles['Normal']
-        ))
+        story.append(Paragraph(self.config.report_title, self.styles["JapaneseTitle"]))
+        story.append(
+            Paragraph(
+                f"{self.config.fiscal_year}年度 {self.config.company_name}",
+                self.styles["Normal"],
+            )
+        )
         story.append(Spacer(1, 30))
 
         # Executive Summary
-        story.append(Paragraph("1. エグゼクティブサマリー", self.styles['JapaneseHeading']))
+        story.append(
+            Paragraph("1. エグゼクティブサマリー", self.styles["JapaneseHeading"])
+        )
         stats = self._get_summary_stats()
         summary_data = [
             ["検証対象仕訳件数", f"{stats.get('total_entries', 0):,}件"],
@@ -660,7 +674,7 @@ class PDFReportGenerator:
         story.append(Spacer(1, 20))
 
         # Risk Distribution
-        story.append(Paragraph("2. リスク分布", self.styles['JapaneseHeading']))
+        story.append(Paragraph("2. リスク分布", self.styles["JapaneseHeading"]))
         dist = self._get_risk_distribution()
         dist_data = [
             ["リスクレベル", "件数"],
@@ -673,23 +687,25 @@ class PDFReportGenerator:
         story.append(Spacer(1, 20))
 
         # Top Findings
-        story.append(Paragraph("3. 主要な発見事項", self.styles['JapaneseHeading']))
+        story.append(Paragraph("3. 主要な発見事項", self.styles["JapaneseHeading"]))
         findings = self._get_top_findings()
         if findings:
             findings_data = [["ルール名", "違反件数"]]
             for f in findings[:10]:
-                findings_data.append([f['rule_name'], f"{f['count']:,}"])
+                findings_data.append([f["rule_name"], f"{f['count']:,}"])
             story.append(self._create_table(findings_data, header=True))
         else:
-            story.append(Paragraph(
-                "検出された重大な発見事項はありません。",
-                self.styles['JapaneseBody']
-            ))
+            story.append(
+                Paragraph(
+                    "検出された重大な発見事項はありません。",
+                    self.styles["JapaneseBody"],
+                )
+            )
         story.append(Spacer(1, 20))
 
         # Recommendations
         story.append(PageBreak())
-        story.append(Paragraph("4. 推奨事項", self.styles['JapaneseHeading']))
+        story.append(Paragraph("4. 推奨事項", self.styles["JapaneseHeading"]))
         recommendations = [
             "1. 高リスク仕訳の詳細調査を実施してください",
             "2. 自己承認仕訳について職務分掌の遵守状況を確認してください",
@@ -698,7 +714,7 @@ class PDFReportGenerator:
             "5. 内部統制の改善提案を策定してください",
         ]
         for rec in recommendations:
-            story.append(Paragraph(rec, self.styles['JapaneseBody']))
+            story.append(Paragraph(rec, self.styles["JapaneseBody"]))
             story.append(Spacer(1, 5))
 
         # Build PDF
@@ -706,23 +722,21 @@ class PDFReportGenerator:
         buffer.seek(0)
         return buffer.getvalue()
 
-    def _create_table(
-        self,
-        data: list[list[str]],
-        header: bool = False
-    ) -> Table:
+    def _create_table(self, data: list[list[str]], header: bool = False) -> Table:
         """Create formatted table."""
-        table = Table(data, colWidths=[100*mm, 50*mm])
+        table = Table(data, colWidths=[100 * mm, 50 * mm])
         style = [
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('PADDING', (0, 0), (-1, -1), 5),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("FONTSIZE", (0, 0), (-1, -1), 10),
+            ("PADDING", (0, 0), (-1, -1), 5),
         ]
         if header:
-            style.extend([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ])
+            style.extend(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                    ("FONTSIZE", (0, 0), (-1, 0), 11),
+                ]
+            )
         table.setStyle(TableStyle(style))
         return table
 

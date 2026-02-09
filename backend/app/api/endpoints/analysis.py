@@ -400,17 +400,19 @@ async def get_risk_details(
         flags = (row[4] or "").split(",") if row[4] else []
         risk_factors = [v.strip() for v in violations + flags if v.strip()]
 
-        entries.append(RiskDetailItem(
-            gl_detail_id=row[0] or "",
-            journal_id=row[1] or "",
-            risk_score=row[2] or 0,
-            rule_score=0,  # Would be calculated from violations
-            ml_score=0,    # Would be from ml_anomalies
-            benford_score=0,  # Would be from benford analysis
-            risk_factors=risk_factors,
-            amount=row[5] or 0,
-            date=str(row[6]) if row[6] else "",
-        ))
+        entries.append(
+            RiskDetailItem(
+                gl_detail_id=row[0] or "",
+                journal_id=row[1] or "",
+                risk_score=row[2] or 0,
+                rule_score=0,  # Would be calculated from violations
+                ml_score=0,  # Would be from ml_anomalies
+                benford_score=0,  # Would be from benford analysis
+                risk_factors=risk_factors,
+                amount=row[5] or 0,
+                date=str(row[6]) if row[6] else "",
+            )
+        )
 
     # Get statistics
     stats_query = f"""
@@ -479,12 +481,27 @@ async def get_benford_detail(
 
     # Expected Benford distributions
     expected_first = {
-        1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-        6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+        1: 0.301,
+        2: 0.176,
+        3: 0.125,
+        4: 0.097,
+        5: 0.079,
+        6: 0.067,
+        7: 0.058,
+        8: 0.051,
+        9: 0.046,
     }
     expected_second = {
-        0: 0.120, 1: 0.114, 2: 0.109, 3: 0.104, 4: 0.100,
-        5: 0.097, 6: 0.093, 7: 0.090, 8: 0.088, 9: 0.085,
+        0: 0.120,
+        1: 0.114,
+        2: 0.109,
+        3: 0.104,
+        4: 0.100,
+        5: 0.097,
+        6: 0.093,
+        7: 0.090,
+        8: 0.088,
+        9: 0.085,
     }
 
     # First digit distribution
@@ -511,16 +528,22 @@ async def get_benford_detail(
         expected_pct = expected_first.get(digit, 0)
         deviation = actual_pct - expected_pct
         # Z-score approximation
-        z_score = deviation / (expected_pct * (1 - expected_pct) / total_first) ** 0.5 if total_first > 0 else 0
+        z_score = (
+            deviation / (expected_pct * (1 - expected_pct) / total_first) ** 0.5
+            if total_first > 0
+            else 0
+        )
 
-        first_digit_data.append(BenfordDigitData(
-            digit=digit,
-            actual_count=count,
-            actual_pct=round(actual_pct, 4),
-            expected_pct=expected_pct,
-            deviation=round(deviation, 4),
-            z_score=round(z_score, 2),
-        ))
+        first_digit_data.append(
+            BenfordDigitData(
+                digit=digit,
+                actual_count=count,
+                actual_pct=round(actual_pct, 4),
+                expected_pct=expected_pct,
+                deviation=round(deviation, 4),
+                z_score=round(z_score, 2),
+            )
+        )
 
     # Second digit distribution
     second_query = f"""
@@ -545,20 +568,32 @@ async def get_benford_detail(
         actual_pct = count / total_second
         expected_pct = expected_second.get(digit, 0)
         deviation = actual_pct - expected_pct
-        z_score = deviation / (expected_pct * (1 - expected_pct) / total_second) ** 0.5 if total_second > 0 else 0
+        z_score = (
+            deviation / (expected_pct * (1 - expected_pct) / total_second) ** 0.5
+            if total_second > 0
+            else 0
+        )
 
-        second_digit_data.append(BenfordDigitData(
-            digit=digit,
-            actual_count=count,
-            actual_pct=round(actual_pct, 4),
-            expected_pct=expected_pct,
-            deviation=round(deviation, 4),
-            z_score=round(z_score, 2),
-        ))
+        second_digit_data.append(
+            BenfordDigitData(
+                digit=digit,
+                actual_count=count,
+                actual_pct=round(actual_pct, 4),
+                expected_pct=expected_pct,
+                deviation=round(deviation, 4),
+                z_score=round(z_score, 2),
+            )
+        )
 
     # Calculate MAD
-    mad_first = sum(abs(d.deviation) for d in first_digit_data) / 9 if first_digit_data else 0
-    mad_second = sum(abs(d.deviation) for d in second_digit_data) / 10 if second_digit_data else 0
+    mad_first = (
+        sum(abs(d.deviation) for d in first_digit_data) / 9 if first_digit_data else 0
+    )
+    mad_second = (
+        sum(abs(d.deviation) for d in second_digit_data) / 10
+        if second_digit_data
+        else 0
+    )
 
     # Determine conformity
     if mad_first <= 0.006:

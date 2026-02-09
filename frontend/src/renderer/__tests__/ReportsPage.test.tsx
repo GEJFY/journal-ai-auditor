@@ -21,18 +21,20 @@ vi.mock('lucide-react', () => ({
   BarChart3: (props: Record<string, unknown>) => <span data-testid="icon-barchart3" {...props} />,
 }));
 
-// Mock API
+// Mock API - getReportTemplates returns { templates: [...] } wrapper
 vi.mock('../lib/api', () => ({
   api: {
-    getReportTemplates: vi.fn().mockResolvedValue([
-      { id: 'summary', name: 'サマリーレポート', description: '概要レポート' },
-      { id: 'detailed', name: '詳細レポート', description: '詳細分析レポート' },
-      { id: 'executive', name: 'エグゼクティブレポート', description: '経営向け報告' },
-      { id: 'violations', name: '違反レポート', description: 'ルール違反一覧' },
-      { id: 'risk', name: 'リスクレポート', description: 'リスク分析' },
-      { id: 'benford', name: 'ベンフォードレポート', description: 'ベンフォード分析' },
-      { id: 'working_paper', name: '調書', description: '監査調書' },
-    ]),
+    getReportTemplates: vi.fn().mockResolvedValue({
+      templates: [
+        { id: 'summary', name: 'サマリーレポート', description: '概要レポート' },
+        { id: 'detailed', name: '詳細レポート', description: '詳細分析レポート' },
+        { id: 'executive', name: 'エグゼクティブレポート', description: '経営向け報告' },
+        { id: 'violations', name: '違反レポート', description: 'ルール違反一覧' },
+        { id: 'risk', name: 'リスクレポート', description: 'リスク分析' },
+        { id: 'benford', name: 'ベンフォードレポート', description: 'ベンフォード分析' },
+        { id: 'working_paper', name: '調書', description: '監査調書' },
+      ],
+    }),
     generateReport: vi.fn().mockResolvedValue({
       id: 'test-report',
       type: 'summary',

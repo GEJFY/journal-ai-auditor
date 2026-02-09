@@ -77,7 +77,7 @@ class QAAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "respond",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("respond", END)

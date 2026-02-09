@@ -16,23 +16,23 @@ class RuleSeverity(StrEnum):
     """Severity level of rule violations."""
 
     CRITICAL = "critical"  # 重大: 不正の強い疑い
-    HIGH = "high"          # 高: 要調査
-    MEDIUM = "medium"      # 中: 要確認
-    LOW = "low"            # 低: 注意
-    INFO = "info"          # 情報: 参考
+    HIGH = "high"  # 高: 要調査
+    MEDIUM = "medium"  # 中: 要確認
+    LOW = "low"  # 低: 注意
+    INFO = "info"  # 情報: 参考
 
 
 class RuleCategory(StrEnum):
     """Category of audit rules."""
 
-    AMOUNT = "amount"           # 金額ルール
-    TIME = "time"               # 時間ルール
-    ACCOUNT = "account"         # 勘定ルール
-    APPROVAL = "approval"       # 承認ルール
-    DESCRIPTION = "description" # 摘要ルール
-    PATTERN = "pattern"         # パターンルール
-    TREND = "trend"             # トレンドルール
-    ML = "ml"                   # 機械学習ルール
+    AMOUNT = "amount"  # 金額ルール
+    TIME = "time"  # 時間ルール
+    ACCOUNT = "account"  # 勘定ルール
+    APPROVAL = "approval"  # 承認ルール
+    DESCRIPTION = "description"  # 摘要ルール
+    PATTERN = "pattern"  # パターンルール
+    TREND = "trend"  # トレンドルール
+    ML = "ml"  # 機械学習ルール
 
 
 @dataclass

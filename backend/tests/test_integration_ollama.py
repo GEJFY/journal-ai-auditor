@@ -84,7 +84,9 @@ class TestOllamaAgentIntegration:
             max_tokens=100,
         )
         with pytest.MonkeyPatch.context() as mp:
-            mp.setattr("app.agents.base.settings.ollama_base_url", "http://localhost:11434")
+            mp.setattr(
+                "app.agents.base.settings.ollama_base_url", "http://localhost:11434"
+            )
             llm = create_llm(config)
             assert llm is not None
 
@@ -101,7 +103,9 @@ class TestOllamaAgentIntegration:
             max_tokens=50,
         )
         with pytest.MonkeyPatch.context() as mp:
-            mp.setattr("app.agents.base.settings.ollama_base_url", "http://localhost:11434")
+            mp.setattr(
+                "app.agents.base.settings.ollama_base_url", "http://localhost:11434"
+            )
             llm = create_llm(config)
             response = llm.invoke([HumanMessage(content="Say hello")])
             assert response.content

@@ -101,7 +101,7 @@ class InvestigationAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "conclude",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("conclude", END)
@@ -200,10 +200,13 @@ class InvestigationAgent(BaseAgent):
 4. 使用している勘定科目のパターン
 5. 異常な行動パターンの有無
 """
-        result = await self.execute(task, {
-            "user_id": user_id,
-            "fiscal_year": fiscal_year,
-        })
+        result = await self.execute(
+            task,
+            {
+                "user_id": user_id,
+                "fiscal_year": fiscal_year,
+            },
+        )
         return result.to_dict()
 
     async def investigate_rule_violation(
@@ -231,10 +234,13 @@ class InvestigationAgent(BaseAgent):
 4. 共通する特徴
 5. 改善のための推奨事項
 """
-        result = await self.execute(task, {
-            "rule_id": rule_id,
-            "fiscal_year": fiscal_year,
-        })
+        result = await self.execute(
+            task,
+            {
+                "rule_id": rule_id,
+                "fiscal_year": fiscal_year,
+            },
+        )
         return result.to_dict()
 
     async def trace_transaction_flow(

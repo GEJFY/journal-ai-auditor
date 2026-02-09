@@ -43,19 +43,23 @@ class LLMService:
 
         if provider == "anthropic":
             from anthropic import Anthropic
+
             self._client = Anthropic(api_key=settings.anthropic_api_key)
 
         elif provider == "openai":
             from openai import OpenAI
+
             self._client = OpenAI(api_key=settings.openai_api_key)
 
         elif provider == "google":
             from google import genai
+
             client = genai.Client(api_key=settings.google_api_key)
             self._client = client
 
         elif provider == "bedrock":
             import boto3
+
             self._client = boto3.client(
                 "bedrock-runtime",
                 region_name=settings.aws_region,
@@ -63,6 +67,7 @@ class LLMService:
 
         elif provider == "azure":
             from openai import AzureOpenAI
+
             self._client = AzureOpenAI(
                 api_key=settings.azure_openai_api_key,
                 api_version=settings.azure_openai_api_version,
@@ -71,6 +76,7 @@ class LLMService:
 
         elif provider == "azure_foundry":
             from openai import AzureOpenAI
+
             self._client = AzureOpenAI(
                 api_key=settings.azure_foundry_api_key,
                 api_version=settings.azure_foundry_api_version,
@@ -80,6 +86,7 @@ class LLMService:
         elif provider == "vertex_ai":
             import vertexai
             from vertexai.generative_models import GenerativeModel
+
             vertexai.init(
                 project=settings.gcp_project_id,
                 location=settings.gcp_location,
@@ -88,6 +95,7 @@ class LLMService:
 
         elif provider == "ollama":
             import httpx
+
             self._client = httpx.Client(
                 base_url=settings.ollama_base_url,
                 timeout=self.config.timeout,

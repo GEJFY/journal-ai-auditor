@@ -220,22 +220,26 @@ class TestAuditRule:
 
     def test_execute_finds_violations(self):
         rule = _DummyRule()
-        df = pl.DataFrame({
-            "gl_detail_id": ["A", "B", "C"],
-            "journal_id": ["J1", "J1", "J2"],
-            "amount": [500_000, 2_000_000, 5_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["A", "B", "C"],
+                "journal_id": ["J1", "J1", "J2"],
+                "amount": [500_000, 2_000_000, 5_000_000],
+            }
+        )
         result = rule.execute(df)
         assert result.total_checked == 3
         assert result.violations_found == 2
 
     def test_execute_no_violations(self):
         rule = _DummyRule()
-        df = pl.DataFrame({
-            "gl_detail_id": ["A"],
-            "journal_id": ["J1"],
-            "amount": [100],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["A"],
+                "journal_id": ["J1"],
+                "amount": [100],
+            }
+        )
         result = rule.execute(df)
         assert result.violations_found == 0
 
@@ -293,6 +297,7 @@ class TestRuleEngine:
 
     def _make_engine(self):
         from app.services.rules.rule_engine import RuleEngine
+
         mock_db = MagicMock()
         return RuleEngine(db=mock_db, max_workers=2)
 
@@ -324,11 +329,13 @@ class TestRuleEngine:
     def test_execute_single_rule(self):
         engine = self._make_engine()
         rule = _DummyRule()
-        df = pl.DataFrame({
-            "gl_detail_id": ["A", "B"],
-            "journal_id": ["J1", "J1"],
-            "amount": [500_000, 2_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["A", "B"],
+                "journal_id": ["J1", "J1"],
+                "amount": [500_000, 2_000_000],
+            }
+        )
         result = engine.execute_rule(rule, df)
         assert result.success is True
         assert result.violations_found == 1
@@ -349,11 +356,13 @@ class TestRuleEngine:
     def test_execute_rules_sequential(self):
         engine = self._make_engine()
         rule = _DummyRule()
-        df = pl.DataFrame({
-            "gl_detail_id": ["A", "B", "C"],
-            "journal_id": ["J1", "J1", "J2"],
-            "amount": [500_000, 2_000_000, 3_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["A", "B", "C"],
+                "journal_id": ["J1", "J1", "J2"],
+                "amount": [500_000, 2_000_000, 3_000_000],
+            }
+        )
         result = engine.execute_rules(df, [rule], parallel=False)
         assert result.total_entries == 3
         assert result.rules_executed == 1
@@ -362,11 +371,13 @@ class TestRuleEngine:
     def test_execute_rules_parallel(self):
         engine = self._make_engine()
         rule = _DummyRule()
-        df = pl.DataFrame({
-            "gl_detail_id": ["A"],
-            "journal_id": ["J1"],
-            "amount": [5_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["A"],
+                "journal_id": ["J1"],
+                "amount": [5_000_000],
+            }
+        )
         # parallel=True でも1ルールなので sequential fallback
         result = engine.execute_rules(df, [rule], parallel=True)
         assert result.rules_executed == 1
@@ -374,11 +385,13 @@ class TestRuleEngine:
     def test_execute_rules_aggregates_by_category(self):
         engine = self._make_engine()
         rule = _DummyRule()
-        df = pl.DataFrame({
-            "gl_detail_id": ["A"],
-            "journal_id": ["J1"],
-            "amount": [5_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["A"],
+                "journal_id": ["J1"],
+                "amount": [5_000_000],
+            }
+        )
         result = engine.execute_rules(df, [rule])
         assert "amount" in result.violations_by_category
         assert result.violations_by_category["amount"] == 1
@@ -461,6 +474,7 @@ class TestEngineResult:
 
     def test_to_dict(self):
         from app.services.rules.rule_engine import EngineResult
+
         result = EngineResult(
             total_entries=100,
             total_rules=5,
@@ -483,31 +497,37 @@ class TestRiskScore:
 
     def test_risk_category_critical(self):
         from app.services.rules.scoring import RiskScore
+
         s = RiskScore(gl_detail_id="A", journal_id="J", total_score=85)
         assert s.risk_category == "critical"
 
     def test_risk_category_high(self):
         from app.services.rules.scoring import RiskScore
+
         s = RiskScore(gl_detail_id="A", journal_id="J", total_score=65)
         assert s.risk_category == "high"
 
     def test_risk_category_medium(self):
         from app.services.rules.scoring import RiskScore
+
         s = RiskScore(gl_detail_id="A", journal_id="J", total_score=45)
         assert s.risk_category == "medium"
 
     def test_risk_category_low(self):
         from app.services.rules.scoring import RiskScore
+
         s = RiskScore(gl_detail_id="A", journal_id="J", total_score=25)
         assert s.risk_category == "low"
 
     def test_risk_category_minimal(self):
         from app.services.rules.scoring import RiskScore
+
         s = RiskScore(gl_detail_id="A", journal_id="J", total_score=10)
         assert s.risk_category == "minimal"
 
     def test_to_dict(self):
         from app.services.rules.scoring import RiskScore
+
         s = RiskScore(
             gl_detail_id="A",
             journal_id="J",
@@ -527,6 +547,7 @@ class TestScoringConfig:
 
     def test_defaults(self):
         from app.services.rules.scoring import ScoringConfig
+
         config = ScoringConfig()
         assert config.severity_weights["critical"] == 25.0
         assert config.category_weights["approval"] == 1.5
@@ -539,6 +560,7 @@ class TestRiskScoringService:
 
     def _make_service(self):
         from app.services.rules.scoring import RiskScoringService
+
         mock_db = MagicMock()
         return RiskScoringService(db=mock_db)
 
@@ -717,6 +739,7 @@ class TestRiskPrioritizer:
 
     def test_get_review_queue(self):
         from app.services.rules.scoring import RiskPrioritizer
+
         mock_db = MagicMock()
         mock_db.execute_df.return_value = pl.DataFrame({"id": [1, 2, 3]})
         prioritizer = RiskPrioritizer(db=mock_db)
@@ -725,6 +748,7 @@ class TestRiskPrioritizer:
 
     def test_get_sample_by_risk_level_default(self):
         from app.services.rules.scoring import RiskPrioritizer
+
         mock_db = MagicMock()
         mock_db.execute_df.return_value = pl.DataFrame({"id": [1]})
         prioritizer = RiskPrioritizer(db=mock_db)
@@ -734,6 +758,7 @@ class TestRiskPrioritizer:
 
     def test_get_sample_by_risk_level_custom(self):
         from app.services.rules.scoring import RiskPrioritizer
+
         mock_db = MagicMock()
         mock_db.execute_df.return_value = pl.DataFrame({"id": [1, 2]})
         prioritizer = RiskPrioritizer(db=mock_db)

@@ -27,13 +27,20 @@ vi.mock('recharts', () => ({
   Cell: () => <div />,
 }));
 
-// Mock API
+// Mock API - matches RiskResponse / ViolationsResponse schemas
 vi.mock('../lib/api', () => ({
   api: {
     getRiskAnalysis: vi.fn().mockResolvedValue({
-      distribution: { high: 5, medium: 15, low: 80 },
-      items: [],
-      violations_summary: { total: 20, by_rule: {} },
+      risk_distribution: { high: 5, medium: 15, low: 80, minimal: 100 },
+      high_risk: [],
+      medium_risk: [],
+      low_risk: [],
+    }),
+    getViolations: vi.fn().mockResolvedValue({
+      violations: [],
+      total_count: 20,
+      by_severity: { high: 5, medium: 10, low: 5 },
+      by_category: { amount: 8, time: 7, approval: 5 },
     }),
   },
 }));

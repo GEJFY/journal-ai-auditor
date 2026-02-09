@@ -10,8 +10,14 @@ class LLMConfig:
     """Configuration for LLM calls."""
 
     provider: Literal[
-        "anthropic", "openai", "google", "bedrock",
-        "azure", "azure_foundry", "vertex_ai", "ollama",
+        "anthropic",
+        "openai",
+        "google",
+        "bedrock",
+        "azure",
+        "azure_foundry",
+        "vertex_ai",
+        "ollama",
     ]
     model: str
     temperature: float = 0.0

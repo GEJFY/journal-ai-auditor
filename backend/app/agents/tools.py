@@ -8,7 +8,6 @@ Provides LangChain tools that agents can use to:
 - Compare patterns
 """
 
-
 from langchain_core.tools import tool
 
 from app.db import DuckDBManager
@@ -291,7 +290,11 @@ def get_period_comparison(
         JSON string with period comparison data.
     """
     db = get_db()
-    account_filter = f"AND gl_account_number LIKE '{gl_account_number}%'" if gl_account_number else ""
+    account_filter = (
+        f"AND gl_account_number LIKE '{gl_account_number}%'"
+        if gl_account_number
+        else ""
+    )
 
     query = f"""
         SELECT
@@ -327,7 +330,9 @@ def get_anomaly_patterns(
     """
     db = get_db()
     fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
-    pattern_filter = f"AND anomaly_flags LIKE '%{pattern_type}%'" if pattern_type else ""
+    pattern_filter = (
+        f"AND anomaly_flags LIKE '%{pattern_type}%'" if pattern_type else ""
+    )
 
     query = f"""
         SELECT
@@ -515,9 +520,19 @@ def save_audit_finding(
                 finding_title, finding_description, severity, category,
                 affected_amount, affected_count, recommendation)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            [finding_id, workflow_id, agent_type, fiscal_year,
-             finding_title, finding_description, severity.upper(), category,
-             affected_amount, affected_count, recommendation]
+            [
+                finding_id,
+                workflow_id,
+                agent_type,
+                fiscal_year,
+                finding_title,
+                finding_description,
+                severity.upper(),
+                category,
+                affected_amount,
+                affected_count,
+                recommendation,
+            ],
         )
         return json.dumps({"finding_id": finding_id, "status": "saved"})
     except Exception as e:

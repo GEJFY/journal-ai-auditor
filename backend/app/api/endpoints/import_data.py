@@ -101,6 +101,7 @@ async def upload_file(
 
     # Generate temp file ID
     import uuid
+
     temp_id = str(uuid.uuid4())
     temp_path = UPLOAD_DIR / f"{temp_id}{suffix}"
 
@@ -282,7 +283,14 @@ async def suggest_mapping(columns: str) -> dict:
         "suggested_mapping": mapping,
         "unmapped": [c for c in column_list if c not in mapping.values()],
         "missing_required": [
-            c for c in ["journal_id", "effective_date", "gl_account_number", "amount", "debit_credit_indicator"]
+            c
+            for c in [
+                "journal_id",
+                "effective_date",
+                "gl_account_number",
+                "amount",
+                "debit_credit_indicator",
+            ]
             if c not in mapping
         ],
     }

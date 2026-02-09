@@ -107,6 +107,7 @@ class AggregationService:
             AggregationResult with execution details.
         """
         import time
+
         start = time.perf_counter()
 
         try:
@@ -377,7 +378,9 @@ class AggregationService:
         """
         return self._execute_aggregation("agg_trend_yoy", query)
 
-    def _update_benford_distribution(self, fiscal_year: int | None) -> AggregationResult:
+    def _update_benford_distribution(
+        self, fiscal_year: int | None
+    ) -> AggregationResult:
         """Update Benford's Law distribution."""
         fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
 

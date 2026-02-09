@@ -25,8 +25,7 @@ def anyio_backend():
 async def client():
     """Create async test client."""
     async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 
@@ -114,7 +113,7 @@ class TestReportEndpoints:
         """Test summary report generation."""
         response = await client.post(
             "/api/v1/reports/generate",
-            json={"report_type": "summary", "fiscal_year": 2024}
+            json={"report_type": "summary", "fiscal_year": 2024},
         )
         assert response.status_code == 200
         data = response.json()
@@ -126,7 +125,7 @@ class TestReportEndpoints:
         """Test executive report generation."""
         response = await client.post(
             "/api/v1/reports/generate",
-            json={"report_type": "executive", "fiscal_year": 2024}
+            json={"report_type": "executive", "fiscal_year": 2024},
         )
         assert response.status_code == 200
         data = response.json()
@@ -194,7 +193,10 @@ class TestLLMConfiguration:
 
         bedrock_models = LLM_MODELS["bedrock"]
         assert "anthropic.claude-sonnet-4-6-opus-20260115-v1:0" in bedrock_models
-        assert bedrock_models["anthropic.claude-sonnet-4-6-opus-20260115-v1:0"]["tier"] == "premium"
+        assert (
+            bedrock_models["anthropic.claude-sonnet-4-6-opus-20260115-v1:0"]["tier"]
+            == "premium"
+        )
 
     def test_azure_foundry_gpt5_models(self):
         """Test Azure Foundry has GPT-5 series."""
@@ -349,7 +351,7 @@ class TestErrorHandling:
         """Test handling of invalid report type."""
         response = await client.post(
             "/api/v1/reports/generate",
-            json={"report_type": "invalid_type", "fiscal_year": 2024}
+            json={"report_type": "invalid_type", "fiscal_year": 2024},
         )
         # Should either return 400 or 422
         assert response.status_code in [400, 422, 200]  # 200 if handled gracefully
@@ -357,10 +359,7 @@ class TestErrorHandling:
     @pytest.mark.anyio
     async def test_missing_required_params(self, client: AsyncClient):
         """Test handling of missing required parameters."""
-        response = await client.post(
-            "/api/v1/reports/generate",
-            json={}
-        )
+        response = await client.post("/api/v1/reports/generate", json={})
         assert response.status_code == 422  # Validation error
 
 

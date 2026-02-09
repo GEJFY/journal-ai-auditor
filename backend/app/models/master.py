@@ -138,9 +138,11 @@ class Vendor(BaseModel):
         max_length=200,
         description="取引先名（英語）",
     )
-    vendor_type: Literal["CUSTOMER", "SUPPLIER", "INTERCOMPANY", "BANK", "OTHER"] = Field(
-        ...,
-        description="取引先区分",
+    vendor_type: Literal["CUSTOMER", "SUPPLIER", "INTERCOMPANY", "BANK", "OTHER"] = (
+        Field(
+            ...,
+            description="取引先区分",
+        )
     )
     country: str | None = Field(
         None,

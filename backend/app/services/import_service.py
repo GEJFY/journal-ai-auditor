@@ -42,7 +42,9 @@ class ImportResult:
             "errors": self.errors[:100],  # Limit errors returned
             "warnings": self.warnings[:100],
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
         }
 
 
@@ -52,20 +54,53 @@ class ColumnMapping:
     # AICPA GL_Detail standard columns
     STANDARD_COLUMNS = {
         "gl_detail_id": ["gl_detail_id", "id", "line_id", "detail_id"],
-        "business_unit_code": ["business_unit_code", "bu_code", "company_code", "company"],
+        "business_unit_code": [
+            "business_unit_code",
+            "bu_code",
+            "company_code",
+            "company",
+        ],
         "fiscal_year": ["fiscal_year", "year", "fy"],
         "accounting_period": ["accounting_period", "period", "month"],
         "journal_id": ["journal_id", "je_id", "voucher_no", "slip_no", "伝票番号"],
-        "journal_id_line_number": ["journal_id_line_number", "line_no", "line_number", "行番号"],
-        "effective_date": ["effective_date", "posting_date", "transaction_date", "計上日", "発効日"],
+        "journal_id_line_number": [
+            "journal_id_line_number",
+            "line_no",
+            "line_number",
+            "行番号",
+        ],
+        "effective_date": [
+            "effective_date",
+            "posting_date",
+            "transaction_date",
+            "計上日",
+            "発効日",
+        ],
         "entry_date": ["entry_date", "input_date", "created_date", "入力日"],
         "entry_time": ["entry_time", "input_time", "created_time", "入力時刻"],
-        "gl_account_number": ["gl_account_number", "account_code", "account", "勘定科目コード", "科目"],
+        "gl_account_number": [
+            "gl_account_number",
+            "account_code",
+            "account",
+            "勘定科目コード",
+            "科目",
+        ],
         "amount": ["amount", "金額"],
         "amount_currency": ["amount_currency", "currency", "通貨"],
         "functional_amount": ["functional_amount", "local_amount", "円貨金額"],
-        "debit_credit_indicator": ["debit_credit_indicator", "dc_flag", "dc", "借貸区分"],
-        "je_line_description": ["je_line_description", "description", "memo", "摘要", "適用"],
+        "debit_credit_indicator": [
+            "debit_credit_indicator",
+            "dc_flag",
+            "dc",
+            "借貸区分",
+        ],
+        "je_line_description": [
+            "je_line_description",
+            "description",
+            "memo",
+            "摘要",
+            "適用",
+        ],
         "source": ["source", "source_system", "発生源"],
         "vendor_code": ["vendor_code", "customer_code", "取引先コード"],
         "dept_code": ["dept_code", "department_code", "部門コード"],
@@ -174,13 +209,25 @@ class ImportService:
             "columns": columns,
             "column_count": len(columns),
             "suggested_mapping": suggested_mapping,
-            "unmapped_columns": [c for c in columns if c not in suggested_mapping.values()],
+            "unmapped_columns": [
+                c for c in columns if c not in suggested_mapping.values()
+            ],
             "missing_required": [
-                c for c in ["journal_id", "effective_date", "gl_account_number", "amount", "debit_credit_indicator"]
+                c
+                for c in [
+                    "journal_id",
+                    "effective_date",
+                    "gl_account_number",
+                    "amount",
+                    "debit_credit_indicator",
+                ]
                 if c not in suggested_mapping
             ],
             "sample_data": sample_df.to_dicts()[:10],
-            "dtypes": {col: str(dtype) for col, dtype in zip(df.columns, df.dtypes, strict=False)},
+            "dtypes": {
+                col: str(dtype)
+                for col, dtype in zip(df.columns, df.dtypes, strict=False)
+            },
         }
 
     def validate_file(
@@ -275,10 +322,12 @@ class ImportService:
 
         except Exception as e:
             result.success = False
-            result.errors.append({
-                "type": "system",
-                "message": str(e),
-            })
+            result.errors.append(
+                {
+                    "type": "system",
+                    "message": str(e),
+                }
+            )
 
         result.completed_at = datetime.now()
         return result
@@ -374,8 +423,11 @@ class ImportService:
             # Create ID from journal_id and line_number
             if "journal_id" in df.columns and "journal_id_line_number" in df.columns:
                 df = df.with_columns(
-                    (pl.col("journal_id") + "-" + pl.col("journal_id_line_number").cast(pl.Utf8).str.zfill(3))
-                    .alias("gl_detail_id")
+                    (
+                        pl.col("journal_id")
+                        + "-"
+                        + pl.col("journal_id_line_number").cast(pl.Utf8).str.zfill(3)
+                    ).alias("gl_detail_id")
                 )
             else:
                 # Generate UUID for each row
@@ -420,10 +472,12 @@ class ImportService:
 
         except Exception as e:
             result.success = False
-            result.errors.append({
-                "type": "system",
-                "message": str(e),
-            })
+            result.errors.append(
+                {
+                    "type": "system",
+                    "message": str(e),
+                }
+            )
 
         result.completed_at = datetime.now()
         return result

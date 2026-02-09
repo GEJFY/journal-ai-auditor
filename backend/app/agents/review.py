@@ -78,7 +78,7 @@ class ReviewAgent(BaseAgent):
             {
                 "tools": "tools",
                 "end": "evaluate",
-            }
+            },
         )
         graph.add_edge("tools", "think")
         graph.add_edge("evaluate", END)
@@ -214,10 +214,12 @@ class ReviewAgent(BaseAgent):
         Returns:
             Validation results.
         """
-        findings_summary = "\n".join([
-            f"- {f.get('id', 'N/A')}: {f.get('description', '')} [Risk: {f.get('risk_level', 'Unknown')}]"
-            for f in findings
-        ])
+        findings_summary = "\n".join(
+            [
+                f"- {f.get('id', 'N/A')}: {f.get('description', '')} [Risk: {f.get('risk_level', 'Unknown')}]"
+                for f in findings
+            ]
+        )
 
         task = f"""
 以下の発見事項のリスク評価を検証してください：

@@ -130,7 +130,9 @@ class BenfordResult:
     chi_square: float = 0.0
     p_value: float = 1.0
     mad: float = 0.0  # Mean Absolute Deviation
-    conformity: str = "unknown"  # "close", "acceptable", "marginally acceptable", "nonconforming"
+    conformity: str = (
+        "unknown"  # "close", "acceptable", "marginally acceptable", "nonconforming"
+    )
     digit_deviations: dict[int, float] = field(default_factory=dict)
 
     @property
@@ -204,8 +206,7 @@ class BenfordAnalyzer:
 
         # Calculate deviations
         result.digit_deviations = {
-            d: result.observed_freq[d] - BENFORD_FIRST_DIGIT[d]
-            for d in range(1, 10)
+            d: result.observed_freq[d] - BENFORD_FIRST_DIGIT[d] for d in range(1, 10)
         }
 
         # Calculate MAD
@@ -263,8 +264,7 @@ class BenfordAnalyzer:
         result.expected_freq = BENFORD_SECOND_DIGIT.copy()
 
         result.digit_deviations = {
-            d: result.observed_freq[d] - BENFORD_SECOND_DIGIT[d]
-            for d in range(0, 10)
+            d: result.observed_freq[d] - BENFORD_SECOND_DIGIT[d] for d in range(0, 10)
         }
 
         result.mad = sum(abs(v) for v in result.digit_deviations.values()) / 10
@@ -343,7 +343,9 @@ class FirstDigitBenfordRule(AuditRule):
                         "digit_deviations": benford_result.digit_deviations,
                         "total_entries": result.total_checked,
                     },
-                    score_impact=15.0 if benford_result.conformity == "nonconforming" else 10.0,
+                    score_impact=15.0
+                    if benford_result.conformity == "nonconforming"
+                    else 10.0,
                 )
                 result.violations.append(violation)
 
@@ -453,7 +455,8 @@ class DigitDeviationBenfordRule(AuditRule):
             if abs(deviation) > threshold:
                 # Find sample entries with this digit
                 digit_entries = df.filter(
-                    pl.col("amount").abs().cast(pl.Utf8).str.lstrip("0").str.slice(0, 1) == str(digit)
+                    pl.col("amount").abs().cast(pl.Utf8).str.lstrip("0").str.slice(0, 1)
+                    == str(digit)
                 )
                 if len(digit_entries) > 0:
                     sample_row = digit_entries.row(0, named=True)
@@ -504,16 +507,25 @@ class SummationBenfordRule(AuditRule):
         result.total_checked = len(df)
 
         # Calculate sum by first digit
-        df_with_digit = df.with_columns([
-            pl.col("amount").abs().cast(pl.Utf8).str.lstrip("0").str.slice(0, 1).alias("first_digit")
-        ])
+        df_with_digit = df.with_columns(
+            [
+                pl.col("amount")
+                .abs()
+                .cast(pl.Utf8)
+                .str.lstrip("0")
+                .str.slice(0, 1)
+                .alias("first_digit")
+            ]
+        )
 
-        summation = df_with_digit.group_by("first_digit").agg([
-            pl.col("amount").abs().sum().alias("digit_sum"),
-            pl.count().alias("count"),
-            pl.col("gl_detail_id").first().alias("sample_id"),
-            pl.col("journal_id").first().alias("sample_journal"),
-        ])
+        summation = df_with_digit.group_by("first_digit").agg(
+            [
+                pl.col("amount").abs().sum().alias("digit_sum"),
+                pl.count().alias("count"),
+                pl.col("gl_detail_id").first().alias("sample_id"),
+                pl.col("journal_id").first().alias("sample_journal"),
+            ]
+        )
 
         total_sum = df["amount"].abs().sum()
         if total_sum == 0:
@@ -531,7 +543,7 @@ class SummationBenfordRule(AuditRule):
                 violation = self._create_violation(
                     gl_detail_id=row["sample_id"],
                     journal_id=row["sample_journal"],
-                    message=f"金額集中: 桁{digit}に{pct*100:.1f}%集中",
+                    message=f"金額集中: 桁{digit}に{pct * 100:.1f}%集中",
                     details={
                         "digit": digit,
                         "sum": row["digit_sum"],
@@ -566,7 +578,9 @@ class IndividualBenfordViolationRule(AuditRule):
 
     @property
     def description(self) -> str:
-        return "ベンフォード分布から乖離している第1桁を持つ高額取引を個別にフラグします。"
+        return (
+            "ベンフォード分布から乖離している第1桁を持つ高額取引を個別にフラグします。"
+        )
 
     @property
     def default_severity(self) -> RuleSeverity:
@@ -588,21 +602,27 @@ class IndividualBenfordViolationRule(AuditRule):
 
         # Find the most anomalous digit
         max_deviation_digit = max(
-            benford_result.digit_deviations.items(),
-            key=lambda x: abs(x[1])
+            benford_result.digit_deviations.items(), key=lambda x: abs(x[1])
         )[0]
 
         # If this digit is over-represented, flag high-value entries with it
         if benford_result.digit_deviations[max_deviation_digit] > 0:
             threshold = self.get_threshold("individual_threshold", 10_000_000)
 
-            df_with_digit = df.with_columns([
-                pl.col("amount").abs().cast(pl.Utf8).str.lstrip("0").str.slice(0, 1).alias("first_digit")
-            ])
+            df_with_digit = df.with_columns(
+                [
+                    pl.col("amount")
+                    .abs()
+                    .cast(pl.Utf8)
+                    .str.lstrip("0")
+                    .str.slice(0, 1)
+                    .alias("first_digit")
+                ]
+            )
 
             flagged = df_with_digit.filter(
-                (pl.col("first_digit") == str(max_deviation_digit)) &
-                (pl.col("amount").abs() >= threshold)
+                (pl.col("first_digit") == str(max_deviation_digit))
+                & (pl.col("amount").abs() >= threshold)
             )
 
             # Limit to top entries
@@ -617,7 +637,9 @@ class IndividualBenfordViolationRule(AuditRule):
                     details={
                         "amount": row["amount"],
                         "first_digit": max_deviation_digit,
-                        "digit_deviation": benford_result.digit_deviations[max_deviation_digit],
+                        "digit_deviation": benford_result.digit_deviations[
+                            max_deviation_digit
+                        ],
                     },
                     score_impact=5.0,
                 )

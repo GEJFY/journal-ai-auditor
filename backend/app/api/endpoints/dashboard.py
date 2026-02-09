@@ -412,8 +412,15 @@ async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
     db = get_db()
 
     expected = {
-        1: 0.301, 2: 0.176, 3: 0.125, 4: 0.097, 5: 0.079,
-        6: 0.067, 7: 0.058, 8: 0.051, 9: 0.046,
+        1: 0.301,
+        2: 0.176,
+        3: 0.125,
+        4: 0.097,
+        5: 0.079,
+        6: 0.067,
+        7: 0.058,
+        8: 0.051,
+        9: 0.046,
     }
 
     query = """
@@ -439,13 +446,15 @@ async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
         digit, count = row[0], row[1]
         actual_pct = count / total if total > 0 else 0
         expected_pct = expected.get(digit, 0)
-        distribution.append({
-            "digit": digit,
-            "count": count,
-            "actual_pct": round(actual_pct, 4),
-            "expected_pct": expected_pct,
-            "deviation": round(actual_pct - expected_pct, 4),
-        })
+        distribution.append(
+            {
+                "digit": digit,
+                "count": count,
+                "actual_pct": round(actual_pct, 4),
+                "expected_pct": expected_pct,
+                "deviation": round(actual_pct - expected_pct, 4),
+            }
+        )
 
     mad = sum(abs(d["deviation"]) for d in distribution) / 9 if distribution else 0
 
@@ -454,9 +463,12 @@ async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
         "total_count": total,
         "mad": round(mad, 4),
         "conformity": (
-            "close" if mad <= 0.006 else
-            "acceptable" if mad <= 0.012 else
-            "marginally_acceptable" if mad <= 0.015 else
-            "nonconforming"
+            "close"
+            if mad <= 0.006
+            else "acceptable"
+            if mad <= 0.012
+            else "marginally_acceptable"
+            if mad <= 0.015
+            else "nonconforming"
         ),
     }

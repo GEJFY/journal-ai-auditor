@@ -63,7 +63,9 @@ class TestOrchestratorInit:
     @patch("app.agents.orchestrator.DocumentationAgent")
     @patch("app.agents.orchestrator.QAAgent")
     @patch("app.agents.orchestrator.ReviewAgent")
-    def test_default_init(self, mock_review, mock_qa, mock_doc, mock_inv, mock_analysis):
+    def test_default_init(
+        self, mock_review, mock_qa, mock_doc, mock_inv, mock_analysis
+    ):
         """デフォルト初期化."""
         orch = AgentOrchestrator()
         assert orch.config.agent_type == AgentType.ORCHESTRATOR
@@ -73,7 +75,9 @@ class TestOrchestratorInit:
     @patch("app.agents.orchestrator.DocumentationAgent")
     @patch("app.agents.orchestrator.QAAgent")
     @patch("app.agents.orchestrator.ReviewAgent")
-    def test_custom_config(self, mock_review, mock_qa, mock_doc, mock_inv, mock_analysis):
+    def test_custom_config(
+        self, mock_review, mock_qa, mock_doc, mock_inv, mock_analysis
+    ):
         """カスタム設定での初期化."""
         config = AgentConfig(
             agent_type=AgentType.ORCHESTRATOR,
@@ -93,14 +97,23 @@ class TestKeywordClassify:
     @patch("app.agents.orchestrator.DocumentationAgent")
     @patch("app.agents.orchestrator.QAAgent")
     @patch("app.agents.orchestrator.ReviewAgent")
-    def setup_method(self, method, mock_review=None, mock_qa=None,
-                     mock_doc=None, mock_inv=None, mock_analysis=None):
+    def setup_method(
+        self,
+        method,
+        mock_review=None,
+        mock_qa=None,
+        mock_doc=None,
+        mock_inv=None,
+        mock_analysis=None,
+    ):
         """テストごとにOrchestratorを初期化."""
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             self.orch = AgentOrchestrator()
 
     def test_analysis_keywords(self):
@@ -111,13 +124,19 @@ class TestKeywordClassify:
 
     def test_investigation_keywords(self):
         """調査関連キーワードの分類."""
-        assert self.orch._keyword_classify("この仕訳を詳しく調査して") == "investigation"
+        assert (
+            self.orch._keyword_classify("この仕訳を詳しく調査して") == "investigation"
+        )
         assert self.orch._keyword_classify("原因を深掘りしたい") == "investigation"
 
     def test_documentation_keywords(self):
         """文書化関連キーワードの分類."""
-        assert self.orch._keyword_classify("レポートを作成してください") == "documentation"
-        assert self.orch._keyword_classify("マネジメントレターの作成") == "documentation"
+        assert (
+            self.orch._keyword_classify("レポートを作成してください") == "documentation"
+        )
+        assert (
+            self.orch._keyword_classify("マネジメントレターの作成") == "documentation"
+        )
 
     def test_review_keywords(self):
         """レビュー関連キーワードの分類."""
@@ -139,11 +158,13 @@ class TestExtractFindings:
     @patch("app.agents.orchestrator.QAAgent")
     @patch("app.agents.orchestrator.ReviewAgent")
     def setup_method(self, method, *mocks):
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             self.orch = AgentOrchestrator()
 
     def test_extract_from_result_with_summary(self):
@@ -198,11 +219,13 @@ class TestBuildPrompts:
     @patch("app.agents.orchestrator.QAAgent")
     @patch("app.agents.orchestrator.ReviewAgent")
     def setup_method(self, method, *mocks):
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             self.orch = AgentOrchestrator()
 
     def test_investigation_prompt_with_findings(self):
@@ -267,11 +290,13 @@ class TestAvailableWorkflows:
     @patch("app.agents.orchestrator.QAAgent")
     @patch("app.agents.orchestrator.ReviewAgent")
     def test_get_workflows(self, *mocks):
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             orch = AgentOrchestrator()
 
         workflows = orch.get_available_workflows()

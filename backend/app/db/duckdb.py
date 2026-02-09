@@ -53,7 +53,9 @@ class DuckDBManager:
         finally:
             conn.close()
 
-    def execute(self, query: str, params: list[Any] | None = None) -> list[tuple[Any, ...]]:
+    def execute(
+        self, query: str, params: list[Any] | None = None
+    ) -> list[tuple[Any, ...]]:
         """Execute a query and return results.
 
         Args:

@@ -40,10 +40,10 @@ from app.services.rules.time_rules import create_time_rule_set
 class BatchMode(StrEnum):
     """Batch execution mode."""
 
-    FULL = "full"           # Run all rules
+    FULL = "full"  # Run all rules
     INCREMENTAL = "incremental"  # New/modified entries only
-    QUICK = "quick"         # Critical rules only
-    ML_ONLY = "ml_only"     # ML detection only
+    QUICK = "quick"  # Critical rules only
+    ML_ONLY = "ml_only"  # ML detection only
     RULES_ONLY = "rules_only"  # Rules without ML
 
 
@@ -95,7 +95,9 @@ class BatchResult:
             "batch_id": self.batch_id,
             "mode": self.mode.value,
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
             "success": self.success,
             "total_entries": self.total_entries,
             "rules_executed": self.rules_executed,
@@ -154,6 +156,7 @@ class BatchOrchestrator:
             BatchResult with execution details.
         """
         import uuid
+
         config = config or BatchConfig()
         result = BatchResult(
             batch_id=str(uuid.uuid4()),
@@ -167,7 +170,9 @@ class BatchOrchestrator:
             phase_start = time.perf_counter()
             df = self._load_data(config)
             result.total_entries = len(df)
-            result.phase_timings["load_data"] = (time.perf_counter() - phase_start) * 1000
+            result.phase_timings["load_data"] = (
+                time.perf_counter() - phase_start
+            ) * 1000
 
             if len(df) == 0:
                 result.completed_at = datetime.now()
@@ -187,29 +192,39 @@ class BatchOrchestrator:
             result.total_violations = engine_result.total_violations
             result.violations_by_severity = engine_result.violations_by_severity
             result.violations_by_category = engine_result.violations_by_category
-            result.phase_timings["rule_execution"] = (time.perf_counter() - phase_start) * 1000
+            result.phase_timings["rule_execution"] = (
+                time.perf_counter() - phase_start
+            ) * 1000
 
             # Phase 3: Store violations
             if config.store_violations and engine_result.all_violations:
                 phase_start = time.perf_counter()
                 self.rule_engine.store_violations(engine_result.all_violations)
-                result.phase_timings["store_violations"] = (time.perf_counter() - phase_start) * 1000
+                result.phase_timings["store_violations"] = (
+                    time.perf_counter() - phase_start
+                ) * 1000
 
             # Phase 4: Calculate and update risk scores
             if config.update_risk_scores and engine_result.all_violations:
                 phase_start = time.perf_counter()
-                scores = self.scoring_service.score_violations(engine_result.all_violations)
+                scores = self.scoring_service.score_violations(
+                    engine_result.all_violations
+                )
                 self.scoring_service.update_database_scores(scores)
                 result.scoring_completed = True
                 result.entries_scored = len(scores)
-                result.phase_timings["scoring"] = (time.perf_counter() - phase_start) * 1000
+                result.phase_timings["scoring"] = (
+                    time.perf_counter() - phase_start
+                ) * 1000
 
             # Phase 5: Update aggregations
             if config.update_aggregations:
                 phase_start = time.perf_counter()
                 agg_results = self.aggregation_service.update_all(config.fiscal_year)
                 result.aggregations_updated = sum(1 for r in agg_results if r.success)
-                result.phase_timings["aggregations"] = (time.perf_counter() - phase_start) * 1000
+                result.phase_timings["aggregations"] = (
+                    time.perf_counter() - phase_start
+                ) * 1000
 
             result.completed_at = datetime.now()
 
@@ -250,9 +265,15 @@ class BatchOrchestrator:
             rules = all_rules
         elif config.mode == BatchMode.QUICK:
             # Critical rules only (approval and high-severity)
-            rules = [r for r in all_rules if r.category in [
-                RuleCategory.APPROVAL,
-            ] or r.default_severity.value in ["critical", "high"]]
+            rules = [
+                r
+                for r in all_rules
+                if r.category
+                in [
+                    RuleCategory.APPROVAL,
+                ]
+                or r.default_severity.value in ["critical", "high"]
+            ]
         elif config.mode == BatchMode.ML_ONLY:
             rules = [r for r in all_rules if r.category == RuleCategory.ML]
         elif config.mode == BatchMode.RULES_ONLY:
@@ -293,12 +314,14 @@ class BatchOrchestrator:
             if cat not in by_category:
                 by_category[cat] = {"count": 0, "rules": []}
             by_category[cat]["count"] += 1
-            by_category[cat]["rules"].append({
-                "id": rule.rule_id,
-                "name": rule.rule_name,
-                "severity": rule.default_severity.value,
-                "enabled": rule.enabled,
-            })
+            by_category[cat]["rules"].append(
+                {
+                    "id": rule.rule_id,
+                    "name": rule.rule_name,
+                    "severity": rule.default_severity.value,
+                    "enabled": rule.enabled,
+                }
+            )
 
         return {
             "total_rules": len(rules),

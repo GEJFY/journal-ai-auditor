@@ -126,6 +126,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
+
         return ChatAnthropic(
             model=config.model_name,
             api_key=settings.anthropic_api_key,
@@ -135,6 +136,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "openai":
         from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(
             model=config.model_name,
             api_key=settings.openai_api_key,
@@ -144,6 +146,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "azure":
         from langchain_openai import AzureChatOpenAI
+
         return AzureChatOpenAI(
             azure_deployment=settings.azure_openai_deployment,
             azure_endpoint=settings.azure_openai_endpoint,
@@ -155,6 +158,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "azure_foundry":
         from langchain_openai import AzureChatOpenAI
+
         return AzureChatOpenAI(
             azure_deployment=settings.azure_foundry_deployment or config.model_name,
             azure_endpoint=settings.azure_foundry_endpoint,
@@ -166,6 +170,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "bedrock":
         from langchain_aws import ChatBedrockConverse
+
         return ChatBedrockConverse(
             model=config.model_name,
             region_name=settings.aws_region,
@@ -175,6 +180,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "vertex_ai":
         from langchain_google_vertexai import ChatVertexAI
+
         return ChatVertexAI(
             model_name=config.model_name,
             project=settings.gcp_project_id,
@@ -185,6 +191,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
+
         return ChatGoogleGenerativeAI(
             model=config.model_name,
             google_api_key=settings.google_api_key,
@@ -194,6 +201,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
 
     elif provider == "ollama":
         from langchain_ollama import ChatOllama
+
         return ChatOllama(
             model=config.model_name,
             base_url=settings.ollama_base_url,
@@ -381,6 +389,7 @@ class BaseAgent(ABC):
             Agent execution result.
         """
         import time
+
         start_time = time.perf_counter()
 
         try:
@@ -400,8 +409,10 @@ class BaseAgent(ABC):
                 recommendations=final_state.get("recommendations", []),
                 insights=final_state.get("insights", []),
                 messages=[
-                    {"role": "assistant" if isinstance(m, AIMessage) else "user",
-                     "content": m.content}
+                    {
+                        "role": "assistant" if isinstance(m, AIMessage) else "user",
+                        "content": m.content,
+                    }
                     for m in final_state.get("messages", [])
                     if not isinstance(m, SystemMessage)
                 ],
@@ -434,4 +445,5 @@ class BaseAgent(ABC):
             Agent execution result.
         """
         import asyncio
+
         return asyncio.run(self.execute(task, context))

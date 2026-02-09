@@ -27,8 +27,14 @@ class TestLLMConfig:
 
     def test_all_providers_valid(self):
         providers = [
-            "anthropic", "openai", "google", "bedrock",
-            "azure", "azure_foundry", "vertex_ai", "ollama",
+            "anthropic",
+            "openai",
+            "google",
+            "bedrock",
+            "azure",
+            "azure_foundry",
+            "vertex_ai",
+            "ollama",
         ]
         for p in providers:
             config = LLMConfig(provider=p, model="test")
@@ -177,8 +183,14 @@ class TestModelCatalog:
 
     def test_all_providers_in_catalog(self):
         expected = [
-            "anthropic", "openai", "google", "bedrock",
-            "azure_foundry", "vertex_ai", "azure", "ollama",
+            "anthropic",
+            "openai",
+            "google",
+            "bedrock",
+            "azure_foundry",
+            "vertex_ai",
+            "azure",
+            "ollama",
         ]
         for p in expected:
             assert p in LLM_MODELS, f"Provider {p} missing from LLM_MODELS"
@@ -350,6 +362,7 @@ class TestGenerateBedrock:
         service = LLMService(config=config)
 
         import json as json_mod
+
         mock_client = MagicMock()
         response_body = {
             "content": [{"text": "Bedrock Anthropicの回答"}],
@@ -371,6 +384,7 @@ class TestGenerateBedrock:
         service = LLMService(config=config)
 
         import json as json_mod
+
         mock_client = MagicMock()
         response_body = {
             "results": [{"outputText": "Nova Proの回答"}],
@@ -440,7 +454,9 @@ class TestGenerateAzureFoundry:
 
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.choices = [MagicMock(message=MagicMock(content="Claude on Foundry"))]
+        mock_response.choices = [
+            MagicMock(message=MagicMock(content="Claude on Foundry"))
+        ]
         mock_response.model = "claude-sonnet-4-5"
         mock_response.usage.prompt_tokens = 15
         mock_response.usage.completion_tokens = 35

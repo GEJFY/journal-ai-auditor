@@ -17,12 +17,12 @@ from app.services.llm.service import LLMService
 # Anthropic Direct
 # --------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("ANTHROPIC_API_KEY"),
     reason="ANTHROPIC_API_KEY not set",
 )
 class TestAnthropicIntegration:
-
     @pytest.fixture
     def service(self):
         return LLMService(
@@ -40,12 +40,12 @@ class TestAnthropicIntegration:
 # OpenAI Direct
 # --------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("OPENAI_API_KEY"),
     reason="OPENAI_API_KEY not set",
 )
 class TestOpenAIIntegration:
-
     @pytest.fixture
     def service(self):
         return LLMService(
@@ -62,12 +62,12 @@ class TestOpenAIIntegration:
 # Google AI Studio
 # --------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("GOOGLE_API_KEY"),
     reason="GOOGLE_API_KEY not set",
 )
 class TestGoogleIntegration:
-
     @pytest.fixture
     def service(self):
         return LLMService(
@@ -84,12 +84,12 @@ class TestGoogleIntegration:
 # AWS Bedrock
 # --------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("AWS_ACCESS_KEY_ID"),
     reason="AWS_ACCESS_KEY_ID not set",
 )
 class TestBedrockIntegration:
-
     @pytest.fixture
     def service(self):
         return LLMService(
@@ -110,12 +110,12 @@ class TestBedrockIntegration:
 # Azure AI Foundry
 # --------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("AZURE_FOUNDRY_API_KEY"),
     reason="AZURE_FOUNDRY_API_KEY not set",
 )
 class TestAzureFoundryIntegration:
-
     @pytest.fixture
     def service(self):
         return LLMService(
@@ -132,12 +132,12 @@ class TestAzureFoundryIntegration:
 # GCP Vertex AI
 # --------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("GCP_PROJECT_ID"),
     reason="GCP_PROJECT_ID not set",
 )
 class TestVertexAIIntegration:
-
     @pytest.fixture
     def service(self):
         return LLMService(

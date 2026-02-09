@@ -20,7 +20,9 @@ class TestImportToAnalysisWorkflow:
         """テスト環境のセットアップ"""
         self.temp_dir = temp_data_dir
 
-    def test_full_workflow_import_analyze_report(self, client: TestClient, sample_data_dir: Path):
+    def test_full_workflow_import_analyze_report(
+        self, client: TestClient, sample_data_dir: Path
+    ):
         """
         完全なワークフロー:
         1. ヘルスチェック
@@ -52,7 +54,9 @@ class TestImportToAnalysisWorkflow:
         assert response.status_code == 200
 
         # Step 6: 違反一覧取得
-        response = client.get("/api/v1/analysis/violations", params={"fiscal_year": 2024})
+        response = client.get(
+            "/api/v1/analysis/violations", params={"fiscal_year": 2024}
+        )
         assert response.status_code == 200
 
         # Step 7: レポートテンプレート取得
@@ -88,7 +92,7 @@ class TestDashboardNavigation:
                 "fiscal_year": 2024,
                 "period_start": "2024-04-01",
                 "period_end": "2024-06-30",
-            }
+            },
         )
         assert response.status_code == 200
 
@@ -106,36 +110,33 @@ class TestRiskAnalysisFlow:
         """
         # Step 1: 全違反取得
         response = client.get(
-            "/api/v1/analysis/violations",
-            params={"fiscal_year": 2024}
+            "/api/v1/analysis/violations", params={"fiscal_year": 2024}
         )
         assert response.status_code == 200
 
         # Step 2: Criticalのみフィルター
         response = client.get(
             "/api/v1/analysis/violations",
-            params={"fiscal_year": 2024, "risk_level": "Critical"}
+            params={"fiscal_year": 2024, "risk_level": "Critical"},
         )
         assert response.status_code == 200
 
         # Step 3: High以上フィルター
         response = client.get(
             "/api/v1/analysis/violations",
-            params={"fiscal_year": 2024, "risk_level": "Critical,High"}
+            params={"fiscal_year": 2024, "risk_level": "Critical,High"},
         )
         assert response.status_code == 200
 
         # Step 4: ML異常取得
         response = client.get(
-            "/api/v1/analysis/ml-anomalies",
-            params={"fiscal_year": 2024}
+            "/api/v1/analysis/ml-anomalies", params={"fiscal_year": 2024}
         )
         assert response.status_code == 200
 
         # Step 5: Benford詳細
         response = client.get(
-            "/api/v1/analysis/benford-detail",
-            params={"fiscal_year": 2024}
+            "/api/v1/analysis/benford-detail", params={"fiscal_year": 2024}
         )
         assert response.status_code == 200
 
@@ -161,8 +162,8 @@ class TestReportGenerationFlow:
             json={
                 "fiscal_year": 2024,
                 "period_start": "2024-04-01",
-                "period_end": "2024-06-30"
-            }
+                "period_end": "2024-06-30",
+            },
         )
         # エクスポートが成功するか、パラメータエラー
         assert response.status_code in [200, 422, 500]
@@ -173,8 +174,8 @@ class TestReportGenerationFlow:
             json={
                 "fiscal_year": 2024,
                 "period_start": "2024-04-01",
-                "period_end": "2024-06-30"
-            }
+                "period_end": "2024-06-30",
+            },
         )
         assert response.status_code in [200, 422, 500]
 
@@ -186,16 +187,12 @@ class TestErrorRecovery:
         """無効なパラメータからの回復"""
         # 無効なリクエスト
         response = client.get(
-            "/api/v1/dashboard/summary",
-            params={"fiscal_year": "invalid"}
+            "/api/v1/dashboard/summary", params={"fiscal_year": "invalid"}
         )
         assert response.status_code == 422
 
         # 次のリクエストは正常に処理される
-        response = client.get(
-            "/api/v1/dashboard/summary",
-            params={"fiscal_year": 2024}
-        )
+        response = client.get("/api/v1/dashboard/summary", params={"fiscal_year": 2024})
         assert response.status_code == 200
 
     def test_continuous_requests(self, client: TestClient):
@@ -227,16 +224,12 @@ class TestDataConsistency:
         """KPIとサマリーの整合性"""
         # サマリー取得
         summary_response = client.get(
-            "/api/v1/dashboard/summary",
-            params={"fiscal_year": 2024}
+            "/api/v1/dashboard/summary", params={"fiscal_year": 2024}
         )
         assert summary_response.status_code == 200
 
         # KPI取得
-        kpi_response = client.get(
-            "/api/v1/dashboard/kpi",
-            params={"fiscal_year": 2024}
-        )
+        kpi_response = client.get("/api/v1/dashboard/kpi", params={"fiscal_year": 2024})
         assert kpi_response.status_code == 200
 
         # データ構造が一致することを確認
@@ -244,10 +237,7 @@ class TestDataConsistency:
         kpi_response.json()
 
         # どちらもsuccessまたはdata構造を持つ
-        assert (
-            "data" in summary or "total_entries" in summary or
-            "success" in summary
-        )
+        assert "data" in summary or "total_entries" in summary or "success" in summary
 
 
 class TestPerformance:
@@ -270,10 +260,7 @@ class TestPerformance:
         import time
 
         start = time.time()
-        response = client.get(
-            "/api/v1/dashboard/summary",
-            params={"fiscal_year": 2024}
-        )
+        response = client.get("/api/v1/dashboard/summary", params={"fiscal_year": 2024})
         elapsed = time.time() - start
 
         assert response.status_code == 200

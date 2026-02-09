@@ -370,28 +370,47 @@ class TestOrchestratorKeywordClassify:
     def test_analysis_keywords(self):
         from app.agents.orchestrator import AgentOrchestrator
 
-        assert AgentOrchestrator._keyword_classify("リスク分析を実施してください") == "analysis"
+        assert (
+            AgentOrchestrator._keyword_classify("リスク分析を実施してください")
+            == "analysis"
+        )
         assert AgentOrchestrator._keyword_classify("異常パターンを調べて") == "analysis"
         assert AgentOrchestrator._keyword_classify("統計的な分布を見たい") == "analysis"
 
     def test_investigation_keywords(self):
         from app.agents.orchestrator import AgentOrchestrator
 
-        assert AgentOrchestrator._keyword_classify("この仕訳を調査して") == "investigation"
-        assert AgentOrchestrator._keyword_classify("原因を深掘りしてください") == "investigation"
+        assert (
+            AgentOrchestrator._keyword_classify("この仕訳を調査して") == "investigation"
+        )
+        assert (
+            AgentOrchestrator._keyword_classify("原因を深掘りしてください")
+            == "investigation"
+        )
 
     def test_documentation_keywords(self):
         from app.agents.orchestrator import AgentOrchestrator
 
-        assert AgentOrchestrator._keyword_classify("レポートを作成して") == "documentation"
-        assert AgentOrchestrator._keyword_classify("報告書を生成してください") == "documentation"
-        assert AgentOrchestrator._keyword_classify("マネジメントレターを書いて") == "documentation"
+        assert (
+            AgentOrchestrator._keyword_classify("レポートを作成して") == "documentation"
+        )
+        assert (
+            AgentOrchestrator._keyword_classify("報告書を生成してください")
+            == "documentation"
+        )
+        assert (
+            AgentOrchestrator._keyword_classify("マネジメントレターを書いて")
+            == "documentation"
+        )
 
     def test_review_keywords(self):
         from app.agents.orchestrator import AgentOrchestrator
 
         assert AgentOrchestrator._keyword_classify("発見事項をレビューして") == "review"
-        assert AgentOrchestrator._keyword_classify("是正措置を提案してください") == "review"
+        assert (
+            AgentOrchestrator._keyword_classify("是正措置を提案してください")
+            == "review"
+        )
 
     def test_default_to_qa(self):
         from app.agents.orchestrator import AgentOrchestrator
@@ -404,12 +423,15 @@ class TestOrchestratorExtractFindings:
     """発見事項抽出ロジックのテスト"""
 
     def _make_orchestrator(self):
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             from app.agents.orchestrator import AgentOrchestrator
+
             return AgentOrchestrator()
 
     def test_extract_from_summary_dict(self):
@@ -432,7 +454,10 @@ class TestOrchestratorExtractFindings:
     def test_extract_from_messages(self):
         orch = self._make_orchestrator()
         messages = [
-            {"role": "assistant", "content": "高リスク仕訳を10件発見しました。異常パターンが存在します。"},
+            {
+                "role": "assistant",
+                "content": "高リスク仕訳を10件発見しました。異常パターンが存在します。",
+            },
             {"role": "assistant", "content": "特に問題なし"},
         ]
         findings = orch._extract_findings_from_messages(messages, "investigation")
@@ -456,12 +481,15 @@ class TestOrchestratorPromptBuilding:
     """プロンプト構築メソッドのテスト"""
 
     def _make_orchestrator(self):
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             from app.agents.orchestrator import AgentOrchestrator
+
             return AgentOrchestrator()
 
     def test_build_investigation_prompt_with_findings(self):
@@ -501,9 +529,7 @@ class TestOrchestratorPromptBuilding:
             {"severity": "MEDIUM", "title": "f2"},
             {"severity": "LOW", "title": "f3"},
         ]
-        context = orch._build_documentation_context(
-            2024, {}, [], all_findings, {}
-        )
+        context = orch._build_documentation_context(2024, {}, [], all_findings, {})
         assert "2024" in context
         assert "高: 1" in context
         assert "中: 1" in context
@@ -555,12 +581,15 @@ class TestOrchestratorAvailableWorkflows:
     """get_available_workflows() のテスト"""
 
     def test_returns_workflows(self):
-        with patch("app.agents.orchestrator.AnalysisAgent"), \
-             patch("app.agents.orchestrator.InvestigationAgent"), \
-             patch("app.agents.orchestrator.DocumentationAgent"), \
-             patch("app.agents.orchestrator.QAAgent"), \
-             patch("app.agents.orchestrator.ReviewAgent"):
+        with (
+            patch("app.agents.orchestrator.AnalysisAgent"),
+            patch("app.agents.orchestrator.InvestigationAgent"),
+            patch("app.agents.orchestrator.DocumentationAgent"),
+            patch("app.agents.orchestrator.QAAgent"),
+            patch("app.agents.orchestrator.ReviewAgent"),
+        ):
             from app.agents.orchestrator import AgentOrchestrator
+
             orch = AgentOrchestrator()
             workflows = orch.get_available_workflows()
             assert len(workflows) == 4

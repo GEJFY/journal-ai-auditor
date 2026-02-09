@@ -65,7 +65,7 @@ class JAIAException(Exception):
         message: str,
         error_code: str | None = None,
         detail: dict[str, Any] | None = None,
-        http_status_code: int | None = None
+        http_status_code: int | None = None,
     ):
         """
         例外を初期化します。
@@ -94,7 +94,7 @@ class JAIAException(Exception):
         return {
             "error_code": self.error_code,
             "message": self.message,
-            "detail": self.detail
+            "detail": self.detail,
         }
 
     def __str__(self) -> str:
@@ -107,6 +107,7 @@ class JAIAException(Exception):
 # ========================================
 # バリデーション関連の例外
 # ========================================
+
 
 class ValidationError(JAIAException):
     """バリデーションエラーの基底クラス。"""
@@ -130,7 +131,7 @@ class FileValidationError(ValidationError):
         file_path: str | None = None,
         expected_format: str | None = None,
         actual_format: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if file_path:
@@ -158,7 +159,7 @@ class DataValidationError(ValidationError):
         row_number: int | None = None,
         expected_value: Any = None,
         actual_value: Any = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if field:
@@ -186,7 +187,7 @@ class ColumnMappingError(ValidationError):
         message: str,
         missing_columns: list[str] | None = None,
         invalid_mappings: dict[str, str] | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if missing_columns:
@@ -199,6 +200,7 @@ class ColumnMappingError(ValidationError):
 # ========================================
 # インポート関連の例外
 # ========================================
+
 
 class ImportError(JAIAException):
     """インポートエラーの基底クラス。"""
@@ -221,7 +223,7 @@ class FileReadError(ImportError):
         message: str,
         file_path: str,
         original_error: Exception | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["file_path"] = file_path
@@ -244,7 +246,7 @@ class EncodingError(ImportError):
         message: str,
         expected_encoding: str | None = None,
         detected_encoding: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if expected_encoding:
@@ -268,7 +270,7 @@ class DuplicateDataError(ImportError):
         message: str,
         duplicate_keys: list[str] | None = None,
         duplicate_count: int | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if duplicate_keys:
@@ -281,6 +283,7 @@ class DuplicateDataError(ImportError):
 # ========================================
 # データベース関連の例外
 # ========================================
+
 
 class DatabaseError(JAIAException):
     """データベースエラーの基底クラス。"""
@@ -303,7 +306,7 @@ class ConnectionError(DatabaseError):
         message: str,
         database_type: str | None = None,
         database_path: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if database_type:
@@ -327,7 +330,7 @@ class QueryError(DatabaseError):
         message: str,
         query: str | None = None,
         parameters: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if query:
@@ -353,6 +356,7 @@ class IntegrityError(DatabaseError):
 # 分析関連の例外
 # ========================================
 
+
 class AnalysisError(JAIAException):
     """分析エラーの基底クラス。"""
 
@@ -375,7 +379,7 @@ class RuleExecutionError(AnalysisError):
         rule_id: str,
         rule_name: str | None = None,
         affected_count: int | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["rule_id"] = rule_id
@@ -400,7 +404,7 @@ class MLModelError(AnalysisError):
         message: str,
         model_name: str,
         phase: str | None = None,  # "training" or "inference"
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["model_name"] = model_name
@@ -423,7 +427,7 @@ class BenfordAnalysisError(AnalysisError):
         message: str,
         digit_position: int | None = None,  # 1 or 2
         sample_size: int | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if digit_position is not None:
@@ -436,6 +440,7 @@ class BenfordAnalysisError(AnalysisError):
 # ========================================
 # エージェント関連の例外
 # ========================================
+
 
 class AgentError(JAIAException):
     """エージェントエラーの基底クラス。"""
@@ -458,7 +463,7 @@ class OrchestratorError(AgentError):
         message: str,
         session_id: str | None = None,
         current_phase: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if session_id:
@@ -484,7 +489,7 @@ class LLMProviderError(AgentError):
         provider: str,
         model: str | None = None,
         error_type: str | None = None,  # "rate_limit", "timeout", "auth", etc.
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["provider"] = provider
@@ -509,7 +514,7 @@ class ToolExecutionError(AgentError):
         message: str,
         tool_name: str,
         input_params: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["tool_name"] = tool_name
@@ -521,6 +526,7 @@ class ToolExecutionError(AgentError):
 # ========================================
 # レポート関連の例外
 # ========================================
+
 
 class ReportError(JAIAException):
     """レポートエラーの基底クラス。"""
@@ -544,7 +550,7 @@ class TemplateNotFoundError(ReportError):
         message: str,
         template_id: str,
         available_templates: list[str] | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["template_id"] = template_id
@@ -567,7 +573,7 @@ class ReportGenerationError(ReportError):
         message: str,
         report_type: str,
         stage: str | None = None,  # "data_fetch", "render", "export"
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["report_type"] = report_type
@@ -579,6 +585,7 @@ class ReportGenerationError(ReportError):
 # ========================================
 # 認証・認可関連の例外
 # ========================================
+
 
 class AuthorizationError(JAIAException):
     """
@@ -595,7 +602,7 @@ class AuthorizationError(JAIAException):
         message: str,
         user_id: str | None = None,
         required_permission: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if user_id:
@@ -609,6 +616,7 @@ class AuthorizationError(JAIAException):
 # リソース関連の例外
 # ========================================
 
+
 class ResourceNotFoundError(JAIAException):
     """
     リソース未発見エラー。
@@ -619,13 +627,7 @@ class ResourceNotFoundError(JAIAException):
     error_code = "RESOURCE_NOT_FOUND"
     http_status_code = 404
 
-    def __init__(
-        self,
-        message: str,
-        resource_type: str,
-        resource_id: str,
-        **kwargs
-    ):
+    def __init__(self, message: str, resource_type: str, resource_id: str, **kwargs):
         detail = kwargs.pop("detail", {})
         detail["resource_type"] = resource_type
         detail["resource_id"] = resource_id
@@ -648,7 +650,7 @@ class ConflictError(JAIAException):
         resource_type: str | None = None,
         current_state: str | None = None,
         expected_state: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if resource_type:
@@ -676,7 +678,7 @@ class RateLimitError(JAIAException):
         limit: int | None = None,
         window_seconds: int | None = None,
         retry_after_seconds: int | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if limit is not None:
@@ -691,6 +693,7 @@ class RateLimitError(JAIAException):
 # ========================================
 # セキュリティ関連の例外
 # ========================================
+
 
 class SecurityError(JAIAException):
     """セキュリティエラーの基底クラス。"""
@@ -709,12 +712,7 @@ class AuthenticationError(SecurityError):
     error_code = "AUTHENTICATION_ERROR"
     http_status_code = 401
 
-    def __init__(
-        self,
-        message: str,
-        auth_method: str | None = None,
-        **kwargs
-    ):
+    def __init__(self, message: str, auth_method: str | None = None, **kwargs):
         detail = kwargs.pop("detail", {})
         if auth_method:
             detail["auth_method"] = auth_method
@@ -758,7 +756,7 @@ class IPBlockedError(SecurityError):
         message: str,
         ip_address: str | None = None,
         reason: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if ip_address:
@@ -783,7 +781,7 @@ class SuspiciousActivityError(SecurityError):
         message: str,
         activity_type: str | None = None,
         user_id: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         if activity_type:
@@ -796,6 +794,7 @@ class SuspiciousActivityError(SecurityError):
 # ========================================
 # サーキットブレーカー関連の例外
 # ========================================
+
 
 class CircuitBreakerError(JAIAException):
     """
@@ -812,7 +811,7 @@ class CircuitBreakerError(JAIAException):
         message: str,
         service: str,
         retry_after_seconds: int | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["service"] = service
@@ -831,12 +830,7 @@ class ServiceUnavailableError(JAIAException):
     error_code = "SERVICE_UNAVAILABLE"
     http_status_code = 503
 
-    def __init__(
-        self,
-        message: str,
-        service: str,
-        **kwargs
-    ):
+    def __init__(self, message: str, service: str, **kwargs):
         detail = kwargs.pop("detail", {})
         detail["service"] = service
         super().__init__(message, detail=detail, **kwargs)
@@ -857,7 +851,7 @@ class TimeoutError(JAIAException):
         message: str,
         operation: str,
         timeout_seconds: float | None = None,
-        **kwargs
+        **kwargs,
     ):
         detail = kwargs.pop("detail", {})
         detail["operation"] = operation

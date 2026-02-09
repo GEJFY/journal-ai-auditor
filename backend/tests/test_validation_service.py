@@ -233,9 +233,7 @@ class TestV006JournalBalance:
         service = ValidationService()
         result = service.validate_dataframe(df)
         balance_errors = [
-            e
-            for e in result.errors
-            if hasattr(e, "check_id") and e.check_id == "V006"
+            e for e in result.errors if hasattr(e, "check_id") and e.check_id == "V006"
         ]
         assert len(balance_errors) == 0
 

@@ -58,7 +58,9 @@ class AnalyzeRequest(BaseModel):
     """Request for analysis endpoint."""
 
     fiscal_year: int
-    analysis_type: str = "risk_distribution"  # risk_distribution, benford, period_comparison
+    analysis_type: str = (
+        "risk_distribution"  # risk_distribution, benford, period_comparison
+    )
     account_prefix: str | None = None
 
 

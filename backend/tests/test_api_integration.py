@@ -36,7 +36,9 @@ class TestDashboardEndpoints:
 
     def test_dashboard_with_invalid_fiscal_year(self, client: TestClient):
         """無効な会計年度"""
-        response = client.get("/api/v1/dashboard/summary", params={"fiscal_year": "invalid"})
+        response = client.get(
+            "/api/v1/dashboard/summary", params={"fiscal_year": "invalid"}
+        )
 
         # バリデーションエラー
         assert response.status_code == 422
@@ -81,10 +83,7 @@ class TestAgentEndpoints:
 
     def test_agent_analyze_endpoint_exists(self, client: TestClient):
         """分析エンドポイントの存在確認"""
-        response = client.post(
-            "/api/v1/agents/analyze",
-            json={"fiscal_year": 2024}
-        )
+        response = client.post("/api/v1/agents/analyze", json={"fiscal_year": 2024})
 
         # エンドポイントが存在する（LLM設定がなくてもエラーではない）
         assert response.status_code in [200, 422, 500, 503]
@@ -113,8 +112,7 @@ class TestErrorHandling:
     def test_validation_error_response_format(self, client: TestClient):
         """バリデーションエラーのレスポンス形式"""
         response = client.get(
-            "/api/v1/dashboard/summary",
-            params={"fiscal_year": "not-a-number"}
+            "/api/v1/dashboard/summary", params={"fiscal_year": "not-a-number"}
         )
 
         assert response.status_code == 422
@@ -133,8 +131,8 @@ class TestCORSHeaders:
             "/api/v1/health",
             headers={
                 "Origin": "http://localhost:5173",
-                "Access-Control-Request-Method": "GET"
-            }
+                "Access-Control-Request-Method": "GET",
+            },
         )
 
         # CORSプリフライトリクエストが処理される

@@ -42,11 +42,13 @@ class TestAmountRules:
 
     def test_materiality_rule_ignores_small_amounts(self):
         """重要性基準以下の金額は検出しない"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001"],
-            "amount": [50_000_000],  # 閾値以下
-            "functional_amount": [50_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001"],
+                "amount": [50_000_000],  # 閾値以下
+                "functional_amount": [50_000_000],
+            }
+        )
 
         rule = MaterialityRule(threshold=100_000_000)
         result = rule.execute(df)
@@ -55,11 +57,13 @@ class TestAmountRules:
 
     def test_round_amount_rule_detects_round_numbers(self):
         """丸め金額ルールのテスト"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001", "TEST002", "TEST003"],
-            "amount": [100_000_000, 12_345_678, 50_000_000],
-            "functional_amount": [100_000_000, 12_345_678, 50_000_000],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001", "TEST002", "TEST003"],
+                "amount": [100_000_000, 12_345_678, 50_000_000],
+                "functional_amount": [100_000_000, 12_345_678, 50_000_000],
+            }
+        )
 
         rule = RoundAmountRule()
         result = rule.execute(df)
@@ -69,16 +73,18 @@ class TestAmountRules:
 
     def test_odd_ending_rule_detects_suspicious_endings(self):
         """端数異常ルールのテスト"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001", "TEST002", "TEST003", "TEST004"],
-            "amount": [
-                99_999_999,  # 999で終わる
-                100_000,     # 通常
-                88_888_888,  # 888で終わる
-                12_345_678,  # 通常
-            ],
-            "functional_amount": [99_999_999, 100_000, 88_888_888, 12_345_678],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001", "TEST002", "TEST003", "TEST004"],
+                "amount": [
+                    99_999_999,  # 999で終わる
+                    100_000,  # 通常
+                    88_888_888,  # 888で終わる
+                    12_345_678,  # 通常
+                ],
+                "functional_amount": [99_999_999, 100_000, 88_888_888, 12_345_678],
+            }
+        )
 
         rule = OddEndingRule()
         result = rule.execute(df)
@@ -92,10 +98,7 @@ class TestTimeRules:
 
     def test_after_hours_rule_detects_late_entries(self, sample_journal_entries):
         """営業時間外ルールのテスト"""
-        rule = AfterHoursRule(
-            business_start_hour=9,
-            business_end_hour=18
-        )
+        rule = AfterHoursRule(business_start_hour=9, business_end_hour=18)
 
         result = rule.execute(sample_journal_entries)
 
@@ -105,10 +108,12 @@ class TestTimeRules:
 
     def test_after_hours_rule_allows_business_hours(self):
         """営業時間内は検出しない"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001", "TEST002"],
-            "entry_time": ["10:00:00", "14:30:00"],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001", "TEST002"],
+                "entry_time": ["10:00:00", "14:30:00"],
+            }
+        )
 
         rule = AfterHoursRule()
         result = rule.execute(df)
@@ -117,19 +122,21 @@ class TestTimeRules:
 
     def test_weekend_holiday_rule_detects_weekend_entries(self):
         """週末・祝日ルールのテスト"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001", "TEST002", "TEST003"],
-            "effective_date": [
-                date(2024, 6, 29),  # 土曜日
-                date(2024, 6, 30),  # 日曜日
-                date(2024, 7, 1),   # 月曜日
-            ],
-            "entry_date": [
-                date(2024, 6, 29),
-                date(2024, 6, 30),
-                date(2024, 7, 1),
-            ],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001", "TEST002", "TEST003"],
+                "effective_date": [
+                    date(2024, 6, 29),  # 土曜日
+                    date(2024, 6, 30),  # 日曜日
+                    date(2024, 7, 1),  # 月曜日
+                ],
+                "entry_date": [
+                    date(2024, 6, 29),
+                    date(2024, 6, 30),
+                    date(2024, 7, 1),
+                ],
+            }
+        )
 
         rule = WeekendHolidayRule()
         result = rule.execute(df)
@@ -166,11 +173,13 @@ class TestApprovalRules:
 
     def test_self_approval_rule_allows_different_users(self):
         """異なる承認者は検出しない"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001"],
-            "prepared_by": ["U001"],
-            "approved_by": ["U002"],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001"],
+                "prepared_by": ["U001"],
+                "approved_by": ["U002"],
+            }
+        )
 
         rule = SelfApprovalRule()
         result = rule.execute(df)
@@ -179,10 +188,12 @@ class TestApprovalRules:
 
     def test_missing_approval_rule_detects_null_approver(self):
         """承認者不在ルールのテスト"""
-        df = pl.DataFrame({
-            "gl_detail_id": ["TEST001", "TEST002", "TEST003"],
-            "approved_by": [None, "U002", ""],
-        })
+        df = pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001", "TEST002", "TEST003"],
+                "approved_by": [None, "U002", ""],
+            }
+        )
 
         rule = MissingApprovalRule()
         result = rule.execute(df)
@@ -282,11 +293,13 @@ class TestRuleExecution:
         rule = MaterialityRule()
         rule.enabled = False
 
-        pl.DataFrame({
-            "gl_detail_id": ["TEST001"],
-            "amount": [999_999_999],
-            "functional_amount": [999_999_999],
-        })
+        pl.DataFrame(
+            {
+                "gl_detail_id": ["TEST001"],
+                "amount": [999_999_999],
+                "functional_amount": [999_999_999],
+            }
+        )
 
         # 無効化されたルールは実行されない
         assert not rule.enabled
