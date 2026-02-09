@@ -7,7 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import polars as pl
 
@@ -26,7 +26,7 @@ class EngineResult:
     """Result of rule engine execution."""
 
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     total_entries: int = 0
     total_rules: int = 0
     rules_executed: int = 0
@@ -67,7 +67,7 @@ class RuleEngine:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
+        db: DuckDBManager | None = None,
         max_workers: int = 4,
     ) -> None:
         """Initialize rule engine.
@@ -99,7 +99,7 @@ class RuleEngine:
         for rule in rule_set.rules:
             self._rules[rule.rule_id] = rule
 
-    def get_rule(self, rule_id: str) -> Optional[AuditRule]:
+    def get_rule(self, rule_id: str) -> AuditRule | None:
         """Get a rule by ID.
 
         Args:
@@ -132,10 +132,10 @@ class RuleEngine:
 
     def load_journal_entries(
         self,
-        fiscal_year: Optional[int] = None,
-        business_unit_code: Optional[str] = None,
-        period: Optional[int] = None,
-        limit: Optional[int] = None,
+        fiscal_year: int | None = None,
+        business_unit_code: str | None = None,
+        period: int | None = None,
+        limit: int | None = None,
     ) -> pl.DataFrame:
         """Load journal entries from database.
 
@@ -208,7 +208,7 @@ class RuleEngine:
     def execute_rules(
         self,
         df: pl.DataFrame,
-        rules: Optional[list[AuditRule]] = None,
+        rules: list[AuditRule] | None = None,
         parallel: bool = True,
     ) -> EngineResult:
         """Execute multiple rules against data.
@@ -294,10 +294,10 @@ class RuleEngine:
 
     def execute_all(
         self,
-        fiscal_year: Optional[int] = None,
-        business_unit_code: Optional[str] = None,
-        period: Optional[int] = None,
-        categories: Optional[list[RuleCategory]] = None,
+        fiscal_year: int | None = None,
+        business_unit_code: str | None = None,
+        period: int | None = None,
+        categories: list[RuleCategory] | None = None,
     ) -> EngineResult:
         """Execute all rules against database data.
 
@@ -441,7 +441,7 @@ class RuleEngine:
 
     def get_violation_summary(
         self,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> dict[str, Any]:
         """Get violation summary from database.
 

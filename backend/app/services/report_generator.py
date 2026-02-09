@@ -9,28 +9,24 @@ Generates audit reports in various formats:
 import io
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pptx import Presentation
-from pptx.util import Inches, Pt
 from pptx.dml.color import RgbColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Inches, Pt
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (
-    SimpleDocTemplate,
+    PageBreak,
     Paragraph,
+    SimpleDocTemplate,
     Spacer,
     Table,
     TableStyle,
-    PageBreak,
-    Image,
 )
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 from app.db import DuckDBManager
 
@@ -40,8 +36,8 @@ class ReportConfig:
     """Report generation configuration."""
 
     fiscal_year: int
-    period_from: Optional[int] = None
-    period_to: Optional[int] = None
+    period_from: int | None = None
+    period_to: int | None = None
     company_name: str = "Sample Company"
     report_title: str = "仕訳検証レポート"
     prepared_by: str = "JAIA"

@@ -5,12 +5,6 @@ API エンドポイント ユニットテスト
 """
 
 import io
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 
 # =========================================================
 # Import Data API テスト

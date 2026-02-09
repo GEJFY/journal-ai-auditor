@@ -8,16 +8,13 @@ Provides LangChain tools that agents can use to:
 - Compare patterns
 """
 
-from typing import Any, Optional
 
 from langchain_core.tools import tool
-import polars as pl
 
 from app.db import DuckDBManager
 
-
 # Global DB instance for tools
-_db: Optional[DuckDBManager] = None
+_db: DuckDBManager | None = None
 
 
 def get_db() -> DuckDBManager:
@@ -30,11 +27,11 @@ def get_db() -> DuckDBManager:
 
 @tool
 def query_journal_entries(
-    gl_account_number: Optional[str] = None,
-    fiscal_year: Optional[int] = None,
-    min_amount: Optional[float] = None,
-    max_amount: Optional[float] = None,
-    min_risk_score: Optional[float] = None,
+    gl_account_number: str | None = None,
+    fiscal_year: int | None = None,
+    min_amount: float | None = None,
+    max_amount: float | None = None,
+    min_risk_score: float | None = None,
     limit: int = 100,
 ) -> str:
     """Query journal entries with optional filters.
@@ -101,7 +98,7 @@ def query_journal_entries(
 
 @tool
 def get_high_risk_entries(
-    fiscal_year: Optional[int] = None,
+    fiscal_year: int | None = None,
     risk_threshold: float = 60.0,
     limit: int = 50,
 ) -> str:
@@ -143,9 +140,9 @@ def get_high_risk_entries(
 
 @tool
 def get_rule_violations(
-    rule_id: Optional[str] = None,
-    severity: Optional[str] = None,
-    fiscal_year: Optional[int] = None,
+    rule_id: str | None = None,
+    severity: str | None = None,
+    fiscal_year: int | None = None,
     limit: int = 100,
 ) -> str:
     """Get rule violations with optional filters.
@@ -205,7 +202,7 @@ def get_rule_violations(
 @tool
 def get_account_summary(
     gl_account_number: str,
-    fiscal_year: Optional[int] = None,
+    fiscal_year: int | None = None,
 ) -> str:
     """Get summary statistics for an account.
 
@@ -244,7 +241,7 @@ def get_account_summary(
 @tool
 def get_user_activity(
     user_id: str,
-    fiscal_year: Optional[int] = None,
+    fiscal_year: int | None = None,
 ) -> str:
     """Get activity summary for a specific user.
 
@@ -282,7 +279,7 @@ def get_user_activity(
 @tool
 def get_period_comparison(
     fiscal_year: int,
-    gl_account_number: Optional[str] = None,
+    gl_account_number: str | None = None,
 ) -> str:
     """Compare metrics across accounting periods.
 
@@ -316,8 +313,8 @@ def get_period_comparison(
 
 @tool
 def get_anomaly_patterns(
-    fiscal_year: Optional[int] = None,
-    pattern_type: Optional[str] = None,
+    fiscal_year: int | None = None,
+    pattern_type: str | None = None,
 ) -> str:
     """Get summary of detected anomaly patterns.
 
@@ -369,7 +366,7 @@ def get_anomaly_patterns(
 
 
 @tool
-def get_benford_analysis(fiscal_year: Optional[int] = None) -> str:
+def get_benford_analysis(fiscal_year: int | None = None) -> str:
     """Get Benford's Law distribution analysis.
 
     Args:
@@ -401,7 +398,7 @@ def get_benford_analysis(fiscal_year: Optional[int] = None) -> str:
 
 
 @tool
-def get_dashboard_kpi(fiscal_year: Optional[int] = None) -> str:
+def get_dashboard_kpi(fiscal_year: int | None = None) -> str:
     """Get key performance indicators for dashboard.
 
     Args:
@@ -439,7 +436,7 @@ def get_dashboard_kpi(fiscal_year: Optional[int] = None) -> str:
 @tool
 def search_journal_description(
     search_term: str,
-    fiscal_year: Optional[int] = None,
+    fiscal_year: int | None = None,
     limit: int = 50,
 ) -> str:
     """Search journal entries by description.
@@ -505,8 +502,8 @@ def save_audit_finding(
     Returns:
         JSON string with the saved finding ID.
     """
-    import uuid
     import json
+    import uuid
 
     db = get_db()
     finding_id = f"AF-{uuid.uuid4().hex[:8].upper()}"
@@ -529,9 +526,9 @@ def save_audit_finding(
 
 @tool
 def get_saved_findings(
-    fiscal_year: Optional[int] = None,
-    workflow_id: Optional[str] = None,
-    severity: Optional[str] = None,
+    fiscal_year: int | None = None,
+    workflow_id: str | None = None,
+    severity: str | None = None,
 ) -> str:
     """Get previously saved audit findings from the database.
 

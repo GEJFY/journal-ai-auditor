@@ -19,25 +19,25 @@ Execution modes:
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 import polars as pl
 
 from app.db import DuckDBManager
 from app.services.aggregation import AggregationService
-from app.services.rules.base import RuleCategory
-from app.services.rules.rule_engine import RuleEngine, EngineResult
-from app.services.rules.scoring import RiskScoringService, ScoringConfig
-from app.services.rules.amount_rules import create_amount_rule_set
-from app.services.rules.time_rules import create_time_rule_set
 from app.services.rules.account_rules import create_account_rule_set
+from app.services.rules.amount_rules import create_amount_rule_set
 from app.services.rules.approval_rules import create_approval_rule_set
-from app.services.rules.ml_detection import create_ml_rule_set
+from app.services.rules.base import RuleCategory
 from app.services.rules.benford import create_benford_rule_set
+from app.services.rules.ml_detection import create_ml_rule_set
+from app.services.rules.rule_engine import RuleEngine
+from app.services.rules.scoring import RiskScoringService
+from app.services.rules.time_rules import create_time_rule_set
 
 
-class BatchMode(str, Enum):
+class BatchMode(StrEnum):
     """Batch execution mode."""
 
     FULL = "full"           # Run all rules
@@ -52,15 +52,15 @@ class BatchConfig:
     """Configuration for batch execution."""
 
     mode: BatchMode = BatchMode.FULL
-    fiscal_year: Optional[int] = None
-    business_unit_code: Optional[str] = None
-    accounting_period: Optional[int] = None
+    fiscal_year: int | None = None
+    business_unit_code: str | None = None
+    accounting_period: int | None = None
     parallel_execution: bool = True
     max_workers: int = 4
     update_aggregations: bool = True
     store_violations: bool = True
     update_risk_scores: bool = True
-    categories: Optional[list[RuleCategory]] = None
+    categories: list[RuleCategory] | None = None
 
 
 @dataclass
@@ -70,7 +70,7 @@ class BatchResult:
     batch_id: str
     mode: BatchMode
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     total_entries: int = 0
     rules_executed: int = 0
     rules_failed: int = 0
@@ -117,7 +117,7 @@ class BatchOrchestrator:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
+        db: DuckDBManager | None = None,
     ) -> None:
         """Initialize batch orchestrator.
 
@@ -143,7 +143,7 @@ class BatchOrchestrator:
 
     def execute(
         self,
-        config: Optional[BatchConfig] = None,
+        config: BatchConfig | None = None,
     ) -> BatchResult:
         """Execute batch processing.
 
@@ -266,7 +266,7 @@ class BatchOrchestrator:
 
         return rules
 
-    def get_status(self, batch_id: str) -> Optional[dict[str, Any]]:
+    def get_status(self, batch_id: str) -> dict[str, Any] | None:
         """Get status of a batch job.
 
         Args:
@@ -312,7 +312,7 @@ class BatchScheduler:
 
     def __init__(
         self,
-        orchestrator: Optional[BatchOrchestrator] = None,
+        orchestrator: BatchOrchestrator | None = None,
     ) -> None:
         """Initialize batch scheduler.
 
@@ -345,7 +345,7 @@ class BatchScheduler:
     def schedule_quick_check(
         self,
         fiscal_year: int,
-        period: Optional[int] = None,
+        period: int | None = None,
     ) -> str:
         """Schedule a quick check job.
 
@@ -386,7 +386,7 @@ class BatchScheduler:
         self._jobs[result.batch_id] = result
         return result.batch_id
 
-    def get_job_result(self, job_id: str) -> Optional[BatchResult]:
+    def get_job_result(self, job_id: str) -> BatchResult | None:
         """Get result of a scheduled job.
 
         Args:

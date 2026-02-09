@@ -9,7 +9,7 @@ Provides REST API for dashboard data:
 """
 
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -28,14 +28,14 @@ class FilterParams(BaseModel):
     """Common filter parameters for dashboard queries."""
 
     fiscal_year: int
-    period_from: Optional[int] = None
-    period_to: Optional[int] = None
-    date_from: Optional[date] = None
-    date_to: Optional[date] = None
-    accounts: Optional[list[str]] = None
-    departments: Optional[list[str]] = None
-    min_amount: Optional[float] = None
-    max_amount: Optional[float] = None
+    period_from: int | None = None
+    period_to: int | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+    accounts: list[str] | None = None
+    departments: list[str] | None = None
+    min_amount: float | None = None
+    max_amount: float | None = None
 
 
 class SummaryResponse(BaseModel):
@@ -111,8 +111,8 @@ class RiskResponse(BaseModel):
 @router.get("/summary", response_model=SummaryResponse)
 async def get_dashboard_summary(
     fiscal_year: int = Query(..., description="Fiscal year"),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
 ) -> SummaryResponse:
     """Get dashboard summary statistics."""
     db = get_db()
@@ -175,8 +175,8 @@ async def get_dashboard_summary(
 async def get_time_series(
     fiscal_year: int = Query(...),
     aggregation: str = Query("daily", regex="^(daily|weekly|monthly)$"),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
 ) -> TimeSeriesResponse:
     """Get time series data for charts."""
     db = get_db()
@@ -226,8 +226,8 @@ async def get_time_series(
 @router.get("/accounts", response_model=AccountsResponse)
 async def get_accounts_analysis(
     fiscal_year: int = Query(...),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(50, le=500),
 ) -> AccountsResponse:
     """Get account-level analysis."""
@@ -282,8 +282,8 @@ async def get_accounts_analysis(
 @router.get("/risk", response_model=RiskResponse)
 async def get_risk_analysis(
     fiscal_year: int = Query(...),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
 ) -> RiskResponse:
     """Get risk analysis results."""

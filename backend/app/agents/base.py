@@ -6,17 +6,17 @@ Provides common infrastructure for all JAIA agents using LangGraph.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional, TypedDict
+from enum import StrEnum
+from typing import Any, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.language_models import BaseChatModel
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langgraph.graph import StateGraph
 
 from app.core.config import settings
 
 
-class AgentType(str, Enum):
+class AgentType(StrEnum):
     """Types of agents available."""
 
     ANALYSIS = "analysis"
@@ -52,8 +52,8 @@ class AgentState(TypedDict, total=False):
 
     # Metadata
     started_at: str
-    completed_at: Optional[str]
-    error: Optional[str]
+    completed_at: str | None
+    error: str | None
 
 
 @dataclass
@@ -89,7 +89,7 @@ class AgentResult:
     messages: list[dict[str, str]] = field(default_factory=list)
     execution_time_ms: float = 0.0
     step_count: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -219,7 +219,7 @@ class BaseAgent(ABC):
     - Graph building
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize agent.
 
         Args:
@@ -228,7 +228,7 @@ class BaseAgent(ABC):
         self.config = config or AgentConfig(agent_type=self.agent_type)
         self.llm = create_llm(self.config)
         self.tools: list[Any] = []
-        self._graph: Optional[StateGraph] = None
+        self._graph: StateGraph | None = None
 
     @property
     @abstractmethod
@@ -285,7 +285,7 @@ class BaseAgent(ABC):
     def _create_initial_state(
         self,
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> AgentState:
         """Create initial state for execution.
 
@@ -369,7 +369,7 @@ class BaseAgent(ABC):
     async def execute(
         self,
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> AgentResult:
         """Execute the agent on a task.
 
@@ -422,7 +422,7 @@ class BaseAgent(ABC):
     def execute_sync(
         self,
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> AgentResult:
         """Synchronous execution wrapper.
 

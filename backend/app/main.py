@@ -17,17 +17,17 @@ JAIAアプリケーションのメインエントリーポイントです。
         uvicorn app.main:app --workers 4 --host 0.0.0.0 --port 8000
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import router as api_router
 from app.core.config import settings
-from app.core.logging import setup_logging, get_logger, audit_log
-from app.core.middleware import setup_middleware, setup_audit_middleware
+from app.core.logging import audit_log, get_logger, setup_logging
+from app.core.middleware import setup_audit_middleware, setup_middleware
 from app.db import DuckDBManager, SQLiteManager
 
 # ロギングシステムを初期化

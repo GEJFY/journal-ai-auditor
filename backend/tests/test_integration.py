@@ -4,13 +4,13 @@ Tests the complete flow from API endpoints through services to database.
 Run with: pytest tests/test_integration.py -v
 """
 
-import pytest
-from httpx import AsyncClient, ASGITransport
-from unittest.mock import patch
-
 # Import the FastAPI app
 import sys
 from pathlib import Path
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.main import app
@@ -215,7 +215,7 @@ class TestLLMConfiguration:
 
     def test_llm_service_initialization(self):
         """Test LLM service can be initialized."""
-        from app.services.llm import LLMService, LLMConfig
+        from app.services.llm import LLMConfig, LLMService
 
         config = LLMConfig(
             provider="anthropic",
@@ -228,7 +228,7 @@ class TestLLMConfiguration:
 
     def test_llm_service_bedrock_init(self):
         """Test LLM service initialization for Bedrock."""
-        from app.services.llm import LLMService, LLMConfig
+        from app.services.llm import LLMConfig, LLMService
 
         config = LLMConfig(
             provider="bedrock",
@@ -240,7 +240,7 @@ class TestLLMConfiguration:
 
     def test_llm_service_azure_foundry_init(self):
         """Test LLM service initialization for Azure Foundry."""
-        from app.services.llm import LLMService, LLMConfig
+        from app.services.llm import LLMConfig, LLMService
 
         config = LLMConfig(
             provider="azure_foundry",
@@ -253,7 +253,7 @@ class TestLLMConfiguration:
 
     def test_llm_service_vertex_ai_init(self):
         """Test LLM service initialization for Vertex AI."""
-        from app.services.llm import LLMService, LLMConfig
+        from app.services.llm import LLMConfig, LLMService
 
         config = LLMConfig(
             provider="vertex_ai",

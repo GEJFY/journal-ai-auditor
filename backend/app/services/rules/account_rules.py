@@ -23,7 +23,6 @@
 - ACC-020: Dormant account activity
 """
 
-from typing import Any
 
 import polars as pl
 
@@ -31,8 +30,8 @@ from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -195,7 +194,7 @@ class SuspenseAccountAgingRule(AuditRule):
         result.total_checked = len(suspense)
 
         # Find old uncleared entries
-        aging_days = self.get_threshold("suspense_aging_days", 90)
+        self.get_threshold("suspense_aging_days", 90)
         threshold = self.get_threshold("suspense_threshold", 1_000_000)
 
         # Group by account to find aged items

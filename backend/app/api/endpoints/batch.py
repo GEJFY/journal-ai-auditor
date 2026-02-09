@@ -6,23 +6,22 @@ Provides REST API for:
 - Retrieving batch results
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
 from app.services.batch import (
-    BatchOrchestrator,
-    BatchScheduler,
     BatchConfig,
     BatchMode,
-    BatchResult,
+    BatchOrchestrator,
+    BatchScheduler,
 )
 
 router = APIRouter()
 
 # Global scheduler instance
-_scheduler: Optional[BatchScheduler] = None
+_scheduler: BatchScheduler | None = None
 
 
 def get_scheduler() -> BatchScheduler:
@@ -37,9 +36,9 @@ class BatchJobRequest(BaseModel):
     """Request to start a batch job."""
 
     mode: str = "full"  # full, quick, ml_only, rules_only
-    fiscal_year: Optional[int] = None
-    business_unit_code: Optional[str] = None
-    accounting_period: Optional[int] = None
+    fiscal_year: int | None = None
+    business_unit_code: str | None = None
+    accounting_period: int | None = None
     update_aggregations: bool = True
 
 
@@ -58,7 +57,7 @@ class BatchStatusResponse(BaseModel):
     status: str
     mode: str
     started_at: str
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
     total_entries: int = 0
     rules_executed: int = 0
     total_violations: int = 0

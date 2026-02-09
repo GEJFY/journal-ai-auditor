@@ -11,7 +11,6 @@
 - APR-008: Unauthorized approver
 """
 
-from typing import Any
 
 import polars as pl
 
@@ -19,8 +18,8 @@ from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -162,7 +161,7 @@ class ApprovalHierarchyRule(AuditRule):
         result = self._create_result()
 
         # Define approval tiers (would be configured per company)
-        tiers = self.get_threshold("approval_tiers", [
+        self.get_threshold("approval_tiers", [
             {"min": 0, "max": 1_000_000, "level": "staff"},
             {"min": 1_000_000, "max": 10_000_000, "level": "manager"},
             {"min": 10_000_000, "max": 50_000_000, "level": "director"},

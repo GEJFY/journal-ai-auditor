@@ -4,8 +4,9 @@ create_llm(), BaseAgent基盤, オーケストレーターのルーティング/
 LLMは全てモックで差し替え。
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 
 from app.agents.base import (
     AgentConfig,
@@ -14,7 +15,6 @@ from app.agents.base import (
     AgentType,
     create_llm,
 )
-
 
 # =========================================================
 # create_llm テスト (全8プロバイダー)
@@ -529,6 +529,7 @@ class TestWorkflowResult:
 
     def test_to_dict_with_completed_at(self):
         from datetime import datetime
+
         from app.agents.orchestrator import WorkflowResult
 
         result = WorkflowResult(

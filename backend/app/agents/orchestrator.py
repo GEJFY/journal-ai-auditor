@@ -8,18 +8,16 @@ Coordinates the execution of multiple agents for complex audit tasks:
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langgraph.graph import StateGraph, END
 
-from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.analysis import AnalysisAgent
-from app.agents.investigation import InvestigationAgent
+from app.agents.base import AgentConfig, AgentType
 from app.agents.documentation import DocumentationAgent
+from app.agents.investigation import InvestigationAgent
 from app.agents.qa import QAAgent
 from app.agents.review import ReviewAgent
-
 
 ORCHESTRATOR_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) のオーケストレーターです。
 複数の専門エージェントを調整して、複雑な監査タスクを実行します。
@@ -45,11 +43,11 @@ class WorkflowResult:
     workflow_id: str
     workflow_type: str
     started_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     agent_results: dict[str, Any] = field(default_factory=dict)
-    final_output: Optional[str] = None
+    final_output: str | None = None
     success: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -70,7 +68,7 @@ class AgentOrchestrator:
 
     def __init__(
         self,
-        config: Optional[AgentConfig] = None,
+        config: AgentConfig | None = None,
     ) -> None:
         """Initialize orchestrator.
 
@@ -223,15 +221,14 @@ class AgentOrchestrator:
                 if any(kw in line for kw in [
                     "リスク", "異常", "不正", "違反", "逸脱", "重要",
                     "発見", "懸念", "要注意", "高額",
-                ]):
-                    if len(line) > 10:
-                        findings.append({
-                            "source": source,
-                            "title": line[:200],
-                            "severity": "HIGH" if any(
-                                k in line for k in ["不正", "重要", "高リスク"]
-                            ) else "MEDIUM",
-                        })
+                ]) and len(line) > 10:
+                    findings.append({
+                        "source": source,
+                        "title": line[:200],
+                        "severity": "HIGH" if any(
+                            k in line for k in ["不正", "重要", "高リスク"]
+                        ) else "MEDIUM",
+                    })
         return findings
 
     def _build_investigation_prompt(
@@ -338,7 +335,7 @@ class AgentOrchestrator:
         self,
         target_type: str,
         target_id: str,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> WorkflowResult:
         """Run an investigation workflow.
 
@@ -384,7 +381,7 @@ class AgentOrchestrator:
     async def run_qa_session(
         self,
         question: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowResult:
         """Run an interactive Q&A session.
 
@@ -423,7 +420,7 @@ class AgentOrchestrator:
         self,
         fiscal_year: int,
         doc_type: str = "summary",
-        findings: Optional[list[dict[str, Any]]] = None,
+        findings: list[dict[str, Any]] | None = None,
     ) -> WorkflowResult:
         """Run a documentation workflow.
 
@@ -471,7 +468,7 @@ class AgentOrchestrator:
     async def route_request(
         self,
         request: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowResult:
         """Route a natural language request to the appropriate agent using LLM.
 

@@ -1,8 +1,8 @@
 """LLM Data Models."""
 
 from dataclasses import dataclass, field
-from typing import Literal, Any
 from datetime import datetime
+from typing import Any, Literal
 
 
 @dataclass

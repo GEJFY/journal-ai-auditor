@@ -12,17 +12,17 @@ Supports:
 """
 
 import time
-from typing import Optional, AsyncGenerator
 from functools import lru_cache
 
-from app.core.config import settings, LLM_MODELS, RECOMMENDED_MODELS
+from app.core.config import LLM_MODELS, RECOMMENDED_MODELS, settings
+
 from .models import LLMConfig, LLMResponse, ModelInfo
 
 
 class LLMService:
     """Multi-provider LLM service."""
 
-    def __init__(self, config: Optional[LLMConfig] = None):
+    def __init__(self, config: LLMConfig | None = None):
         """Initialize LLM service.
 
         Args:
@@ -98,7 +98,7 @@ class LLMService:
     def generate(
         self,
         prompt: str,
-        system: Optional[str] = None,
+        system: str | None = None,
         **kwargs,
     ) -> LLMResponse:
         """Generate a response from the LLM.
@@ -115,7 +115,6 @@ class LLMService:
         client = self._get_client()
 
         provider = self.config.provider
-        model = self.config.model
 
         if provider == "anthropic":
             response = self._generate_anthropic(client, prompt, system, **kwargs)
@@ -140,7 +139,7 @@ class LLMService:
         return response
 
     def _generate_anthropic(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using Anthropic API."""
         messages = [{"role": "user", "content": prompt}]
@@ -165,7 +164,7 @@ class LLMService:
         )
 
     def _generate_openai(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using OpenAI API."""
         messages = []
@@ -192,7 +191,7 @@ class LLMService:
         )
 
     def _generate_google(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using Google GenAI SDK (google-genai)."""
         from google.genai import types
@@ -221,7 +220,7 @@ class LLMService:
         )
 
     def _generate_bedrock(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using AWS Bedrock."""
         import json
@@ -274,7 +273,7 @@ class LLMService:
         )
 
     def _generate_azure(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using Azure OpenAI."""
         messages = []
@@ -301,7 +300,7 @@ class LLMService:
         )
 
     def _generate_azure_foundry(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using Azure Foundry (GPT-5 series + Claude)."""
         messages = []
@@ -342,7 +341,7 @@ class LLMService:
         )
 
     def _generate_vertex_ai(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using GCP Vertex AI (Gemini 3.0 series)."""
         GenerativeModel = client["GenerativeModel"]
@@ -372,10 +371,9 @@ class LLMService:
         )
 
     def _generate_ollama(
-        self, client, prompt: str, system: Optional[str], **kwargs
+        self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
         """Generate using Ollama (local LLM)."""
-        import json
 
         messages = []
         if system:
@@ -431,7 +429,7 @@ class LLMService:
         return RECOMMENDED_MODELS
 
 
-@lru_cache()
+@lru_cache
 def get_llm_service() -> LLMService:
     """Get cached LLM service instance."""
     return LLMService()

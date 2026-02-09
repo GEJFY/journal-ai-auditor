@@ -7,14 +7,13 @@ This agent specializes in:
 - Building investigation narratives
 """
 
-from typing import Any, Optional
+from typing import Any
 
-from langchain_core.messages import AIMessage, ToolMessage
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import ToolMessage
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import INVESTIGATION_TOOLS
-
 
 INVESTIGATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の調査エージェントです。
 フラグが立てられた仕訳を深掘り調査し、問題の根本原因を特定します。
@@ -65,7 +64,7 @@ INVESTIGATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) �
 class InvestigationAgent(BaseAgent):
     """Agent for investigating specific flagged entries."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize investigation agent.
 
         Args:
@@ -179,7 +178,7 @@ class InvestigationAgent(BaseAgent):
     async def investigate_user(
         self,
         user_id: str,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> dict[str, Any]:
         """Investigate a specific user's activity.
 
@@ -210,7 +209,7 @@ class InvestigationAgent(BaseAgent):
     async def investigate_rule_violation(
         self,
         rule_id: str,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> dict[str, Any]:
         """Investigate violations of a specific rule.
 

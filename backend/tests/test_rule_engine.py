@@ -5,8 +5,7 @@ RuleEngine, RiskScoringService, RiskPrioritizer をテスト。
 DB操作はすべてモック化。
 """
 
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import polars as pl
 import pytest
@@ -19,7 +18,6 @@ from app.services.rules.base import (
     RuleSeverity,
     RuleViolation,
 )
-
 
 # =========================================================
 # RuleViolation テスト

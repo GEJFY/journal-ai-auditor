@@ -7,11 +7,11 @@ are available as environment variables. Run manually with:
 """
 
 import os
+
 import pytest
 
 from app.services.llm.models import LLMConfig
 from app.services.llm.service import LLMService
-
 
 # --------------------------------------------------
 # Anthropic Direct

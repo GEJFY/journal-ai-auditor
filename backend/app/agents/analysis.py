@@ -7,14 +7,13 @@ This agent specializes in:
 - Generating analytical insights
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import ANALYSIS_TOOLS
-
 
 ANALYSIS_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の分析エージェントです。
 仕訳データの異常パターンを分析し、監査に役立つ洞察を提供します。
@@ -51,7 +50,7 @@ ANALYSIS_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の分�
 class AnalysisAgent(BaseAgent):
     """Agent for analyzing anomaly patterns in journal data."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize analysis agent.
 
         Args:
@@ -282,7 +281,7 @@ class AnalysisAgent(BaseAgent):
     async def compare_periods(
         self,
         fiscal_year: int,
-        account_prefix: Optional[str] = None,
+        account_prefix: str | None = None,
     ) -> dict[str, Any]:
         """Compare metrics across accounting periods.
 

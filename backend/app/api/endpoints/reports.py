@@ -8,8 +8,8 @@ Provides REST API for:
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -25,7 +25,7 @@ def get_db() -> DuckDBManager:
     return DuckDBManager()
 
 
-class ReportFormat(str, Enum):
+class ReportFormat(StrEnum):
     """Report output formats."""
 
     JSON = "json"
@@ -34,7 +34,7 @@ class ReportFormat(str, Enum):
     PDF = "pdf"
 
 
-class ReportType(str, Enum):
+class ReportType(StrEnum):
     """Report types."""
 
     SUMMARY = "summary"
@@ -51,9 +51,9 @@ class ReportRequest(BaseModel):
 
     report_type: ReportType
     fiscal_year: int
-    period_from: Optional[int] = None
-    period_to: Optional[int] = None
-    accounts: Optional[list[str]] = None
+    period_from: int | None = None
+    period_to: int | None = None
+    accounts: list[str] | None = None
     include_details: bool = True
     format: ReportFormat = ReportFormat.JSON
 
@@ -732,7 +732,7 @@ async def get_report_templates() -> dict[str, Any]:
 
 @router.get("/history")
 async def get_report_history(
-    fiscal_year: Optional[int] = Query(None),
+    fiscal_year: int | None = Query(None),
     limit: int = Query(20, le=100),
 ) -> dict[str, Any]:
     """Get report generation history.

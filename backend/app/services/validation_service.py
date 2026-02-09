@@ -1,9 +1,9 @@
 """Data validation service for import quality checks."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Callable, Optional
+from datetime import date
+from typing import Any
 
 import polars as pl
 
@@ -15,7 +15,7 @@ class ValidationError:
     check_id: str
     check_name: str
     row_index: int
-    column: Optional[str]
+    column: str | None
     value: Any
     message: str
     severity: str = "ERROR"  # ERROR or WARNING
@@ -404,7 +404,7 @@ class ValidationService:
                 row_index=row["index"],
                 column="debit_credit_indicator",
                 value=row.get("debit_credit_indicator"),
-                message=f"借貸区分が不正です（有効値: D, C）",
+                message="借貸区分が不正です（有効値: D, C）",
             ))
             errors_found += 1
 
@@ -601,7 +601,6 @@ class ValidationService:
         # This check requires master data to be loaded
         # For now, just validate format of reference fields
 
-        warnings_found = 0
 
         # Check vendor_code format if present
         if "vendor_code" in df.columns:

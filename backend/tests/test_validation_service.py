@@ -4,10 +4,9 @@ ValidationService ユニットテスト
 10個のバリデーションチェック全てをテスト。
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 import polars as pl
-import pytest
 
 
 def make_journal_df(**overrides) -> pl.DataFrame:

@@ -4,14 +4,10 @@ ImportService ユニットテスト
 CSV/Excelインポート、カラムマッピング、バリデーション連携をテスト。
 """
 
-import tempfile
-from datetime import date
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import polars as pl
 import pytest
-
 
 # =========================================================
 # ColumnMapping テスト

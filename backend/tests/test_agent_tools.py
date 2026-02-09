@@ -5,11 +5,8 @@ Uses a temporary DuckDB database with test data.
 """
 
 import json
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
-import polars as pl
 import pytest
 
 from app.db.duckdb import DuckDBManager
@@ -343,7 +340,7 @@ class TestSaveAndGetFindings:
 
     def test_get_findings(self, mock_db):
         """保存した発見事項の取得."""
-        from app.agents.tools import save_audit_finding, get_saved_findings
+        from app.agents.tools import get_saved_findings, save_audit_finding
 
         # まず保存
         save_audit_finding.invoke({
@@ -361,7 +358,7 @@ class TestSaveAndGetFindings:
 
     def test_get_findings_filter_by_severity(self, mock_db):
         """重要度フィルタ付き取得."""
-        from app.agents.tools import save_audit_finding, get_saved_findings
+        from app.agents.tools import get_saved_findings, save_audit_finding
 
         save_audit_finding.invoke({
             "workflow_id": "WF003",
@@ -430,8 +427,11 @@ class TestToolCollections:
     def test_all_tools_are_callable(self):
         """全ツールがcallableであること."""
         from app.agents.tools import (
-            ANALYSIS_TOOLS, INVESTIGATION_TOOLS, QA_TOOLS,
-            REVIEW_TOOLS, DOCUMENTATION_TOOLS,
+            ANALYSIS_TOOLS,
+            DOCUMENTATION_TOOLS,
+            INVESTIGATION_TOOLS,
+            QA_TOOLS,
+            REVIEW_TOOLS,
         )
 
         all_tools = set()

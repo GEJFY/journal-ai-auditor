@@ -1,8 +1,9 @@
 """Database layer unit tests using temporary DuckDB."""
 
-import pytest
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
+import pytest
 
 from app.db.duckdb import DuckDBManager
 

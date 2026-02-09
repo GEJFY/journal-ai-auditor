@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -59,7 +59,7 @@ class RuleViolation(BaseModel):
     message: str = Field(
         description="違反メッセージ",
     )
-    evidence: Optional[dict] = Field(
+    evidence: dict | None = Field(
         default=None,
         description="証拠データ",
     )
@@ -70,13 +70,13 @@ class AnalysisSession(BaseModel):
 
     session_id: str
     started_at: datetime
-    ended_at: Optional[datetime] = None
+    ended_at: datetime | None = None
     status: Literal["running", "completed", "failed", "cancelled"] = "running"
     fiscal_year: int
-    filters: Optional[dict] = None
+    filters: dict | None = None
     total_entries_analyzed: int = 0
     total_insights: int = 0
-    summary: Optional[str] = None
+    summary: str | None = None
 
 
 class Insight(BaseModel):
@@ -90,11 +90,11 @@ class Insight(BaseModel):
     title: str
     description: str
     severity: Literal["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"] = "INFO"
-    evidence: Optional[dict] = None
+    evidence: dict | None = None
     affected_journals: list[str] = Field(default_factory=list)
     affected_count: int = 0
     affected_amount: Decimal = Decimal("0")
-    recommendation: Optional[str] = None
+    recommendation: str | None = None
     created_at: datetime
 
 

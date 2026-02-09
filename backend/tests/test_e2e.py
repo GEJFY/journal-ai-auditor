@@ -4,8 +4,6 @@ E2Eテスト（エンドツーエンドテスト）
 完全なユーザーワークフローをシミュレートするテストです。
 """
 
-import os
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -43,7 +41,7 @@ class TestImportToAnalysisWorkflow:
         # Step 3: ルール一覧取得
         response = client.get("/api/v1/batch/rules")
         assert response.status_code == 200
-        rules_data = response.json()
+        response.json()
 
         # Step 4: KPI確認
         response = client.get("/api/v1/dashboard/kpi", params={"fiscal_year": 2024})
@@ -155,7 +153,7 @@ class TestReportGenerationFlow:
         # Step 1: テンプレート取得
         response = client.get("/api/v1/reports/templates")
         assert response.status_code == 200
-        templates = response.json()
+        response.json()
 
         # Step 2: PPTエクスポート（データがなくても実行可能か確認）
         response = client.post(
@@ -202,7 +200,7 @@ class TestErrorRecovery:
 
     def test_continuous_requests(self, client: TestClient):
         """連続リクエストのテスト"""
-        for i in range(10):
+        for _i in range(10):
             response = client.get("/health")
             assert response.status_code == 200
 
@@ -243,7 +241,7 @@ class TestDataConsistency:
 
         # データ構造が一致することを確認
         summary = summary_response.json()
-        kpi = kpi_response.json()
+        kpi_response.json()
 
         # どちらもsuccessまたはdata構造を持つ
         assert (

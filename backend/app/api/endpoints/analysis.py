@@ -7,13 +7,13 @@ Provides REST API for:
 - Risk scoring details
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.db import DuckDBManager
-from app.services.rules import RuleEngine, RiskScoringService
+from app.services.rules import RiskScoringService
 
 router = APIRouter()
 
@@ -116,11 +116,11 @@ class BenfordResponse(BaseModel):
 @router.get("/violations", response_model=ViolationsResponse)
 async def get_violations(
     fiscal_year: int = Query(...),
-    rule_id: Optional[str] = Query(None),
-    severity: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    rule_id: str | None = Query(None),
+    severity: str | None = Query(None),
+    category: str | None = Query(None),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
     offset: int = Query(0, ge=0),
 ) -> ViolationsResponse:
@@ -240,10 +240,10 @@ async def get_violations(
 @router.get("/ml-anomalies", response_model=MLAnomaliesResponse)
 async def get_ml_anomalies(
     fiscal_year: int = Query(...),
-    method: Optional[str] = Query(None),
+    method: str | None = Query(None),
     min_score: float = Query(0.5, ge=0, le=1),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
 ) -> MLAnomaliesResponse:
     """Get ML anomaly detection results.
@@ -319,7 +319,7 @@ async def get_ml_anomalies(
     total_count = db.execute(count_query, params)[0][0] or 0
 
     # Get method distribution
-    method_query = f"""
+    method_query = """
         SELECT ma.detection_method, COUNT(*)
         FROM ml_anomalies ma
         JOIN journal_entries je ON ma.gl_detail_id = je.gl_detail_id
@@ -341,8 +341,8 @@ async def get_risk_details(
     fiscal_year: int = Query(...),
     min_score: float = Query(0, ge=0, le=100),
     max_score: float = Query(100, ge=0, le=100),
-    period_from: Optional[int] = Query(None, ge=1, le=12),
-    period_to: Optional[int] = Query(None, ge=1, le=12),
+    period_from: int | None = Query(None, ge=1, le=12),
+    period_to: int | None = Query(None, ge=1, le=12),
     limit: int = Query(100, le=1000),
 ) -> RiskDetailsResponse:
     """Get detailed risk score breakdown.
@@ -425,7 +425,7 @@ async def get_risk_details(
     avg_risk = stats[0][1] or 0
 
     # Get distribution
-    dist_query = f"""
+    dist_query = """
         SELECT
             CASE
                 WHEN risk_score >= 60 THEN 'high'
@@ -458,7 +458,7 @@ async def get_risk_details(
 @router.get("/benford-detail", response_model=BenfordResponse)
 async def get_benford_detail(
     fiscal_year: int = Query(...),
-    account: Optional[str] = Query(None),
+    account: str | None = Query(None),
 ) -> BenfordResponse:
     """Get detailed Benford's Law analysis.
 
@@ -571,7 +571,7 @@ async def get_benford_detail(
         conformity = "nonconforming"
 
     # Find suspicious accounts (high deviation)
-    suspicious_query = f"""
+    suspicious_query = """
         WITH account_benford AS (
             SELECT
                 gl_account_number,
@@ -688,7 +688,7 @@ async def get_rules_summary(fiscal_year: int = Query(...)) -> dict[str, Any]:
 @router.post("/recalculate-scores")
 async def recalculate_risk_scores(
     fiscal_year: int = Query(...),
-    period: Optional[int] = Query(None, ge=1, le=12),
+    period: int | None = Query(None, ge=1, le=12),
 ) -> dict[str, Any]:
     """Recalculate risk scores for entries.
 

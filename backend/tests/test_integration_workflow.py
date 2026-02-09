@@ -4,12 +4,11 @@ Tests for the AgentOrchestrator's workflow coordination logic.
 Mocks LLM calls but tests the full orchestration flow.
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
-from app.agents.orchestrator import AgentOrchestrator, WorkflowResult
 from app.agents.base import AgentConfig, AgentType
+from app.agents.orchestrator import AgentOrchestrator, WorkflowResult
 
 
 class TestWorkflowResult:

@@ -19,8 +19,7 @@ Risk categories:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import polars as pl
 
@@ -124,8 +123,8 @@ class RiskScoringService:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
-        config: Optional[ScoringConfig] = None,
+        db: DuckDBManager | None = None,
+        config: ScoringConfig | None = None,
     ) -> None:
         """Initialize scoring service.
 
@@ -368,7 +367,7 @@ class RiskScoringService:
 
     def get_scoring_summary(
         self,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> dict[str, Any]:
         """Get summary of risk scoring results.
 
@@ -415,14 +414,14 @@ class RiskPrioritizer:
 
     def __init__(
         self,
-        db: Optional[DuckDBManager] = None,
+        db: DuckDBManager | None = None,
     ) -> None:
         self.db = db or DuckDBManager()
 
     def get_review_queue(
         self,
         max_entries: int = 100,
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> pl.DataFrame:
         """Get prioritized queue of entries for review.
 
@@ -473,7 +472,7 @@ class RiskPrioritizer:
 
     def get_sample_by_risk_level(
         self,
-        sample_sizes: Optional[dict[str, int]] = None,
+        sample_sizes: dict[str, int] | None = None,
     ) -> pl.DataFrame:
         """Get stratified sample by risk level.
 

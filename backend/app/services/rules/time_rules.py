@@ -13,8 +13,6 @@
 - TIM-010: Quarterly pattern anomaly
 """
 
-from datetime import datetime, time, timedelta
-from typing import Any
 
 import polars as pl
 
@@ -22,8 +20,8 @@ from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -178,7 +176,7 @@ class PeriodEndConcentrationRule(AuditRule):
         result = self._create_result()
         result.total_checked = len(df)
 
-        last_days = self.get_threshold("period_end_days", 3)
+        self.get_threshold("period_end_days", 3)
         min_amount = self.get_threshold("period_end_min_amount", 50_000_000)
 
         # Identify period-end entries (last N days of month)

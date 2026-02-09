@@ -1,8 +1,9 @@
 """DuckDB connection manager for OLAP operations."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import duckdb
 import polars as pl
@@ -63,10 +64,7 @@ class DuckDBManager:
             List of result tuples.
         """
         with self.connect() as conn:
-            if params:
-                result = conn.execute(query, params)
-            else:
-                result = conn.execute(query)
+            result = conn.execute(query, params) if params else conn.execute(query)
             return result.fetchall()
 
     def execute_df(self, query: str, params: list[Any] | None = None) -> pl.DataFrame:
@@ -80,10 +78,7 @@ class DuckDBManager:
             Polars DataFrame with query results.
         """
         with self.connect() as conn:
-            if params:
-                result = conn.execute(query, params)
-            else:
-                result = conn.execute(query)
+            result = conn.execute(query, params) if params else conn.execute(query)
             return result.pl()
 
     def insert_df(self, table_name: str, df: pl.DataFrame) -> int:

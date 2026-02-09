@@ -3,13 +3,12 @@
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import polars as pl
 
-from app.core.config import settings
 from app.db import DuckDBManager
-from app.services.validation_service import ValidationService, ValidationResult
+from app.services.validation_service import ValidationResult, ValidationService
 
 
 class ImportResult:
@@ -27,7 +26,7 @@ class ImportResult:
         self.errors: list[dict[str, Any]] = []
         self.warnings: list[dict[str, Any]] = []
         self.started_at: datetime = datetime.now()
-        self.completed_at: Optional[datetime] = None
+        self.completed_at: datetime | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -100,7 +99,7 @@ class ColumnMapping:
 class ImportService:
     """Service for importing journal entry data."""
 
-    def __init__(self, db: Optional[DuckDBManager] = None) -> None:
+    def __init__(self, db: DuckDBManager | None = None) -> None:
         """Initialize import service.
 
         Args:
@@ -112,7 +111,7 @@ class ImportService:
     def read_file(
         self,
         file_path: Path,
-        file_type: Optional[Literal["csv", "excel"]] = None,
+        file_type: Literal["csv", "excel"] | None = None,
     ) -> pl.DataFrame:
         """Read a file into a Polars DataFrame.
 
@@ -181,13 +180,13 @@ class ImportService:
                 if c not in suggested_mapping
             ],
             "sample_data": sample_df.to_dicts()[:10],
-            "dtypes": {col: str(dtype) for col, dtype in zip(df.columns, df.dtypes)},
+            "dtypes": {col: str(dtype) for col, dtype in zip(df.columns, df.dtypes, strict=False)},
         }
 
     def validate_file(
         self,
         file_path: Path,
-        column_mapping: Optional[dict[str, str]] = None,
+        column_mapping: dict[str, str] | None = None,
     ) -> ValidationResult:
         """Validate a file before import.
 
@@ -212,11 +211,11 @@ class ImportService:
     def import_file(
         self,
         file_path: Path,
-        column_mapping: Optional[dict[str, str]] = None,
+        column_mapping: dict[str, str] | None = None,
         skip_validation: bool = False,
         skip_errors: bool = False,
         business_unit_code: str = "DEFAULT",
-        fiscal_year: Optional[int] = None,
+        fiscal_year: int | None = None,
     ) -> ImportResult:
         """Import a file into the database.
 
@@ -309,7 +308,7 @@ class ImportService:
         self,
         df: pl.DataFrame,
         business_unit_code: str,
-        fiscal_year: Optional[int],
+        fiscal_year: int | None,
     ) -> pl.DataFrame:
         """Add default values for missing columns.
 

@@ -6,7 +6,6 @@ FastAPI エンドポイントの統合テストを実行します。
 内部エラーを返す可能性があります。
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 

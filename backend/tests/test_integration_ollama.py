@@ -4,9 +4,8 @@ These tests require Ollama to be running locally.
 Skip automatically if Ollama is not available.
 """
 
-import os
-import pytest
 import httpx
+import pytest
 
 from app.services.llm.models import LLMConfig
 from app.services.llm.service import LLMService
@@ -91,6 +90,7 @@ class TestOllamaAgentIntegration:
 
     def test_llm_invoke(self):
         from langchain_core.messages import HumanMessage
+
         from app.agents.base import AgentConfig, AgentType, create_llm
 
         model = get_ollama_model()

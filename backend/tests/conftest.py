@@ -6,9 +6,9 @@ pytest用の共通フィクスチャとヘルパー関数を提供します。
 
 import os
 import tempfile
-from datetime import date, datetime
+from collections.abc import Generator
+from datetime import date
 from pathlib import Path
-from typing import Generator
 
 import polars as pl
 import pytest
@@ -250,7 +250,6 @@ def benford_test_data() -> list[float]:
         list[float]: テスト用金額データ
     """
     import random
-    import math
 
     random.seed(42)
     data = []
@@ -317,7 +316,7 @@ def assert_api_error(response, expected_status: int = 400, expected_code: str = 
     """
     assert response.status_code == expected_status, f"Expected {expected_status}, got {response.status_code}"
     data = response.json()
-    assert data.get("success") == False or "error" in data
+    assert not data.get("success") or "error" in data
 
     if expected_code:
         assert data.get("error", {}).get("error_code") == expected_code

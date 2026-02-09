@@ -18,7 +18,6 @@
 - AMT-015: Unusual write-offs
 """
 
-from typing import Any
 
 import polars as pl
 
@@ -26,8 +25,8 @@ from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -169,7 +168,7 @@ class JustBelowThresholdRule(AuditRule):
 
         for threshold in thresholds:
             lower = threshold * (1 - margin_ratio)
-            upper = threshold * 0.999  # Just below
+            threshold * 0.999  # Just below
 
             suspicious = df.filter(
                 (pl.col("amount").abs() >= lower) &
@@ -533,7 +532,7 @@ class SplitTransactionRule(AuditRule):
         result.total_checked = len(df)
 
         threshold = self.get_threshold("split_threshold", 10_000_000)
-        window_days = self.get_threshold("window_days", 3)
+        self.get_threshold("window_days", 3)
 
         # Group by user, account, and similar dates
         grouped = df.group_by([
@@ -752,7 +751,7 @@ class TaxIrregularityRule(AuditRule):
             ["255", "516", "717"]  # 仮払消費税、仮受消費税など
         )
         tax_rate = self.get_threshold("tax_rate", 0.10)  # 10%
-        tolerance = self.get_threshold("tax_tolerance", 1.0)  # 1円
+        self.get_threshold("tax_tolerance", 1.0)  # 1円
 
         # This is a simplified check - in practice would need linked transactions
         tax_entries = df.filter(
@@ -767,19 +766,18 @@ class TaxIrregularityRule(AuditRule):
             # Check if amount looks like a calculated tax
             # Tax amount should be roughly divisible by tax rate fraction
             expected_base = amount / tax_rate
-            if expected_base % 1 > 0.1 and expected_base % 1 < 0.9:
+            if expected_base % 1 > 0.1 and expected_base % 1 < 0.9 and amount >= 10000:
                 # Amount doesn't look like standard tax calculation
-                if amount >= 10000:  # Only flag significant amounts
-                    violation = self._create_violation(
-                        gl_detail_id=row["gl_detail_id"],
-                        journal_id=row["journal_id"],
-                        message=f"消費税計算異常: {row['amount']:,.0f}円",
-                        details={
-                            "amount": row["amount"],
-                            "implied_base": expected_base,
-                        },
-                    )
-                    result.violations.append(violation)
+                violation = self._create_violation(
+                    gl_detail_id=row["gl_detail_id"],
+                    journal_id=row["journal_id"],
+                    message=f"消費税計算異常: {row['amount']:,.0f}円",
+                    details={
+                        "amount": row["amount"],
+                        "implied_base": expected_base,
+                    },
+                )
+                result.violations.append(violation)
 
         result.violations_found = len(result.violations)
         return result

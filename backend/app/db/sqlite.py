@@ -1,9 +1,10 @@
 """SQLite connection manager for metadata operations."""
 
 import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 from app.core.config import settings
 
@@ -66,10 +67,7 @@ class SQLiteManager:
             List of result rows.
         """
         with self.connect() as conn:
-            if params:
-                cursor = conn.execute(query, params)
-            else:
-                cursor = conn.execute(query)
+            cursor = conn.execute(query, params) if params else conn.execute(query)
             return cursor.fetchall()
 
     def execute_many(
@@ -132,7 +130,7 @@ class SQLiteManager:
         Returns:
             Number of rows updated.
         """
-        set_clause = ", ".join(f"{k} = ?" for k in data.keys())
+        set_clause = ", ".join(f"{k} = ?" for k in data)
         query = f"UPDATE {table} SET {set_clause} WHERE {where}"
         params = tuple(data.values()) + where_params
 

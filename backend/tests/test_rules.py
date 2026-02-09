@@ -4,26 +4,26 @@
 各カテゴリの監査ルールが正しく動作することを検証します。
 """
 
-import pytest
-import polars as pl
-from datetime import date, datetime
+from datetime import date
 
-from app.services.rules.base import RuleCategory, RuleSeverity
+import polars as pl
+
 from app.services.rules.amount_rules import (
     MaterialityRule,
-    RoundAmountRule,
     OddEndingRule,
-)
-from app.services.rules.time_rules import (
-    AfterHoursRule,
-    WeekendHolidayRule,
-    PeriodEndConcentrationRule,
+    RoundAmountRule,
 )
 from app.services.rules.approval_rules import (
-    SelfApprovalRule,
     MissingApprovalRule,
+    SelfApprovalRule,
 )
+from app.services.rules.base import RuleCategory, RuleSeverity
 from app.services.rules.benford import BenfordAnalyzer
+from app.services.rules.time_rules import (
+    AfterHoursRule,
+    PeriodEndConcentrationRule,
+    WeekendHolidayRule,
+)
 
 
 class TestAmountRules:
@@ -282,11 +282,11 @@ class TestRuleExecution:
         rule = MaterialityRule()
         rule.enabled = False
 
-        df = pl.DataFrame({
+        pl.DataFrame({
             "gl_detail_id": ["TEST001"],
             "amount": [999_999_999],
             "functional_amount": [999_999_999],
         })
 
         # 無効化されたルールは実行されない
-        assert rule.enabled == False
+        assert not rule.enabled

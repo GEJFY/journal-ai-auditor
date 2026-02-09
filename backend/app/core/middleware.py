@@ -20,11 +20,10 @@ FastAPIアプリケーションに適用するミドルウェアを定義しま�
 
 import time
 import traceback
-import hashlib
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Callable, Dict, List, Optional, Set
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -32,19 +31,16 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.logging import (
-    get_logger,
-    set_request_id,
-    get_request_id,
-    audit_log,
-    perf_log,
-    security_log,
-)
 from app.core.exceptions import (
     JAIAException,
-    RateLimitError,
-    IPBlockedError,
-    SuspiciousActivityError,
+)
+from app.core.logging import (
+    audit_log,
+    get_logger,
+    get_request_id,
+    perf_log,
+    security_log,
+    set_request_id,
 )
 
 logger = get_logger(__name__)
@@ -62,7 +58,7 @@ class SecurityConfig:
     RATE_LIMIT_WINDOW_SECONDS = 60  # 時間ウィンドウ（秒）
 
     # IPブロック設定
-    BLOCKED_IPS: Set[str] = set()  # 永久ブロックIP
+    BLOCKED_IPS: set[str] = set()  # 永久ブロックIP
     TEMP_BLOCK_THRESHOLD = 10  # 一時ブロックまでの違反回数
     TEMP_BLOCK_DURATION_MINUTES = 15  # 一時ブロック期間（分）
 
@@ -114,7 +110,7 @@ class RateLimiter:
     ):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self.requests: Dict[str, List[float]] = defaultdict(list)
+        self.requests: dict[str, list[float]] = defaultdict(list)
         self.lock = Lock()
 
     def is_allowed(self, client_id: str) -> bool:
@@ -259,9 +255,9 @@ class IPBlockManager:
     """
 
     def __init__(self):
-        self.permanent_blocks: Set[str] = SecurityConfig.BLOCKED_IPS.copy()
-        self.temp_blocks: Dict[str, datetime] = {}
-        self.violation_counts: Dict[str, int] = defaultdict(int)
+        self.permanent_blocks: set[str] = SecurityConfig.BLOCKED_IPS.copy()
+        self.temp_blocks: dict[str, datetime] = {}
+        self.violation_counts: dict[str, int] = defaultdict(int)
         self.lock = Lock()
 
     def is_blocked(self, ip: str) -> bool:

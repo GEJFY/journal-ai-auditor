@@ -8,10 +8,8 @@
 - ML-005: Ensemble (combined methods)
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import polars as pl
@@ -24,8 +22,8 @@ from app.services.rules.base import (
     AuditRule,
     RuleCategory,
     RuleResult,
-    RuleSeverity,
     RuleSet,
+    RuleSeverity,
 )
 
 
@@ -122,7 +120,7 @@ class FeatureExtractor:
                 pl.col("source").to_dummies(separator="_")
             )
             df = pl.concat([df, source_dummies], how="horizontal")
-            feature_cols.extend([c for c in source_dummies.columns])
+            feature_cols.extend(list(source_dummies.columns))
 
         # Add DC indicator
         if "debit_credit_indicator" in df.columns:
@@ -176,7 +174,7 @@ class IsolationForestRule(AuditRule):
         self.contamination = contamination
         self.n_estimators = n_estimators
         self.feature_extractor = FeatureExtractor()
-        self.model: Optional[IsolationForest] = None
+        self.model: IsolationForest | None = None
 
     @property
     def rule_id(self) -> str:

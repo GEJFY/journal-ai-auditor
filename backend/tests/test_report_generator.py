@@ -6,9 +6,6 @@ PPT/PDFレポート生成をモックDBでテスト。
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-
 # =========================================================
 # ReportConfig テスト
 # =========================================================

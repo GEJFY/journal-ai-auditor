@@ -7,14 +7,13 @@ This agent specializes in:
 - Preparing working papers
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from langchain_core.messages import ToolMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
 from app.agents.base import AgentConfig, AgentState, AgentType, BaseAgent
 from app.agents.tools import DOCUMENTATION_TOOLS
-
 
 DOCUMENTATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) の文書化エージェントです。
 監査調書や報告書の作成を支援します。
@@ -52,7 +51,7 @@ DOCUMENTATION_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) �
 class DocumentationAgent(BaseAgent):
     """Agent for generating audit documentation."""
 
-    def __init__(self, config: Optional[AgentConfig] = None) -> None:
+    def __init__(self, config: AgentConfig | None = None) -> None:
         """Initialize documentation agent.
 
         Args:

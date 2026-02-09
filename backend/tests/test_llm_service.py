@@ -1,13 +1,13 @@
 """LLM service unit tests with mock providers."""
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
+import pytest
+
+from app.core.config import LLM_MODELS, RECOMMENDED_MODELS
 from app.services.llm.models import LLMConfig, LLMResponse, ModelInfo
 from app.services.llm.service import LLMService
-from app.core.config import LLM_MODELS, RECOMMENDED_MODELS
-
 
 # --------------------------------------------------
 # LLMConfig tests
@@ -307,7 +307,7 @@ class TestGenerateOpenAI:
         mock_client.chat.completions.create.return_value = mock_response
         service._client = mock_client
 
-        result = service.generate("プロンプト", system="システム")
+        service.generate("プロンプト", system="システム")
         call_args = mock_client.chat.completions.create.call_args
         messages = call_args.kwargs["messages"]
         assert messages[0]["role"] == "system"
