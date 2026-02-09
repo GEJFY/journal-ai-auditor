@@ -103,7 +103,7 @@ try {
     if ($answer -eq "Y" -or $answer -eq "y") {
         Write-Host "  バックエンドを起動しています..." -ForegroundColor Yellow
         Set-Location $BackendDir
-        Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000" -WindowStyle Normal
+        Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8001" -WindowStyle Normal
         Set-Location $ProjectRoot
 
         Write-Host "  起動を待機しています..." -ForegroundColor Gray
