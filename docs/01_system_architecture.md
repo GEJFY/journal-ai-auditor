@@ -532,7 +532,7 @@ services:
       - ./backend:/app
       - ./data:/data
     ports:
-      - "8000:8000"
+      - "8090:8090"
     environment:
       - ENV=development
 ```

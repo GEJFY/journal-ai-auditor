@@ -67,7 +67,7 @@ npm install
 ```bash
 # ターミナル1: バックエンド
 cd backend
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8090
 
 # ターミナル2: フロントエンド
 cd frontend

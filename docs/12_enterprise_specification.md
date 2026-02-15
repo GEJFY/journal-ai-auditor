@@ -1001,7 +1001,7 @@ Application Load Balancer (ALB) の動作
 │  ┌────────────────────────────────────────────────────┐    │
 │  │ Listener: Port 443 (HTTPS)                          │    │
 │  │    ↓                                                │    │
-│  │ Target Group: jaia-backend (Port 8001)              │    │
+│  │ Target Group: jaia-backend (Port 8090)              │    │
 │  │    ↓                                                │    │
 │  │ Health Check: GET /api/v1/health every 30sec        │    │
 │  └────────────────────────────────────────────────────┘    │
@@ -1152,7 +1152,7 @@ resource "azurerm_container_app" "backend" {
             # ヘルスチェック
             liveness_probe {
                 path = "/api/v1/health"
-                port = 8001
+                port = 8090
             }
         }
 
@@ -1164,7 +1164,7 @@ resource "azurerm_container_app" "backend" {
     # HTTPS公開
     ingress {
         external_enabled = true
-        target_port      = 8001
+        target_port      = 8090
     }
 }
 ```
@@ -1322,7 +1322,7 @@ resource "google_cloud_run_v2_service" "backend" {
             startup_probe {
                 http_get {
                     path = "/api/v1/health"
-                    port = 8001
+                    port = 8090
                 }
                 initial_delay_seconds = 10
             }
