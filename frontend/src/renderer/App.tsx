@@ -10,6 +10,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Layout from './components/Layout';
 import DashboardPage from './pages/DashboardPage';
 import ImportPage from './pages/ImportPage';
+import SearchPage from './pages/SearchPage';
+import TimeSeriesPage from './pages/TimeSeriesPage';
+import AccountsPage from './pages/AccountsPage';
 import SettingsPage from './pages/SettingsPage';
 import RiskPage from './pages/RiskPage';
 import AIAnalysisPage from './pages/AIAnalysisPage';
@@ -58,10 +61,10 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/import" element={<ImportPage />} />
-          <Route path="/timeseries" element={<DashboardPage />} />
-          <Route path="/accounts" element={<DashboardPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/timeseries" element={<TimeSeriesPage />} />
+          <Route path="/accounts" element={<AccountsPage />} />
           <Route path="/risk" element={<RiskPage />} />
-          <Route path="/search" element={<DashboardPage />} />
           <Route path="/ai-analysis" element={<AIAnalysisPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />

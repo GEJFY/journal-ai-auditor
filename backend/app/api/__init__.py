@@ -9,6 +9,8 @@ Routes:
 - /analysis - Analysis results endpoints
 - /reports - Report generation endpoints
 - /agents - AI agent endpoints
+- /journals - Journal entry search endpoints
+- /settings - Application settings endpoints
 """
 
 from fastapi import APIRouter
@@ -20,7 +22,9 @@ from app.api.endpoints import (
     dashboard,
     health,
     import_data,
+    journals,
     reports,
+    settings,
 )
 
 router = APIRouter()
@@ -59,4 +63,14 @@ router.include_router(
     agents.router,
     prefix="/agents",
     tags=["AI Agents"],
+)
+router.include_router(
+    journals.router,
+    prefix="/journals",
+    tags=["Journals"],
+)
+router.include_router(
+    settings.router,
+    prefix="/settings",
+    tags=["Settings"],
 )

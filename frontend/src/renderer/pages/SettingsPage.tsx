@@ -1,11 +1,12 @@
 /**
  * Settings Page
  *
- * Application settings and configuration.
+ * Application settings with backend synchronization.
  */
 
 import { useState, useEffect } from 'react';
-import { Save, Database, Bot, Palette } from 'lucide-react';
+import { Save, Database, Bot, Palette, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { API_BASE } from '@/lib/api';
 
 interface Settings {
   fiscalYearStart: string;
@@ -27,9 +28,11 @@ const defaultSettings: Settings = {
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [saved, setSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    // Load from localStorage first
     const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (stored) {
       try {
@@ -39,9 +42,31 @@ export default function SettingsPage() {
         // 破損データは無視
       }
     }
+
+    // Then fetch from backend
+    fetch(`${API_BASE}/settings`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.settings) {
+          setSettings((prev) => ({
+            ...prev,
+            fiscalYearStart: data.settings.fiscal_year_start || prev.fiscalYearStart,
+            llmProvider: data.settings.llm_provider || prev.llmProvider,
+            llmModel: data.settings.llm_model || prev.llmModel,
+            theme: data.settings.theme || prev.theme,
+          }));
+        }
+      })
+      .catch(() => {
+        // バックエンド未接続時はローカル設定を使用
+      });
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    setErrorMessage('');
+
+    // Save to localStorage (without API key)
     const { apiKey, ...safeSettings } = settings;
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(safeSettings));
 
@@ -49,8 +74,34 @@ export default function SettingsPage() {
       localStorage.setItem('jaia-api-key', btoa(apiKey));
     }
 
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    // Sync to backend
+    try {
+      const res = await fetch(`${API_BASE}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: {
+            fiscal_year_start: settings.fiscalYearStart,
+            llm_provider: settings.llmProvider,
+            llm_model: settings.llmModel,
+            theme: settings.theme,
+          },
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch {
+      // LocalStorage保存は成功しているので部分的成功として扱う
+      setSaveStatus('saved');
+      setErrorMessage('バックエンドへの同期に失敗しましたが、ローカルに保存されました');
+      setTimeout(() => {
+        setSaveStatus('idle');
+        setErrorMessage('');
+      }, 5000);
+    }
   };
 
   return (
@@ -117,7 +168,7 @@ export default function SettingsPage() {
               className="input"
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              APIキーはローカルに暗号化して保存されます
+              APIキーはローカルに暗号化して保存されます（バックエンドには送信されません）
             </p>
           </div>
         </div>
@@ -148,11 +199,31 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <button onClick={handleSave} className="btn btn-primary flex items-center gap-2">
-          <Save className="w-4 h-4" />
-          {saved ? '保存しました' : '設定を保存'}
+      {/* Save Button & Status */}
+      <div className="flex items-center justify-end gap-3">
+        {errorMessage && (
+          <div className="flex items-center gap-2 text-sm text-amber-600">
+            <AlertCircle className="w-4 h-4" />
+            {errorMessage}
+          </div>
+        )}
+        {saveStatus === 'saved' && !errorMessage && (
+          <div className="flex items-center gap-2 text-sm text-green-600">
+            <CheckCircle className="w-4 h-4" />
+            保存しました
+          </div>
+        )}
+        <button
+          onClick={handleSave}
+          disabled={saveStatus === 'saving'}
+          className="btn btn-primary flex items-center gap-2"
+        >
+          {saveStatus === 'saving' ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
+          {saveStatus === 'saving' ? '保存中...' : '設定を保存'}
         </button>
       </div>
     </div>

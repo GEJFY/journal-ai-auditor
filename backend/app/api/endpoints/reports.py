@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.db import DuckDBManager
+from app.db import DuckDBManager, SQLiteManager
 
 router = APIRouter()
 
@@ -23,6 +23,11 @@ router = APIRouter()
 def get_db() -> DuckDBManager:
     """Get DB instance."""
     return DuckDBManager()
+
+
+def get_sqlite() -> SQLiteManager:
+    """Get SQLite instance."""
+    return SQLiteManager()
 
 
 class ReportFormat(StrEnum):
@@ -763,11 +768,54 @@ async def get_report_history(
     Returns:
         List of previously generated reports.
     """
-    # In a real implementation, this would query a reports table
-    # For now, return empty history
+    db = get_sqlite()
+    try:
+        conditions = ["1=1"]
+        params: list[Any] = []
+
+        if fiscal_year:
+            conditions.append("fiscal_year = ?")
+            params.append(fiscal_year)
+
+        where = " AND ".join(conditions)
+        rows = db.execute(
+            f"""
+            SELECT report_id, report_type, filename, file_size,
+                   fiscal_year, period_from, period_to, created_at
+            FROM generated_reports
+            WHERE {where}
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            [*params, limit],
+        )
+
+        reports = [
+            {
+                "report_id": row[0],
+                "report_type": row[1],
+                "filename": row[2],
+                "file_size": row[3],
+                "fiscal_year": row[4],
+                "period_from": row[5],
+                "period_to": row[6],
+                "created_at": str(row[7]) if row[7] else None,
+            }
+            for row in rows
+        ]
+
+        count_rows = db.execute(
+            f"SELECT COUNT(*) FROM generated_reports WHERE {where}",
+            params,
+        )
+        total_count = count_rows[0][0] if count_rows else 0
+    except Exception:
+        reports = []
+        total_count = 0
+
     return {
-        "reports": [],
-        "total_count": 0,
+        "reports": reports,
+        "total_count": total_count,
     }
 
 

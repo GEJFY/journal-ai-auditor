@@ -241,15 +241,18 @@ async def get_accounts_analysis(
 
     query = f"""
         SELECT
-            gl_account_number,
-            COALESCE(SUM(CASE WHEN debit_credit_indicator = 'D' THEN amount ELSE 0 END), 0) as debit_total,
-            COALESCE(SUM(CASE WHEN debit_credit_indicator = 'C' THEN amount ELSE 0 END), 0) as credit_total,
-            COALESCE(SUM(amount), 0) as net_amount,
-            COUNT(*) as entry_count
-        FROM journal_entries
-        WHERE fiscal_year = ? {period_filter}
-        GROUP BY gl_account_number
-        ORDER BY ABS(net_amount) DESC
+            je.gl_account_number,
+            COALESCE(SUM(CASE WHEN je.debit_credit_indicator = 'D' THEN je.amount ELSE 0 END), 0) as debit_total,
+            COALESCE(SUM(CASE WHEN je.debit_credit_indicator = 'C' THEN je.amount ELSE 0 END), 0) as credit_total,
+            COALESCE(SUM(je.amount), 0) as net_amount,
+            COUNT(*) as entry_count,
+            MAX(coa.account_name) as account_name
+        FROM journal_entries je
+        LEFT JOIN chart_of_accounts coa
+            ON je.gl_account_number = coa.account_code
+        WHERE je.fiscal_year = ? {period_filter.replace('accounting_period', 'je.accounting_period')}
+        GROUP BY je.gl_account_number
+        ORDER BY ABS(COALESCE(SUM(je.amount), 0)) DESC
         LIMIT {limit}
     """
 
@@ -258,7 +261,7 @@ async def get_accounts_analysis(
     accounts = [
         AccountSummary(
             account_code=row[0] or "",
-            account_name=row[0] or "",  # Would join with chart_of_accounts
+            account_name=row[5] or row[0] or "",
             debit_total=row[1] or 0,
             credit_total=row[2] or 0,
             net_amount=row[3] or 0,
