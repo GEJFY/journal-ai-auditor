@@ -10,11 +10,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 vi.mock('lucide-react', () => ({
   Search: (props: Record<string, unknown>) => <span data-testid="icon-search" {...props} />,
   Filter: (props: Record<string, unknown>) => <span data-testid="icon-filter" {...props} />,
-  ChevronDown: (props: Record<string, unknown>) => <span data-testid="icon-chevron-down" {...props} />,
-  ChevronUp: (props: Record<string, unknown>) => <span data-testid="icon-chevron-up" {...props} />,
-  AlertTriangle: (props: Record<string, unknown>) => (
-    <span data-testid="icon-alert" {...props} />
+  ChevronDown: (props: Record<string, unknown>) => (
+    <span data-testid="icon-chevron-down" {...props} />
   ),
+  ChevronUp: (props: Record<string, unknown>) => <span data-testid="icon-chevron-up" {...props} />,
+  AlertTriangle: (props: Record<string, unknown>) => <span data-testid="icon-alert" {...props} />,
   FileText: (props: Record<string, unknown>) => <span data-testid="icon-file" {...props} />,
   Download: (props: Record<string, unknown>) => <span data-testid="icon-download" {...props} />,
 }));
@@ -58,9 +58,7 @@ describe('SearchPage', () => {
 
   it('shows initial state before search', () => {
     renderWithQuery(<SearchPage />);
-    expect(
-      screen.getByText('検索条件を入力して仕訳データを検索してください')
-    ).toBeTruthy();
+    expect(screen.getByText('検索条件を入力して仕訳データを検索してください')).toBeTruthy();
   });
 
   it('toggles advanced filters', () => {
@@ -140,8 +138,7 @@ describe('SearchPage', () => {
   it('resets filters on reset button click', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () =>
-        Promise.resolve({ entries: [], total_count: 0, page: 0, page_size: 50 }),
+      json: () => Promise.resolve({ entries: [], total_count: 0, page: 0, page_size: 50 }),
     });
 
     renderWithQuery(<SearchPage />);
@@ -155,8 +152,6 @@ describe('SearchPage', () => {
     });
 
     fireEvent.click(screen.getByText('リセット'));
-    expect(
-      screen.getByText('検索条件を入力して仕訳データを検索してください')
-    ).toBeTruthy();
+    expect(screen.getByText('検索条件を入力して仕訳データを検索してください')).toBeTruthy();
   });
 });

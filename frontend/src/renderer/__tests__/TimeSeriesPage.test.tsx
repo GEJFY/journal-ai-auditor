@@ -8,13 +8,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  TrendingUp: (props: Record<string, unknown>) => <span data-testid="icon-trending-up" {...props} />,
+  TrendingUp: (props: Record<string, unknown>) => (
+    <span data-testid="icon-trending-up" {...props} />
+  ),
   Calendar: (props: Record<string, unknown>) => <span data-testid="icon-calendar" {...props} />,
   BarChart3: (props: Record<string, unknown>) => <span data-testid="icon-bar-chart" {...props} />,
   RefreshCw: (props: Record<string, unknown>) => <span data-testid="icon-refresh" {...props} />,
-  ArrowUpRight: (props: Record<string, unknown>) => (
-    <span data-testid="icon-arrow-up" {...props} />
-  ),
+  ArrowUpRight: (props: Record<string, unknown>) => <span data-testid="icon-arrow-up" {...props} />,
   ArrowDownRight: (props: Record<string, unknown>) => (
     <span data-testid="icon-arrow-down" {...props} />
   ),

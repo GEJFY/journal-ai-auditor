@@ -86,7 +86,7 @@ async def update_settings(request: SettingsUpdateRequest) -> dict[str, Any]:
                     data_type = excluded.data_type,
                     updated_at = CURRENT_TIMESTAMP
                 """,
-                [key, str(value), data_type],
+                (key, str(value), data_type),
             )
             updated += 1
         except Exception:

@@ -10,9 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 vi.mock('lucide-react', () => ({
   FileText: (props: Record<string, unknown>) => <span data-testid="icon-file" {...props} />,
   RefreshCw: (props: Record<string, unknown>) => <span data-testid="icon-refresh" {...props} />,
-  ArrowUpDown: (props: Record<string, unknown>) => (
-    <span data-testid="icon-sort" {...props} />
-  ),
+  ArrowUpDown: (props: Record<string, unknown>) => <span data-testid="icon-sort" {...props} />,
   BarChart3: (props: Record<string, unknown>) => <span data-testid="icon-bar-chart" {...props} />,
   TrendingUp: (props: Record<string, unknown>) => (
     <span data-testid="icon-trending-up" {...props} />
