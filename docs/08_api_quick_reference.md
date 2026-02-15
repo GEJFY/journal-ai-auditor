@@ -8,7 +8,7 @@
 ## 基本情報
 
 | 項目 | 値 |
-|------|-----|
+| ---- | --- |
 | ベースURL | `http://localhost:8090/api/v1` |
 | 認証 | 不要（ローカル実行） |
 | Content-Type | `application/json` |
@@ -16,76 +16,98 @@
 
 ---
 
-## エンドポイント一覧
+## エンドポイント一覧（全41エンドポイント）
 
-### システム
-
-| メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/health` | ヘルスチェック |
-| GET | `/api/v1/health` | API健全性確認 |
-
-### データインポート
+### システム（2）
 
 | メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/v1/import/upload` | ファイルアップロード |
-| GET | `/api/v1/import/status/{import_id}` | インポート状況確認 |
+| ------- | ---- | ---- |
+| GET | `/health` | アプリケーションヘルスチェック |
+| GET | `/` | アプリ情報（名称・バージョン・APIパス） |
 
-### ダッシュボード
+### ヘルス（2）
 
 | メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/api/v1/dashboard/summary` | サマリー情報 |
+| ------- | ---- | ---- |
+| GET | `/api/v1/health/health` | API健全性確認 |
+| GET | `/api/v1/health/status` | 詳細ステータス（DB接続含む） |
+
+### データインポート（7）
+
+| メソッド | パス | 説明 |
+| ------- | ---- | ---- |
+| POST | `/api/v1/import/upload` | ファイルアップロード（CSV/XLSX/XLS） |
+| GET | `/api/v1/import/preview/{temp_file_id}` | アップロードファイルのプレビュー |
+| POST | `/api/v1/import/validate/{temp_file_id}` | バリデーション（エラー・警告レポート） |
+| POST | `/api/v1/import/execute` | インポート実行（カラムマッピング指定） |
+| POST | `/api/v1/import/master` | マスタデータインポート（勘定科目/部門/取引先/ユーザー） |
+| GET | `/api/v1/import/mapping/suggest` | カラムマッピング自動提案 |
+| DELETE | `/api/v1/import/temp/{temp_file_id}` | 一時ファイル削除 |
+
+### ダッシュボード（6）
+
+| メソッド | パス | 説明 |
+| ------- | ---- | ---- |
+| GET | `/api/v1/dashboard/summary` | サマリー（件数・金額・リスク件数） |
+| GET | `/api/v1/dashboard/timeseries` | 時系列データ（日次/週次/月次） |
+| GET | `/api/v1/dashboard/accounts` | 勘定科目別分析（借方/貸方合計） |
+| GET | `/api/v1/dashboard/risk` | リスク分析（High/Medium/Low/Minimal） |
 | GET | `/api/v1/dashboard/kpi` | KPI指標 |
-| GET | `/api/v1/dashboard/benford` | Benford分析結果 |
-| GET | `/api/v1/dashboard/timeseries` | 時系列データ |
-| GET | `/api/v1/dashboard/risk-distribution` | リスク分布 |
+| GET | `/api/v1/dashboard/benford` | Benford分布分析 |
 
-### バッチ処理
+### バッチ処理（5）
 
 | メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/v1/batch/execute` | バッチ処理実行 |
-| GET | `/api/v1/batch/rules` | ルール一覧 |
-| GET | `/api/v1/batch/status/{batch_id}` | バッチ状況確認 |
+| ------- | ---- | ---- |
+| POST | `/api/v1/batch/start` | 非同期バッチ開始（full/quick/ml_only/rules_only） |
+| GET | `/api/v1/batch/status/{job_id}` | ジョブ状況確認 |
+| GET | `/api/v1/batch/jobs` | 最近のジョブ一覧 |
+| GET | `/api/v1/batch/rules` | 登録ルール一覧（カテゴリ別） |
+| POST | `/api/v1/batch/run-sync` | 同期バッチ実行（時間がかかる場合あり） |
 
-### 分析
-
-| メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/api/v1/analysis/violations` | 違反仕訳一覧 |
-| GET | `/api/v1/analysis/ml-anomalies` | ML異常検知結果 |
-| GET | `/api/v1/analysis/benford-detail` | Benford詳細分析 |
-| GET | `/api/v1/analysis/risk-details` | リスク詳細 |
-
-### AIエージェント
+### 分析（6）
 
 | メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/api/v1/agents/analyze` | AI分析実行 |
-| GET | `/api/v1/agents/sessions/{session_id}` | セッション状況 |
-| POST | `/api/v1/agents/chat` | チャット送信 |
+| ------- | ---- | ---- |
+| GET | `/api/v1/analysis/violations` | ルール違反一覧（フィルタ対応） |
+| GET | `/api/v1/analysis/ml-anomalies` | ML異常検知結果（手法別） |
+| GET | `/api/v1/analysis/risk-details` | リスクスコア詳細（エントリ別） |
+| GET | `/api/v1/analysis/benford-detail` | Benford詳細分析（桁別分布） |
+| GET | `/api/v1/analysis/rules-summary` | ルール違反サマリー（ルール別・カテゴリ別） |
+| POST | `/api/v1/analysis/recalculate-scores` | リスクスコア再計算 |
 
-### レポート
+### AIエージェント（8）
 
 | メソッド | パス | 説明 |
-|---------|------|------|
+| ------- | ---- | ---- |
+| POST | `/api/v1/agents/ask` | QAエージェントに質問 |
+| POST | `/api/v1/agents/analyze` | リスク分析実行（分布・Benford・期間比較） |
+| POST | `/api/v1/agents/investigate` | 調査実行（エントリ・ユーザー・ルール・仕訳） |
+| POST | `/api/v1/agents/document` | 監査ドキュメント生成（サマリー・所見・マネジメントレター） |
+| POST | `/api/v1/agents/review` | 所見レビュー（レビュー・優先順位・改善提案） |
+| POST | `/api/v1/agents/workflow` | マルチエージェントワークフロー実行 |
+| GET | `/api/v1/agents/workflows` | 利用可能ワークフロー一覧 |
+| POST | `/api/v1/agents/route` | リクエスト自動ルーティング |
+
+### レポート（5）
+
+| メソッド | パス | 説明 |
+| ------- | ---- | ---- |
+| POST | `/api/v1/reports/generate` | レポート生成（7種類対応） |
 | GET | `/api/v1/reports/templates` | テンプレート一覧 |
-| POST | `/api/v1/reports/generate` | レポート生成 |
-| POST | `/api/v1/reports/export/ppt` | PPTエクスポート |
-| POST | `/api/v1/reports/export/pdf` | PDFエクスポート |
+| GET | `/api/v1/reports/history` | 生成履歴 |
+| GET | `/api/v1/reports/export/ppt` | PowerPointエクスポート |
+| GET | `/api/v1/reports/export/pdf` | PDFエクスポート |
 
 ---
 
 ## 共通クエリパラメータ
 
 | パラメータ | 型 | 説明 | 例 |
-|-----------|---|------|-----|
-| `fiscal_year` | integer | 会計年度 | `2024` |
-| `period_start` | date | 期間開始日 | `2024-04-01` |
-| `period_end` | date | 期間終了日 | `2025-03-31` |
-| `risk_level` | string | リスクレベル | `Critical,High` |
+| --------- | -- | ---- | --- |
+| `fiscal_year` | integer | 会計年度（必須が多い） | `2024` |
+| `period_from` | integer | 期間開始（会計期間番号） | `1` |
+| `period_to` | integer | 期間終了（会計期間番号） | `4` |
 | `limit` | integer | 取得件数上限 | `100` |
 | `offset` | integer | オフセット | `0` |
 
@@ -100,11 +122,13 @@ curl http://localhost:8090/health
 ```
 
 レスポンス:
+
 ```json
 {
   "status": "healthy",
   "app": "JAIA",
-  "version": "1.0.0"
+  "version": "0.2.1",
+  "timestamp": "2026-02-15T10:00:00Z"
 }
 ```
 
@@ -114,104 +138,34 @@ curl http://localhost:8090/health
 curl "http://localhost:8090/api/v1/dashboard/summary?fiscal_year=2024"
 ```
 
-レスポンス:
-```json
-{
-  "success": true,
-  "data": {
-    "total_entries": 150000,
-    "total_amount": 5000000000,
-    "risk_distribution": {
-      "Critical": 45,
-      "High": 342,
-      "Medium": 2100,
-      "Low": 147513
-    }
-  }
-}
-```
-
-### KPI取得
+### ファイルアップロード
 
 ```bash
-curl "http://localhost:8090/api/v1/dashboard/kpi?fiscal_year=2024"
+curl -X POST "http://localhost:8090/api/v1/import/upload" \
+  -F "file=@journal_entries.csv"
 ```
 
-レスポンス:
-```json
-{
-  "success": true,
-  "data": {
-    "total_entries": 150000,
-    "total_amount": 5000000000,
-    "critical_count": 45,
-    "high_count": 342,
-    "medium_count": 2100,
-    "low_count": 147513
-  }
-}
-```
-
-### Benford分析取得
+### バッチ処理実行（非同期）
 
 ```bash
-curl "http://localhost:8090/api/v1/dashboard/benford?fiscal_year=2024"
-```
-
-レスポンス:
-```json
-{
-  "success": true,
-  "data": {
-    "first_digit": {
-      "observed": [0.301, 0.176, 0.125, ...],
-      "expected": [0.301, 0.176, 0.125, ...],
-      "mad": 0.008,
-      "conformity": "Close Conformity"
-    }
-  }
-}
-```
-
-### 違反仕訳一覧取得
-
-```bash
-curl "http://localhost:8090/api/v1/analysis/violations?fiscal_year=2024&risk_level=Critical,High&limit=50"
-```
-
-### バッチ処理実行
-
-```bash
-curl -X POST "http://localhost:8090/api/v1/batch/execute" \
+curl -X POST "http://localhost:8090/api/v1/batch/start" \
   -H "Content-Type: application/json" \
-  -d '{"fiscal_year": 2024, "run_rules": true, "run_ml": true}'
+  -d '{"mode": "full", "fiscal_year": 2024}'
+```
+
+### AIエージェントに質問
+
+```bash
+curl -X POST "http://localhost:8090/api/v1/agents/ask" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "2024年度の高リスク仕訳を説明してください"}'
 ```
 
 ### PPTレポートエクスポート
 
 ```bash
-curl -X POST "http://localhost:8090/api/v1/reports/export/ppt" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fiscal_year": 2024,
-    "period_start": "2024-04-01",
-    "period_end": "2024-06-30",
-    "company_name": "株式会社サンプル"
-  }' \
+curl "http://localhost:8090/api/v1/reports/export/ppt?fiscal_year=2024" \
   --output report.pptx
-```
-
-### PDFレポートエクスポート
-
-```bash
-curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fiscal_year": 2024,
-    "period_start": "2024-04-01",
-    "period_end": "2024-06-30"
-  }' \
-  --output report.pdf
 ```
 
 ---
@@ -226,7 +180,7 @@ curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
   "data": { ... },
   "meta": {
     "request_id": "abc123",
-    "timestamp": "2024-01-15T10:00:00Z",
+    "timestamp": "2026-02-15T10:00:00Z",
     "processing_time_ms": 150
   }
 }
@@ -244,7 +198,7 @@ curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
   },
   "meta": {
     "request_id": "abc123",
-    "timestamp": "2024-01-15T10:00:00Z"
+    "timestamp": "2026-02-15T10:00:00Z"
   }
 }
 ```
@@ -254,21 +208,34 @@ curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
 ## エラーコード
 
 | コード | HTTPステータス | 説明 |
-|--------|---------------|------|
+| ------ | ------------- | ---- |
 | `VALIDATION_ERROR` | 400 | リクエスト検証エラー |
+| `SUSPICIOUS_REQUEST` | 400 | 不正リクエスト検出 |
+| `IP_BLOCKED` | 403 | IPブロック |
 | `NOT_FOUND` | 404 | リソースが見つからない |
 | `CONFLICT` | 409 | リソース競合 |
 | `IMPORT_ERROR` | 422 | インポート処理失敗 |
+| `RATE_LIMIT_EXCEEDED` | 429 | レート制限超過 |
 | `ANALYSIS_ERROR` | 500 | 分析処理失敗 |
-| `LLM_PROVIDER_ERROR` | 503 | LLMプロバイダーエラー |
 | `INTERNAL_ERROR` | 500 | 内部エラー |
+| `LLM_PROVIDER_ERROR` | 503 | LLMプロバイダーエラー |
+
+---
+
+## レート制限
+
+| ヘッダー | 説明 |
+| ------- | ---- |
+| `X-RateLimit-Limit` | ウィンドウあたりの最大リクエスト数（デフォルト: 100） |
+| `X-RateLimit-Remaining` | 残りリクエスト数 |
+| `Retry-After` | 制限解除までの秒数（429レスポンス時） |
 
 ---
 
 ## リスクレベル定義
 
 | レベル | スコア範囲 | 説明 |
-|--------|----------|------|
+| ------ | --------- | ---- |
 | Critical | 80-100 | 即時対応が必要 |
 | High | 60-79 | 優先的な確認が必要 |
 | Medium | 40-59 | 通常の確認対象 |
@@ -279,7 +246,7 @@ curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
 ## 監査ルールカテゴリ
 
 | カテゴリ | コード | ルール数 | 説明 |
-|---------|--------|---------|------|
+| ------- | ------ | ------- | ---- |
 | 金額 | AMT | 12 | 金額に関する異常検出 |
 | 時間 | TIM | 10 | 時間・日付に関する異常検出 |
 | 勘定科目 | ACC | 10 | 勘定科目に関する異常検出 |
@@ -291,84 +258,10 @@ curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
 
 ## Swagger UI
 
-開発環境では Swagger UI が利用可能です:
+開発環境（`DEBUG=true`）では Swagger UI が利用可能です:
 
 - Swagger UI: `http://localhost:8090/docs`
 - ReDoc: `http://localhost:8090/redoc`
 - OpenAPI JSON: `http://localhost:8090/openapi.json`
 
-※ 本番環境（`debug=false`）ではセキュリティ上の理由で無効化されます。
-
----
-
-## Python クライアント例
-
-```python
-import httpx
-
-BASE_URL = "http://localhost:8090/api/v1"
-
-async def get_dashboard_summary(fiscal_year: int):
-    """ダッシュボードサマリーを取得"""
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{BASE_URL}/dashboard/summary",
-            params={"fiscal_year": fiscal_year}
-        )
-        return response.json()
-
-async def get_violations(fiscal_year: int, risk_level: str = "Critical,High"):
-    """違反仕訳を取得"""
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{BASE_URL}/analysis/violations",
-            params={
-                "fiscal_year": fiscal_year,
-                "risk_level": risk_level
-            }
-        )
-        return response.json()
-
-async def export_ppt_report(fiscal_year: int, output_path: str):
-    """PPTレポートをエクスポート"""
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"{BASE_URL}/reports/export/ppt",
-            json={"fiscal_year": fiscal_year}
-        )
-        with open(output_path, "wb") as f:
-            f.write(response.content)
-```
-
----
-
-## TypeScript クライアント例
-
-```typescript
-const BASE_URL = "http://localhost:8090/api/v1";
-
-interface DashboardSummary {
-  total_entries: number;
-  total_amount: number;
-  risk_distribution: Record<string, number>;
-}
-
-async function getDashboardSummary(fiscalYear: number): Promise<DashboardSummary> {
-  const response = await fetch(
-    `${BASE_URL}/dashboard/summary?fiscal_year=${fiscalYear}`
-  );
-  const data = await response.json();
-  return data.data;
-}
-
-async function getViolations(
-  fiscalYear: number,
-  riskLevel: string = "Critical,High"
-): Promise<Violation[]> {
-  const response = await fetch(
-    `${BASE_URL}/analysis/violations?fiscal_year=${fiscalYear}&risk_level=${riskLevel}`
-  );
-  const data = await response.json();
-  return data.data.violations;
-}
-```
+※ 本番環境（`DEBUG=false`）ではセキュリティ上の理由で無効化されます。
