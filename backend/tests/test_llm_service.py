@@ -443,12 +443,15 @@ class TestGenerateAzureFoundry:
         mock_client.complete.return_value = mock_response
         service._client = mock_client
 
-        with patch.dict("sys.modules", {
-            "azure": MagicMock(),
-            "azure.ai": MagicMock(),
-            "azure.ai.inference": MagicMock(),
-            "azure.ai.inference.models": MagicMock(),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "azure": MagicMock(),
+                "azure.ai": MagicMock(),
+                "azure.ai.inference": MagicMock(),
+                "azure.ai.inference.models": MagicMock(),
+            },
+        ):
             result = service.generate("テスト")
 
         assert result.content == "Foundryの回答"
@@ -471,12 +474,15 @@ class TestGenerateAzureFoundry:
         mock_client.complete.return_value = mock_response
         service._client = mock_client
 
-        with patch.dict("sys.modules", {
-            "azure": MagicMock(),
-            "azure.ai": MagicMock(),
-            "azure.ai.inference": MagicMock(),
-            "azure.ai.inference.models": MagicMock(),
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "azure": MagicMock(),
+                "azure.ai": MagicMock(),
+                "azure.ai.inference": MagicMock(),
+                "azure.ai.inference.models": MagicMock(),
+            },
+        ):
             result = service.generate("テスト")
 
         assert result.content == "Claude on Foundry"
