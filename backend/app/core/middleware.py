@@ -668,10 +668,10 @@ def setup_middleware(app: FastAPI) -> None:
     # セキュリティヘッダーミドルウェア（最初に実行）
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # CORS設定（本番環境では適切なオリジンを設定）
+    # CORS設定（環境変数 CORS_ALLOWED_ORIGINS で設定可能）
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5290", "http://127.0.0.1:5290"],
+        allow_origins=settings.get_cors_origins(),
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],

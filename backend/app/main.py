@@ -67,6 +67,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         },
     )
 
+    # 設定の検証
+    warnings = settings.validate_for_production()
+    for w in warnings:
+        logger.warning(f"設定警告: {w}")
+
     # データディレクトリの確保
     logger.info("データディレクトリを確認しています...")
     settings.ensure_data_dir()
@@ -161,13 +166,7 @@ def create_app() -> FastAPI:
     # ========================================
     # CORSミドルウェア
     # ========================================
-    # 開発環境ではローカルホストからのアクセスを許可
-    cors_origins = [
-        "http://localhost:5290",
-        "http://127.0.0.1:5290",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]
+    cors_origins = settings.get_cors_origins()
 
     app.add_middleware(
         CORSMiddleware,

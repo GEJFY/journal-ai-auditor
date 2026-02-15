@@ -269,6 +269,9 @@ class Settings(BaseSettings):
     llm_requests_per_minute: int = 60
     llm_tokens_per_minute: int = 100000
 
+    # CORS
+    cors_allowed_origins: str = "http://localhost:5290,http://127.0.0.1:5290"
+
     # Logging
     log_level: str = "INFO"
     log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -284,6 +287,34 @@ class Settings(BaseSettings):
     def get_recommended_model(self, use_case: str = "balanced") -> dict[str, Any]:
         """Get recommended model for use case."""
         return RECOMMENDED_MODELS.get(use_case, RECOMMENDED_MODELS["balanced"])
+
+    def get_cors_origins(self) -> list[str]:
+        """Get CORS allowed origins as list."""
+        return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+
+    def validate_for_production(self) -> list[str]:
+        """Validate settings for production deployment. Returns list of warnings."""
+        warnings = []
+        if self.environment == "production" and self.debug:
+            warnings.append("DEBUG is enabled in production environment")
+        if self.llm_provider != "ollama" and not self._has_llm_credentials():
+            warnings.append(
+                f"No credentials configured for LLM provider: {self.llm_provider}"
+            )
+        return warnings
+
+    def _has_llm_credentials(self) -> bool:
+        """Check if LLM credentials are configured."""
+        cred_map = {
+            "anthropic": self.anthropic_api_key,
+            "openai": self.openai_api_key,
+            "google": self.google_api_key,
+            "bedrock": self.aws_access_key_id,
+            "azure_foundry": self.azure_foundry_api_key,
+            "vertex_ai": self.gcp_project_id,
+            "azure": self.azure_openai_api_key,
+        }
+        return bool(cred_map.get(self.llm_provider))
 
 
 settings = Settings()
