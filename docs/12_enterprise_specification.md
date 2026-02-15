@@ -1772,9 +1772,9 @@ mkdir logs
 # =====================================
 # Step 5: バックエンド起動
 # =====================================
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8090 --reload
 
-# 確認: http://127.0.0.1:8001/docs にアクセス
+# 確認: http://127.0.0.1:8090/docs にアクセス
 
 # =====================================
 # Step 6: フロントエンドセットアップ
@@ -1782,7 +1782,7 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 # 新しいターミナルを開く
 cd ../frontend
 npm install
-npm run dev:vite
+npm run dev
 
 # 確認: http://localhost:5290 にアクセス
 ```

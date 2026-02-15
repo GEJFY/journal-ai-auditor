@@ -74,17 +74,27 @@ cd journal-ai-auditor
 ### 起動
 
 ```powershell
-# 全サービス起動（バックエンド + フロントエンド）
-.\scripts\start_all.ps1
+# ワンクリック起動（推奨）
+.\start.ps1
 
-# または個別起動
-.\scripts\start_backend.ps1   # バックエンド: http://localhost:8090
-.\scripts\start_frontend.ps1  # フロントエンド: http://localhost:5290
+# または start.bat をダブルクリック
+```
+
+バックエンド（`http://localhost:8090`）とフロントエンド（`http://localhost:5290`）が自動起動します。
+
+個別起動も可能です:
+
+```powershell
+.\scripts\start_backend.ps1   # バックエンドのみ
+.\scripts\start_frontend.ps1  # フロントエンドのみ
 ```
 
 ### 動作確認
 
 ```powershell
+# ヘルスチェック
+curl http://localhost:8090/health
+
 # 統合テスト実行
 .\scripts\test_integration.ps1
 ```

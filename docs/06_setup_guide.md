@@ -191,7 +191,7 @@ INFO:     Started reloader process
 
 ```powershell
 cd frontend
-npm run dev:vite
+npm run dev
 ```
 
 成功すると以下が表示されます：

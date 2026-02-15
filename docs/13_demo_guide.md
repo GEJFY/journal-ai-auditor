@@ -129,23 +129,33 @@ JAIAには「グローバル塗料株式会社」というモデル企業のリ�
 
 ## 3. 環境起動
 
-### 3.1 バックエンドの起動
+### 3.1 ワンクリック起動（推奨）
+
+プロジェクトルートで以下を実行するだけで、バックエンドとフロントエンドが自動起動します。
+
+```powershell
+.\start.ps1
+```
+
+または `start.bat` をダブルクリック。
+
+### 3.2 手動起動
+
+**ターミナル1（バックエンド）:**
 
 ```powershell
 cd backend
 .\venv\Scripts\Activate.ps1
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8090 --reload
 ```
 
-確認: ブラウザで http://localhost:8090/docs を開く → Swagger UIが表示
+確認: ブラウザで `http://localhost:8090/docs` を開く → Swagger UIが表示
 
-### 3.2 フロントエンドの起動
-
-新しいターミナルを開いて：
+**ターミナル2（フロントエンド）:**
 
 ```powershell
 cd frontend
-npm run dev:vite
+npm run dev
 ```
 
 確認: ブラウザで http://localhost:5290 を開く → JAIAダッシュボードが表示
@@ -406,7 +416,7 @@ python scripts/load_sample_data.py
 cd frontend
 Remove-Item -Recurse node_modules -ErrorAction SilentlyContinue
 npm install
-npm run dev:vite
+npm run dev
 ```
 
 ---
