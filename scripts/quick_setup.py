@@ -260,7 +260,7 @@ def configure_llm(project_root: Path) -> None:
         "",
         "# Server",
         "HOST=127.0.0.1",
-        "PORT=8001",
+        "PORT=8090",
         "",
         "# Database",
         "DATA_DIR=./data",
@@ -373,7 +373,7 @@ def main():
     print(f"   python ..\\scripts\\load_sample_data.py")
     print()
     print(f"{Colors.CYAN}2.{Colors.END} バックエンドを起動:")
-    print(f"   python -m uvicorn app.main:app --host 127.0.0.1 --port 8001")
+    print(f"   python -m uvicorn app.main:app --host 127.0.0.1 --port 8090")
     print()
     print(f"{Colors.CYAN}3.{Colors.END} フロントエンドを起動（別ターミナル）:")
     print(f"   cd frontend && npm run dev")
