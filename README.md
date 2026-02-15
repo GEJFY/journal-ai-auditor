@@ -280,9 +280,34 @@ Proprietary License - Copyright (c) 2026 Go Yoshizawa. All rights reserved. 詳�
 
 ---
 
+## セキュリティ
+
+セキュリティに関する詳細は [SECURITY.md](SECURITY.md) を参照してください。
+
+脆弱性を発見した場合は、GitHub Issueではなく直接メンテナーに報告してください。
+
+---
+
 ## 更新履歴
 
-### v1.0.0 (2026-02-02)
+詳細は [CHANGELOG.md](CHANGELOG.md) を参照してください。
+
+### v0.2.1 (2026-02-15)
+
+- Azure AI Foundry SDK移行
+- ポート統一 (Backend:8090 / Frontend:5290)
+- セキュリティヘッダー強化
+- CORS環境変数化
+- ドキュメント整備
+
+### v0.2.0 (2026-02-09)
+
+- マルチクラウドLLM対応（8プロバイダー）
+- Docker/Terraform/CI/CD追加
+- エンタープライズセキュリティ機能
+
+### v0.1.0 (2026-02-02)
+
 - 初回リリース
 - 58監査ルール実装
 - 5種ML異常検知
