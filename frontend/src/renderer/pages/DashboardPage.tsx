@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
@@ -16,7 +17,6 @@ import {
   ArrowRight,
   Shield,
   BarChart3,
-  HelpCircle,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -35,6 +35,7 @@ import {
 import { api } from '../lib/api';
 import PageHeader from '../components/ui/PageHeader';
 import StatCard from '../components/dashboard/StatCard';
+import HelpTooltip from '../components/ui/HelpTooltip';
 import clsx from 'clsx';
 
 // Professional color palette
@@ -52,6 +53,7 @@ const CHART_COLORS = {
 };
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [fiscalYear] = useFiscalYear();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -154,7 +156,10 @@ export default function DashboardPage() {
                 {kpi.high_risk_pct.toFixed(1)}%) 検出されています。詳細な調査を推奨します。
               </p>
             </div>
-            <button className="btn bg-white/10 text-white hover:bg-white/20 border-0">
+            <button
+              className="btn bg-white/10 text-white hover:bg-white/20 border-0"
+              onClick={() => navigate('/reports')}
+            >
               詳細レポート
               <ArrowRight size={16} />
             </button>
@@ -205,9 +210,7 @@ export default function DashboardPage() {
               <BarChart3 size={20} className="text-neutral-400" />
               <h3 className="font-semibold text-neutral-800">月次推移</h3>
             </div>
-            <button className="text-neutral-400 hover:text-neutral-600">
-              <HelpCircle size={16} />
-            </button>
+            <HelpTooltip id="dashboard-timeseries" position="left" />
           </div>
           <div className="card-body">
             {timeSeriesLoading ? (
@@ -276,9 +279,7 @@ export default function DashboardPage() {
               <Shield size={20} className="text-neutral-400" />
               <h3 className="font-semibold text-neutral-800">リスク分布</h3>
             </div>
-            <button className="text-neutral-400 hover:text-neutral-600">
-              <HelpCircle size={16} />
-            </button>
+            <HelpTooltip id="dashboard-risk-distribution" position="left" />
           </div>
           <div className="card-body">
             {riskPieData.length > 0 ? (
@@ -355,9 +356,7 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header flex items-center justify-between">
             <h3 className="font-semibold text-neutral-800">ベンフォード分析</h3>
-            <button className="text-neutral-400 hover:text-neutral-600">
-              <HelpCircle size={16} />
-            </button>
+            <HelpTooltip id="benford-analysis" position="left" />
           </div>
           <div className="card-body">
             {benford?.distribution && benford.distribution.length > 0 ? (
@@ -418,7 +417,10 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header flex items-center justify-between">
             <h3 className="font-semibold text-neutral-800">高リスク仕訳（上位5件）</h3>
-            <button className="text-sm text-accent-600 hover:text-accent-700 font-medium">
+            <button
+              className="text-sm text-accent-600 hover:text-accent-700 font-medium"
+              onClick={() => navigate('/risk')}
+            >
               すべて表示
             </button>
           </div>
