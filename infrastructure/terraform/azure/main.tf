@@ -1,7 +1,7 @@
 # =============================================================================
 # JAIA Azure Infrastructure
 # =============================================================================
-# Azure Foundry (GPT-5.2) / Azure OpenAI を使用した監査AIシステム
+# Azure AI Foundry (GPT-5.2) を使用した監査AIシステム
 #
 # 使用方法:
 #   cd infrastructure/terraform/azure
@@ -131,7 +131,7 @@ resource "azurerm_subnet" "private" {
 }
 
 # =============================================================================
-# Azure OpenAI Service
+# Azure AI Foundry Service
 # =============================================================================
 
 resource "azurerm_cognitive_account" "openai" {
@@ -154,19 +154,19 @@ resource "azurerm_cognitive_account" "openai" {
   tags = azurerm_resource_group.main.tags
 }
 
-# GPT-5.2 デプロイメント（Azure Foundry）
+# GPT-5.2 デプロイメント（Azure AI Foundry）
 resource "azurerm_cognitive_deployment" "gpt5" {
   name                 = "gpt-5-2-deployment"
   cognitive_account_id = azurerm_cognitive_account.openai.id
 
   model {
     format  = "OpenAI"
-    name    = "gpt-5.2"
-    version = "2026-01"
+    name    = "gpt-5.2-chat"
+    version = "2025-12-11"
   }
 
   scale {
-    type     = "Standard"
+    type     = "GlobalStandard"
     capacity = 10
   }
 }
@@ -396,7 +396,7 @@ output "container_app_url" {
 }
 
 output "openai_endpoint" {
-  description = "Azure OpenAI endpoint"
+  description = "Azure AI Foundry endpoint"
   value       = azurerm_cognitive_account.openai.endpoint
 }
 

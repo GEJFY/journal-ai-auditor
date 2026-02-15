@@ -237,11 +237,11 @@ class Settings(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_bedrock_endpoint: str | None = None  # Optional custom endpoint
 
-    # Azure Foundry (GPT-5 series + Claude)
+    # Azure AI Foundry (GPT-5 series + Claude) - azure-ai-inference SDK
     azure_foundry_endpoint: str | None = None
     azure_foundry_api_key: str | None = None
     azure_foundry_deployment: str | None = None
-    azure_foundry_api_version: str = "2026-01-01"
+    azure_foundry_api_version: str = "2024-10-21"
 
     # GCP Vertex AI (Gemini 3.0 series)
     # Gemini 3.0: "global" リージョンのみ対応

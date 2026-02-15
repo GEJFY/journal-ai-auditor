@@ -426,11 +426,13 @@ class TestGenerateAzure:
 
 
 class TestGenerateAzureFoundry:
-    """Test _generate_azure_foundry method."""
+    """Test _generate_azure_foundry method (azure-ai-inference SDK)."""
 
-    def test_generate_azure_foundry_gpt5(self):
+    @patch("app.services.llm.service.settings")
+    def test_generate_azure_foundry_gpt5(self, mock_s):
         config = LLMConfig(provider="azure_foundry", model="gpt-5.2")
         service = LLMService(config=config)
+        mock_s.azure_foundry_deployment = "gpt52-deploy"
 
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -438,19 +440,28 @@ class TestGenerateAzureFoundry:
         mock_response.model = "gpt-5.2"
         mock_response.usage.prompt_tokens = 20
         mock_response.usage.completion_tokens = 40
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_client.complete.return_value = mock_response
         service._client = mock_client
 
-        with patch("app.services.llm.service.settings") as mock_s:
-            mock_s.azure_foundry_deployment = "gpt52-deploy"
+        with patch.dict(
+            "sys.modules",
+            {
+                "azure": MagicMock(),
+                "azure.ai": MagicMock(),
+                "azure.ai.inference": MagicMock(),
+                "azure.ai.inference.models": MagicMock(),
+            },
+        ):
             result = service.generate("テスト")
 
         assert result.content == "Foundryの回答"
         assert result.provider == "azure_foundry"
 
-    def test_generate_azure_foundry_claude(self):
+    @patch("app.services.llm.service.settings")
+    def test_generate_azure_foundry_claude(self, mock_s):
         config = LLMConfig(provider="azure_foundry", model="claude-sonnet-4-5")
         service = LLMService(config=config)
+        mock_s.azure_foundry_deployment = None
 
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -460,11 +471,18 @@ class TestGenerateAzureFoundry:
         mock_response.model = "claude-sonnet-4-5"
         mock_response.usage.prompt_tokens = 15
         mock_response.usage.completion_tokens = 35
-        mock_client.chat.completions.create.return_value = mock_response
+        mock_client.complete.return_value = mock_response
         service._client = mock_client
 
-        with patch("app.services.llm.service.settings") as mock_s:
-            mock_s.azure_foundry_deployment = None
+        with patch.dict(
+            "sys.modules",
+            {
+                "azure": MagicMock(),
+                "azure.ai": MagicMock(),
+                "azure.ai.inference": MagicMock(),
+                "azure.ai.inference.models": MagicMock(),
+            },
+        ):
             result = service.generate("テスト")
 
         assert result.content == "Claude on Foundry"
