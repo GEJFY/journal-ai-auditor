@@ -5,9 +5,9 @@ Supports:
 - OpenAI Direct API (GPT-5.2, GPT-5, o3-pro, o3, o4-mini)
 - Google AI Studio (Gemini 3 Flash, Gemini 2.5 Pro)
 - AWS Bedrock (Claude Opus 4.6, Nova Premier/Pro/Lite) - Enterprise
-- Azure AI Foundry (GPT-5.2, Claude Opus 4.6) - Latest Models
+- Azure AI Foundry (GPT-5.2, Claude Opus 4.6) - azure-ai-inference SDK
 - GCP Vertex AI (Gemini 3 Pro/Flash) - Cost Effective
-- Azure OpenAI (Legacy GPT-4o)
+- Azure OpenAI (Legacy GPT-4o) - openai SDK
 - Ollama (Phi-4, Llama 3.3, DeepSeek R1) - Local Development
 """
 
@@ -75,12 +75,12 @@ class LLMService:
             )
 
         elif provider == "azure_foundry":
-            from openai import AzureOpenAI
+            from azure.ai.inference import ChatCompletionsClient
+            from azure.core.credentials import AzureKeyCredential
 
-            self._client = AzureOpenAI(
-                api_key=settings.azure_foundry_api_key,
-                api_version=settings.azure_foundry_api_version,
-                azure_endpoint=settings.azure_foundry_endpoint,
+            self._client = ChatCompletionsClient(
+                endpoint=settings.azure_foundry_endpoint,
+                credential=AzureKeyCredential(settings.azure_foundry_api_key),
             )
 
         elif provider == "vertex_ai":
@@ -310,32 +310,22 @@ class LLMService:
     def _generate_azure_foundry(
         self, client, prompt: str, system: str | None, **kwargs
     ) -> LLMResponse:
-        """Generate using Azure Foundry (GPT-5 series + Claude)."""
+        """Generate using Azure AI Foundry (azure-ai-inference SDK)."""
+        from azure.ai.inference.models import SystemMessage, UserMessage
+
         messages = []
         if system:
-            messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
+            messages.append(SystemMessage(content=system))
+        messages.append(UserMessage(content=prompt))
 
-        model = self.config.model
-        deployment = settings.azure_foundry_deployment or model
+        deployment = settings.azure_foundry_deployment or self.config.model
 
-        # Handle Claude models on Azure Foundry
-        if "claude" in model.lower():
-            # Claude models use Anthropic-style API on Azure Foundry
-            response = client.chat.completions.create(
-                model=deployment,
-                max_tokens=self.config.max_tokens,
-                temperature=self.config.temperature,
-                messages=messages,
-            )
-        else:
-            # GPT-5 series models
-            response = client.chat.completions.create(
-                model=deployment,
-                max_tokens=self.config.max_tokens,
-                temperature=self.config.temperature,
-                messages=messages,
-            )
+        response = client.complete(
+            model=deployment,
+            messages=messages,
+            max_tokens=self.config.max_tokens,
+            temperature=self.config.temperature,
+        )
 
         return LLMResponse(
             content=response.choices[0].message.content,

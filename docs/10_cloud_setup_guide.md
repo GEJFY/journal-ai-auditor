@@ -6,7 +6,7 @@ AI分析機能に使用するLLMプロバイダーの設定方法を説明しま
 
 1. [概要](#1-概要)
 2. [AWS Bedrock（推奨・エンタープライズ）](#2-aws-bedrock推奨エンタープライズ)
-3. [Azure Foundry（最新GPT-5）](#3-azure-foundry最新gpt-5)
+3. [Azure AI Foundry（最新GPT-5）](#3-azure-ai-foundry最新gpt-5)
 4. [GCP Vertex AI（コスパ・Gemini 3.0）](#4-gcp-vertex-aiコスパgemini-30)
 5. [Anthropic Claude（直接API）](#5-anthropic-claude直接api)
 6. [OpenAI GPT（直接API）](#6-openai-gpt直接api)
@@ -124,7 +124,7 @@ print('Bedrock connection: OK')
 
 ---
 
-## 3. Azure Foundry（最新GPT-5）
+## 3. Azure AI Foundry（最新GPT-5）
 
 ### 利用可能モデル（2026年最新）
 
@@ -149,7 +149,7 @@ LLM_MODEL=gpt-5.2
 AZURE_FOUNDRY_ENDPOINT=https://your-foundry.openai.azure.com/
 AZURE_FOUNDRY_API_KEY=xxxxxxxx
 AZURE_FOUNDRY_DEPLOYMENT=gpt-5-2-deployment
-AZURE_FOUNDRY_API_VERSION=2026-01-01
+AZURE_FOUNDRY_API_VERSION=2024-10-21
 ```
 
 ### 接続テスト
@@ -159,7 +159,7 @@ python -c "
 from app.services.llm import LLMService, LLMConfig
 config = LLMConfig(provider='azure_foundry', model='gpt-5.2')
 service = LLMService(config)
-print('Azure Foundry connection: OK')
+print('Azure AI Foundry connection: OK')
 "
 ```
 
@@ -551,11 +551,12 @@ for use_case, info in recommended.items():
 - IAMポリシー設定必須
 - リージョン: us-east-1 または us-west-2 推奨
 
-#### Azure Foundry
+#### Azure AI Foundry
 
 - GPT-5モデルはプレビュー申請が必要な場合あり
 - デプロイメント名を確認
-- APIバージョンは `2026-01-01`
+- APIバージョンは `2024-10-21`
+- SDK: `azure-ai-inference` (`pip install azure-ai-inference azure-core`)
 
 #### GCP Vertex AI
 

@@ -157,6 +157,8 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
         )
 
     elif provider == "azure_foundry":
+        # Azure AI Foundry (OpenAI互換エンドポイント経由)
+        # LangChain公式Azure AI Foundryアダプター未提供のためAzureChatOpenAIを使用
         from langchain_openai import AzureChatOpenAI
 
         return AzureChatOpenAI(
@@ -165,7 +167,7 @@ def create_llm(config: AgentConfig) -> BaseChatModel:
             api_key=settings.azure_foundry_api_key,
             api_version=settings.azure_foundry_api_version,
             temperature=config.temperature,
-            max_tokens=config.max_tokens,
+            max_completion_tokens=config.max_tokens,
         )
 
     elif provider == "bedrock":
