@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
   FileText,
   RefreshCw,
@@ -23,7 +24,7 @@ type SortKey = 'net_amount' | 'entry_count' | 'debit_total' | 'credit_total';
 type SortDir = 'asc' | 'desc';
 
 export default function AccountsPage() {
-  const [fiscalYear] = useState(2024);
+  const [fiscalYear] = useFiscalYear();
   const [sortKey, setSortKey] = useState<SortKey>('net_amount');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isRefreshing, setIsRefreshing] = useState(false);

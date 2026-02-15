@@ -7,6 +7,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Mock useFiscalYear hook
+vi.mock('../lib/useFiscalYear', () => ({
+  useFiscalYear: () => [2024, vi.fn()],
+}));
+
 // Mock the api module
 vi.mock('../lib/api', () => ({
   api: {

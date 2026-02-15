@@ -6,6 +6,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Mock useFiscalYear hook
+vi.mock('../lib/useFiscalYear', () => ({
+  useFiscalYear: () => [2024, vi.fn()],
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   FileText: (props: Record<string, unknown>) => <span data-testid="icon-file-text" {...props} />,
@@ -27,6 +32,7 @@ vi.mock('lucide-react', () => ({
 
 // Mock API - getReportTemplates returns { templates: [...] } wrapper
 vi.mock('../lib/api', () => ({
+  API_BASE: 'http://localhost:8090/api/v1',
   api: {
     getReportTemplates: vi.fn().mockResolvedValue({
       templates: [

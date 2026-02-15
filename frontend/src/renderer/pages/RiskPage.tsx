@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import { AlertTriangle, AlertCircle, Info, ChevronRight, Filter } from 'lucide-react';
 import {
   BarChart,
@@ -79,7 +80,7 @@ function RiskCard({ item, level }: RiskCardProps) {
 }
 
 export default function RiskPage() {
-  const [fiscalYear] = useState(2024);
+  const [fiscalYear] = useFiscalYear();
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
   const { data: riskData, isLoading } = useQuery({
