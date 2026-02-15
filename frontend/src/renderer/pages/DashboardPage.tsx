@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
   FileText,
   TrendingUp,
@@ -51,7 +52,7 @@ const CHART_COLORS = {
 };
 
 export default function DashboardPage() {
-  const [fiscalYear] = useState(2024);
+  const [fiscalYear] = useFiscalYear();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {

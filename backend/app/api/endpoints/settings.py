@@ -6,12 +6,15 @@ Application settings endpoints.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.db import SQLiteManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -38,6 +41,7 @@ async def get_settings() -> dict[str, Any]:
     try:
         rows = db.execute("SELECT key, value, data_type FROM app_settings")
     except Exception:
+        logger.warning("Failed to read app_settings table; returning empty settings")
         rows = []
 
     settings: dict[str, Any] = {}
@@ -90,6 +94,6 @@ async def update_settings(request: SettingsUpdateRequest) -> dict[str, Any]:
             )
             updated += 1
         except Exception:
-            pass
+            logger.error("Failed to update setting '%s': %s", key, value, exc_info=True)
 
     return {"updated": updated, "success": True}

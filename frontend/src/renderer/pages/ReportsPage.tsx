@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
   FileText,
   Download,
@@ -19,7 +20,7 @@ import {
   Shield,
   BarChart3,
 } from 'lucide-react';
-import { api, type ReportRequest, type ReportTemplate } from '../lib/api';
+import { api, API_BASE, type ReportRequest, type ReportTemplate } from '../lib/api';
 
 const REPORT_ICONS: Record<string, React.ReactNode> = {
   summary: <FileText className="w-6 h-6" />,
@@ -40,7 +41,7 @@ interface GeneratedReport {
 }
 
 export default function ReportsPage() {
-  const [fiscalYear] = useState(2024);
+  const [fiscalYear] = useFiscalYear();
   const [selectedReport, setSelectedReport] = useState<GeneratedReport | null>(null);
   const [generatedReports, setGeneratedReports] = useState<GeneratedReport[]>([]);
 
@@ -72,6 +73,24 @@ export default function ReportsPage() {
       include_details: true,
       format: 'json',
     });
+  };
+
+  const handleDownloadJson = (report: GeneratedReport) => {
+    const blob = new Blob([JSON.stringify(report.data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${report.type}_${fiscalYear}_${report.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPpt = () => {
+    window.open(`${API_BASE}/reports/export/ppt?fiscal_year=${fiscalYear}`, '_blank');
+  };
+
+  const handleExportPdf = () => {
+    window.open(`${API_BASE}/reports/export/pdf?fiscal_year=${fiscalYear}`, '_blank');
   };
 
   if (templatesLoading) {
@@ -155,10 +174,22 @@ export default function ReportsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded">
+                      <button
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedReport(report);
+                        }}
+                      >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded">
+                      <button
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadJson(report);
+                        }}
+                      >
                         <Download className="w-4 h-4" />
                       </button>
                     </div>
@@ -174,9 +205,26 @@ export default function ReportsPage() {
                       {selectedReport.name} プレビュー
                     </h4>
                     <div className="flex gap-2">
-                      <button className="btn-secondary flex items-center gap-2">
+                      <button
+                        className="btn-secondary flex items-center gap-2"
+                        onClick={() => handleDownloadJson(selectedReport)}
+                      >
                         <Download className="w-4 h-4" />
-                        ダウンロード
+                        JSON
+                      </button>
+                      <button
+                        className="btn-secondary flex items-center gap-2"
+                        onClick={handleExportPpt}
+                      >
+                        <FileBarChart className="w-4 h-4" />
+                        PPT
+                      </button>
+                      <button
+                        className="btn-secondary flex items-center gap-2"
+                        onClick={handleExportPdf}
+                      >
+                        <FileText className="w-4 h-4" />
+                        PDF
                       </button>
                     </div>
                   </div>

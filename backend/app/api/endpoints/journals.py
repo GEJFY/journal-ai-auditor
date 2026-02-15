@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Query
+from fastapi.responses import StreamingResponse
 
 from app.db import DuckDBManager
 
@@ -155,3 +156,134 @@ async def search_journals(
         "page": offset // limit if limit else 0,
         "page_size": limit,
     }
+
+
+@router.get("/export")
+async def export_journals_csv(
+    fiscal_year: int = Query(...),
+    keyword: str | None = Query(None),
+    account: str | None = Query(None),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    min_amount: float | None = Query(None, ge=0),
+    max_amount: float | None = Query(None, ge=0),
+    prepared_by: str | None = Query(None),
+    risk_score_min: float | None = Query(None, ge=0, le=100),
+) -> StreamingResponse:
+    """Export search results as CSV.
+
+    Uses the same filters as /search but returns a CSV file.
+    """
+    import csv
+    import io
+
+    from fastapi.responses import StreamingResponse
+
+    db = get_db()
+
+    conditions = ["je.fiscal_year = ?"]
+    params: list[Any] = [fiscal_year]
+
+    if keyword:
+        conditions.append(
+            "(je.journal_id ILIKE ? OR je.description ILIKE ?"
+            " OR je.gl_account_number ILIKE ?)"
+        )
+        kw = f"%{keyword}%"
+        params.extend([kw, kw, kw])
+
+    if account:
+        conditions.append("je.gl_account_number = ?")
+        params.append(account)
+
+    if date_from:
+        conditions.append("je.effective_date >= ?")
+        params.append(date_from)
+
+    if date_to:
+        conditions.append("je.effective_date <= ?")
+        params.append(date_to)
+
+    if min_amount is not None:
+        conditions.append("je.amount >= ?")
+        params.append(min_amount)
+
+    if max_amount is not None:
+        conditions.append("je.amount <= ?")
+        params.append(max_amount)
+
+    if prepared_by:
+        conditions.append("je.prepared_by ILIKE ?")
+        params.append(f"%{prepared_by}%")
+
+    if risk_score_min is not None:
+        conditions.append("COALESCE(je.risk_score, 0) >= ?")
+        params.append(risk_score_min)
+
+    where = " AND ".join(conditions)
+
+    query = f"""
+        SELECT
+            je.journal_id,
+            je.effective_date,
+            je.gl_account_number,
+            COALESCE(coa.account_name, '') as account_name,
+            je.amount,
+            je.debit_credit_indicator,
+            je.description,
+            je.prepared_by,
+            je.approved_by,
+            COALESCE(je.risk_score, 0) as risk_score
+        FROM journal_entries je
+        LEFT JOIN chart_of_accounts coa
+            ON je.gl_account_number = coa.account_code
+        WHERE {where}
+        ORDER BY je.effective_date DESC, je.journal_id
+        LIMIT 10000
+    """
+
+    rows = db.execute(query, params)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "仕訳ID",
+            "日付",
+            "勘定科目コード",
+            "勘定科目名",
+            "金額",
+            "借方/貸方",
+            "摘要",
+            "起票者",
+            "承認者",
+            "リスクスコア",
+        ]
+    )
+    for row in rows:
+        writer.writerow(
+            [
+                row[0] or "",
+                str(row[1]) if row[1] else "",
+                row[2] or "",
+                row[3] or "",
+                float(row[4] or 0),
+                "借方" if row[5] == "D" else "貸方" if row[5] == "C" else row[5] or "",
+                row[6] or "",
+                row[7] or "",
+                row[8] or "",
+                float(row[9] or 0),
+            ]
+        )
+
+    csv_bytes = output.getvalue().encode("utf-8-sig")
+
+    filename = f"journal_search_{fiscal_year}.csv"
+    return StreamingResponse(
+        iter([csv_bytes]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Length": str(len(csv_bytes)),
+        },
+    )

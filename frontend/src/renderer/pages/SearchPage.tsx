@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
   Search,
   Filter,
@@ -54,24 +55,27 @@ interface SearchResult {
   page_size: number;
 }
 
-const DEFAULT_FILTERS: SearchFilters = {
-  fiscal_year: 2024,
-  keyword: '',
-  account: '',
-  date_from: '',
-  date_to: '',
-  min_amount: '',
-  max_amount: '',
-  prepared_by: '',
-  risk_score_min: '',
-};
+function makeDefaultFilters(fiscalYear: number): SearchFilters {
+  return {
+    fiscal_year: fiscalYear,
+    keyword: '',
+    account: '',
+    date_from: '',
+    date_to: '',
+    min_amount: '',
+    max_amount: '',
+    prepared_by: '',
+    risk_score_min: '',
+  };
+}
 
 // =============================================================================
 // Component
 // =============================================================================
 
 export default function SearchPage() {
-  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+  const [fiscalYear] = useFiscalYear();
+  const [filters, setFilters] = useState<SearchFilters>(() => makeDefaultFilters(fiscalYear));
   const [submittedFilters, setSubmittedFilters] = useState<SearchFilters | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [page, setPage] = useState(0);
@@ -112,10 +116,26 @@ export default function SearchPage() {
   );
 
   const handleReset = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+    setFilters(makeDefaultFilters(fiscalYear));
     setSubmittedFilters(null);
     setPage(0);
-  }, []);
+  }, [fiscalYear]);
+
+  const handleExportCsv = useCallback(() => {
+    if (!submittedFilters) return;
+    const params = new URLSearchParams();
+    params.append('fiscal_year', submittedFilters.fiscal_year.toString());
+    if (submittedFilters.keyword) params.append('keyword', submittedFilters.keyword);
+    if (submittedFilters.account) params.append('account', submittedFilters.account);
+    if (submittedFilters.date_from) params.append('date_from', submittedFilters.date_from);
+    if (submittedFilters.date_to) params.append('date_to', submittedFilters.date_to);
+    if (submittedFilters.min_amount) params.append('min_amount', submittedFilters.min_amount);
+    if (submittedFilters.max_amount) params.append('max_amount', submittedFilters.max_amount);
+    if (submittedFilters.prepared_by) params.append('prepared_by', submittedFilters.prepared_by);
+    if (submittedFilters.risk_score_min)
+      params.append('risk_score_min', submittedFilters.risk_score_min);
+    window.open(`${API_BASE}/journals/export?${params}`, '_blank');
+  }, [submittedFilters]);
 
   const riskBadge = (score: number) => {
     if (score >= 80) return 'badge badge-danger';
@@ -267,7 +287,7 @@ export default function SearchPage() {
               </h3>
             </div>
             {data && data.total_count > 0 && (
-              <button className="btn btn-secondary btn-sm">
+              <button className="btn btn-secondary btn-sm" onClick={handleExportCsv}>
                 <Download className="w-4 h-4" />
                 CSV出力
               </button>

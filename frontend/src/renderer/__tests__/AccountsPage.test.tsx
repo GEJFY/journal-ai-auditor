@@ -6,6 +6,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Mock useFiscalYear hook
+vi.mock('../lib/useFiscalYear', () => ({
+  useFiscalYear: () => [2024, vi.fn()],
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   FileText: (props: Record<string, unknown>) => <span data-testid="icon-file" {...props} />,

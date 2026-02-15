@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
   TrendingUp,
   Calendar,
@@ -43,7 +44,7 @@ const CHART_COLORS = {
 };
 
 export default function TimeSeriesPage() {
-  const [fiscalYear] = useState(2024);
+  const [fiscalYear] = useFiscalYear();
   const [aggregation, setAggregation] = useState<Aggregation>('monthly');
   const [chartType, setChartType] = useState<'area' | 'bar' | 'line'>('area');
   const [isRefreshing, setIsRefreshing] = useState(false);
