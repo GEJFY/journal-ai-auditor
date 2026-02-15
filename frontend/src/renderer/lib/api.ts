@@ -4,7 +4,7 @@
  * Provides typed API access to the backend.
  */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+export const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:8090/api/v1';
 
 // =============================================================================
 // Dashboard Types
@@ -259,7 +259,8 @@ export const api = {
   // Health
   // ---------------------------------------------------------------------------
   healthCheck: (): Promise<{ status: string; app: string; version: string }> => {
-    return fetch('http://localhost:8000/health').then((r) => r.json());
+    const base = API_BASE.replace(/\/api\/v1$/, '');
+    return fetch(`${base}/health`).then((r) => r.json());
   },
 
   // ---------------------------------------------------------------------------

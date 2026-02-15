@@ -175,17 +175,17 @@ npm install
 ```powershell
 cd backend
 .\venv\Scripts\activate
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8090 --reload
 ```
 
 成功すると以下が表示されます：
 
 ```
-INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://127.0.0.1:8090 (Press CTRL+C to quit)
 INFO:     Started reloader process
 ```
 
-ブラウザで http://127.0.0.1:8001/docs を開くと、API仕様書が表示されます。
+ブラウザで http://127.0.0.1:8090/docs を開くと、API仕様書が表示されます。
 
 **ターミナル2 — フロントエンド:**
 
@@ -199,10 +199,10 @@ npm run dev:vite
 ```
   VITE v6.x.x  ready in xxx ms
 
-  ➜  Local:   http://localhost:5180/
+  ➜  Local:   http://localhost:5290/
 ```
 
-ブラウザで http://localhost:5180 を開くと、JAIAのダッシュボードが表示されます。
+ブラウザで http://localhost:5290 を開くと、JAIAのダッシュボードが表示されます。
 
 ---
 
@@ -520,8 +520,8 @@ Configuration OK
 
 バックエンド起動後、以下のURLにアクセス：
 
-- http://127.0.0.1:8001/health → `{"status":"healthy"}` が表示されればOK
-- http://127.0.0.1:8001/docs → Swagger UIでAPIを確認
+- http://127.0.0.1:8090/health → `{"status":"healthy"}` が表示されればOK
+- http://127.0.0.1:8090/docs → Swagger UIでAPIを確認
 
 ### 5.2 統合テスト
 
@@ -648,7 +648,7 @@ docker build -t jaia-backend:latest .
 # 実行
 docker run -d \
   --name jaia-backend \
-  -p 8001:8001 \
+  -p 8090:8090 \
   -e LLM_PROVIDER=ollama \
   -e LLM_MODEL=phi4 \
   -v jaia-data:/app/data \
@@ -659,7 +659,7 @@ docker run -d \
 
 ```bash
 # バックエンドポート
-ufw allow 8001/tcp
+ufw allow 8090/tcp
 
 # フロントエンドポート（Nginx使用時）
 ufw allow 80/tcp
@@ -745,7 +745,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **解決方法**:
 ```powershell
 # 使用中のポートを確認
-netstat -ano | findstr :8001
+netstat -ano | findstr :8090
 
 # プロセスを終了（PIDを指定）
 taskkill /PID <表示されたPID> /F
@@ -819,8 +819,8 @@ python -m uvicorn app.main:app --reload --log-level debug
 |---|------|-------------|---------|
 | 1 | Python | `python --version` | 3.11.x 以上 |
 | 2 | Node.js | `node --version` | 18.x.x 以上 |
-| 3 | バックエンド起動 | `curl http://localhost:8001/health` | `{"status":"healthy"}` |
-| 4 | フロントエンド起動 | ブラウザで http://localhost:5180 | ダッシュボード表示 |
+| 3 | バックエンド起動 | `curl http://localhost:8090/health` | `{"status":"healthy"}` |
+| 4 | フロントエンド起動 | ブラウザで http://localhost:5290 | ダッシュボード表示 |
 | 5 | 統合テスト | `.\scripts\test_integration.ps1` | All tests passed |
 
 ### B. ファイルパス一覧
@@ -838,8 +838,8 @@ python -m uvicorn app.main:app --reload --log-level debug
 
 | サービス | デフォルトポート | 設定変数 |
 |---------|----------------|---------|
-| バックエンドAPI | 8001 | `PORT` |
-| フロントエンド（開発） | 5180 | `vite.config.ts` |
+| バックエンドAPI | 8090 | `PORT` |
+| フロントエンド（開発） | 5290 | `vite.config.ts` |
 | Ollama | 11434 | `OLLAMA_BASE_URL` |
 
 ### D. 8プロバイダー設定早見表

@@ -1,12 +1,31 @@
-"""Azure AI Foundry gpt-5.2 接続テスト (azure-ai-inference SDK)"""
+"""Azure AI Foundry gpt-5.2 接続テスト (azure-ai-inference SDK)
+
+環境変数から認証情報を読み込みます。
+backend/.env が設定されていれば dotenv 経由でも読み込み可能です。
+"""
+
+import os
+import sys
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 
-ENDPOINT = "https://aoai-jaia-demo2.openai.azure.com/"
-API_KEY = "70ogFGysFkPmDDJfsAspiTo82YXiR8EeO9l1R8IEB7zYjIFC1qlgJQQJ99CBACHYHv6XJ3w3AAABACOGTR0s"
-DEPLOYMENT = "gpt-52-deployment"
+ENDPOINT = os.environ.get("AZURE_FOUNDRY_ENDPOINT", "")
+API_KEY = os.environ.get("AZURE_FOUNDRY_API_KEY", "")
+DEPLOYMENT = os.environ.get("AZURE_FOUNDRY_DEPLOYMENT", "gpt-52-deployment")
+
+if not ENDPOINT or not API_KEY:
+    print("ERROR: AZURE_FOUNDRY_ENDPOINT and AZURE_FOUNDRY_API_KEY must be set.")
+    print("Set environment variables or configure backend/.env")
+    sys.exit(1)
 
 print(f"Endpoint: {ENDPOINT}")
 print(f"Deployment: {DEPLOYMENT}")
@@ -28,5 +47,7 @@ response = client.complete(
 
 print(f"Response: {response.choices[0].message.content}")
 print(f"Model: {response.model}")
-print(f"Tokens: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
+print(
+    f"Tokens: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}"
+)
 print("\n=== SUCCESS ===")

@@ -137,7 +137,7 @@ cd backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-確認: ブラウザで http://localhost:8001/docs を開く → Swagger UIが表示
+確認: ブラウザで http://localhost:8090/docs を開く → Swagger UIが表示
 
 ### 3.2 フロントエンドの起動
 
@@ -148,7 +148,7 @@ cd frontend
 npm run dev:vite
 ```
 
-確認: ブラウザで http://localhost:5180 を開く → JAIAダッシュボードが表示
+確認: ブラウザで http://localhost:5290 を開く → JAIAダッシュボードが表示
 
 ### 3.3 サンプルデータのロード
 
@@ -178,7 +178,7 @@ python scripts/insert_sample_violations.py
 
 ### Step 1: ダッシュボードを開く
 
-1. ブラウザで http://localhost:5180 にアクセス
+1. ブラウザで http://localhost:5290 にアクセス
 2. 「ダッシュボード」ページが表示される
 
 ### Step 2: KPIカードの確認
@@ -199,7 +199,7 @@ python scripts/insert_sample_violations.py
 
 ### Step 4: データ取込のデモ（APIで実施）
 
-Swagger UI（http://localhost:8001/docs）を使って：
+Swagger UI（http://localhost:8090/docs）を使って：
 
 1. `POST /api/v1/import/upload` エンドポイントを開く
 2. `sample_data/10_journal_entries.csv` をアップロード

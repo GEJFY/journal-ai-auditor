@@ -88,7 +88,7 @@ Write-Step "3/5" "バックエンドの状態を確認しています..."
 
 $BackendRunning = $false
 try {
-    $health = Invoke-RestMethod -Uri "http://localhost:8001/health" -Method GET -TimeoutSec 5
+    $health = Invoke-RestMethod -Uri "http://localhost:8090/health" -Method GET -TimeoutSec 5
     if ($health.status -eq "healthy") {
         Write-Host "  ✓ バックエンドは既に起動しています" -ForegroundColor Green
         $BackendRunning = $true
@@ -103,7 +103,7 @@ try {
     if ($answer -eq "Y" -or $answer -eq "y") {
         Write-Host "  バックエンドを起動しています..." -ForegroundColor Yellow
         Set-Location $BackendDir
-        Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8001" -WindowStyle Normal
+        Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8090" -WindowStyle Normal
         Set-Location $ProjectRoot
 
         Write-Host "  起動を待機しています..." -ForegroundColor Gray
@@ -111,7 +111,7 @@ try {
 
         # 再度確認
         try {
-            $health = Invoke-RestMethod -Uri "http://localhost:8001/health" -Method GET -TimeoutSec 10
+            $health = Invoke-RestMethod -Uri "http://localhost:8090/health" -Method GET -TimeoutSec 10
             if ($health.status -eq "healthy") {
                 Write-Host "  ✓ バックエンドが起動しました" -ForegroundColor Green
                 $BackendRunning = $true
@@ -133,7 +133,7 @@ if (-not $BackendRunning) {
 # Step 4: APIエンドポイントのテスト
 Write-Step "4/5" "APIエンドポイントをテストしています..."
 
-$BaseUrl = "http://localhost:8001"
+$BaseUrl = "http://localhost:8090"
 $AllPassed = $true
 
 $AllPassed = (Test-Endpoint "Health Check" "$BaseUrl/health") -and $AllPassed
@@ -154,13 +154,13 @@ if ($AllPassed) {
     Write-Host ""
     Write-Host "  次のステップ:" -ForegroundColor Cyan
     Write-Host "  1. ブラウザで Swagger UI を開く:" -ForegroundColor White
-    Write-Host "     http://localhost:8001/docs" -ForegroundColor Yellow
+    Write-Host "     http://localhost:8090/docs" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "  2. フロントエンドを起動する:" -ForegroundColor White
     Write-Host "     .\scripts\start_frontend.ps1" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "  3. サンプルデータをインポートする:" -ForegroundColor White
-    Write-Host "     POST http://localhost:8001/api/v1/import/upload" -ForegroundColor Yellow
+    Write-Host "     POST http://localhost:8090/api/v1/import/upload" -ForegroundColor Yellow
 } else {
     Write-Host ""
     Write-Host "  一部のテストが失敗しました。" -ForegroundColor Yellow

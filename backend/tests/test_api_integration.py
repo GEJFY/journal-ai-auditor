@@ -130,7 +130,7 @@ class TestCORSHeaders:
         response = client.options(
             "/api/v1/health",
             headers={
-                "Origin": "http://localhost:5173",
+                "Origin": "http://localhost:5290",
                 "Access-Control-Request-Method": "GET",
             },
         )

@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Continue"
 
-$BaseUrl = "http://localhost:8000"
+$BaseUrl = "http://localhost:8090"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  JAIA Integration Tests" -ForegroundColor Cyan

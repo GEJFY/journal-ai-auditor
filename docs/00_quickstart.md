@@ -136,10 +136,10 @@ AZURE_OPENAI_DEPLOYMENT=your-deployment-name
 
 ```powershell
 # backendディレクトリで実行
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8090 --reload
 ```
 
-ブラウザで `http://127.0.0.1:8001/docs` を開いてAPIドキュメントが表示されれば成功です。
+ブラウザで `http://127.0.0.1:8090/docs` を開いてAPIドキュメントが表示されれば成功です。
 
 ### Step 5: フロントエンドのセットアップ
 
@@ -155,7 +155,7 @@ npm install
 npm run dev:vite
 ```
 
-ブラウザで `http://localhost:5180` を開いてアプリが表示されれば成功です。
+ブラウザで `http://localhost:5290` を開いてアプリが表示されれば成功です。
 
 ---
 

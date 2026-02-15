@@ -49,8 +49,8 @@ $env:JAIA_LOG_LEVEL = "INFO"
 # Start the server
 Write-Host ""
 Write-Host "Starting JAIA Backend Server..." -ForegroundColor Green
-Write-Host "API Docs: http://localhost:8000/docs" -ForegroundColor Cyan
-Write-Host "Health Check: http://localhost:8000/health" -ForegroundColor Cyan
+Write-Host "API Docs: http://localhost:8090/docs" -ForegroundColor Cyan
+Write-Host "Health Check: http://localhost:8090/health" -ForegroundColor Cyan
 Write-Host ""
 
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8090 --reload

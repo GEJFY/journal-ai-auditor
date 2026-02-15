@@ -12,12 +12,12 @@ services:
     container_name: jaia-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-8001}:8001"
+      - "${BACKEND_PORT:-8090}:8090"
     environment:
       - APP_NAME=JAIA
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - DEBUG=${DEBUG:-false}
-      - PORT=8001
+      - PORT=8090
       - HOST=0.0.0.0
       # Database
       - DATA_DIR=/app/data
@@ -60,7 +60,7 @@ services:
       - jaia-data:/app/data
       - ${GCP_CREDENTIALS_PATH:-./credentials}:/app/credentials:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
       interval: 30s
       timeout: 10s
       retries: 3

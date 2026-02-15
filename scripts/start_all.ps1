@@ -32,9 +32,9 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "  JAIA is starting up!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Backend API:  http://localhost:8000" -ForegroundColor Cyan
-Write-Host "API Docs:     http://localhost:8000/docs" -ForegroundColor Cyan
-Write-Host "Frontend:     http://localhost:5173" -ForegroundColor Cyan
+Write-Host "Backend API:  http://localhost:8090" -ForegroundColor Cyan
+Write-Host "API Docs:     http://localhost:8090/docs" -ForegroundColor Cyan
+Write-Host "Frontend:     http://localhost:5290" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Press any key to exit this window..." -ForegroundColor Gray
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

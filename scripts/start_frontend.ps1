@@ -24,7 +24,7 @@ if (-not (Test-Path $NodeModules)) {
 # Start the development server
 Write-Host ""
 Write-Host "Starting JAIA Frontend..." -ForegroundColor Green
-Write-Host "Development URL: http://localhost:5173" -ForegroundColor Cyan
+Write-Host "Development URL: http://localhost:5290" -ForegroundColor Cyan
 Write-Host ""
 
 npm run dev

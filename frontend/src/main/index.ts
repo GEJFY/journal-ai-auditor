@@ -41,7 +41,7 @@ function createWindow(): BrowserWindow {
 
   // Load the app
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL('http://localhost:5290');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -68,7 +68,7 @@ function startBackend(): void {
   const backendPath = path.join(process.resourcesPath, 'backend');
   const pythonExe = path.join(backendPath, 'python.exe');
 
-  backendProcess = spawn(pythonExe, ['-m', 'uvicorn', 'app.main:app', '--port', '8000'], {
+  backendProcess = spawn(pythonExe, ['-m', 'uvicorn', 'app.main:app', '--port', '8090'], {
     cwd: backendPath,
     stdio: 'pipe',
   });

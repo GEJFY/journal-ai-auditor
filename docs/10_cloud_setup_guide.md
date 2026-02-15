@@ -451,7 +451,7 @@ services:
   backend:
     build: .
     ports:
-      - "8001:8001"
+      - "8090:8090"
     environment:
       - LLM_PROVIDER=${LLM_PROVIDER:-bedrock}
       - LLM_MODEL=${LLM_MODEL:-anthropic.claude-sonnet-4-6-opus-20260115-v1:0}
@@ -483,10 +483,10 @@ services:
 
 ```bash
 # バックエンド
-curl http://localhost:8001/health
+curl http://localhost:8090/health
 
 # API
-curl http://localhost:8001/api/v1/health
+curl http://localhost:8090/api/v1/health
 ```
 
 ---

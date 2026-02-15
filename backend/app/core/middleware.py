@@ -671,7 +671,7 @@ def setup_middleware(app: FastAPI) -> None:
     # CORS設定（本番環境では適切なオリジンを設定）
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5180", "http://127.0.0.1:5180"],
+        allow_origins=["http://localhost:5290", "http://127.0.0.1:5290"],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],

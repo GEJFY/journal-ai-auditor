@@ -45,8 +45,8 @@ JAIA（Journal entry AI Analyzer）は、仕訳データのリスク分析を自
 
 1. **アプリケーションを起動**
    ```
-   フロントエンド: http://localhost:5180
-   バックエンドAPI: http://localhost:8001
+   フロントエンド: http://localhost:5290
+   バックエンドAPI: http://localhost:8090
    ```
 
 2. **初回起動時のオンボーディング**

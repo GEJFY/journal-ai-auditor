@@ -1784,7 +1784,7 @@ cd ../frontend
 npm install
 npm run dev:vite
 
-# 確認: http://localhost:5180 にアクセス
+# 確認: http://localhost:5290 にアクセス
 ```
 
 ### 8.2 クラウド環境デプロイ
