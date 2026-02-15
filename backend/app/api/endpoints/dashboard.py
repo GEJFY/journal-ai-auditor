@@ -250,7 +250,7 @@ async def get_accounts_analysis(
         FROM journal_entries je
         LEFT JOIN chart_of_accounts coa
             ON je.gl_account_number = coa.account_code
-        WHERE je.fiscal_year = ? {period_filter.replace('accounting_period', 'je.accounting_period')}
+        WHERE je.fiscal_year = ? {period_filter.replace("accounting_period", "je.accounting_period")}
         GROUP BY je.gl_account_number
         ORDER BY ABS(COALESCE(SUM(je.amount), 0)) DESC
         LIMIT {limit}

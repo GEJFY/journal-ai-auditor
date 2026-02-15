@@ -116,14 +116,16 @@ async def search_journals(
         FROM journal_entries je
         LEFT JOIN chart_of_accounts coa
             ON je.gl_account_number = coa.account_code
-        WHERE {where.replace('fiscal_year', 'je.fiscal_year')
-               .replace('journal_id', 'je.journal_id')
-               .replace('description', 'je.description')
-               .replace('gl_account_number', 'je.gl_account_number')
-               .replace('effective_date', 'je.effective_date')
-               .replace('amount', 'je.amount')
-               .replace('prepared_by', 'je.prepared_by')
-               .replace('risk_score', 'je.risk_score')}
+        WHERE {
+        where.replace("fiscal_year", "je.fiscal_year")
+        .replace("journal_id", "je.journal_id")
+        .replace("description", "je.description")
+        .replace("gl_account_number", "je.gl_account_number")
+        .replace("effective_date", "je.effective_date")
+        .replace("amount", "je.amount")
+        .replace("prepared_by", "je.prepared_by")
+        .replace("risk_score", "je.risk_score")
+    }
         ORDER BY je.effective_date DESC, je.journal_id, je.journal_id_line_number
         LIMIT {limit} OFFSET {offset}
     """
