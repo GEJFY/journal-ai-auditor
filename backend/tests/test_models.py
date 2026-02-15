@@ -123,7 +123,7 @@ class TestConfigModels:
         from app.core.config import settings
 
         assert settings.app_name == "JAIA"
-        assert settings.port == 8001
+        assert settings.port == 8090
         assert settings.llm_provider in [
             "anthropic",
             "openai",

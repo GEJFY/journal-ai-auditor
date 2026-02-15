@@ -58,7 +58,7 @@ JAIAは仕訳データのAI監査を行うエンタープライズシステム�
 |  |              (ECS/Container Apps/Cloud Run)                |     |
 |  |  +---------+  +---------+  +---------+                    |     |
 |  |  |Backend 1|  |Backend 2|  |Backend N|  Auto-scaling      |     |
-|  |  | :8001   |  | :8001   |  | :8001   |                    |     |
+|  |  | :8090   |  | :8090   |  | :8090   |                    |     |
 |  |  +----+----+  +----+----+  +----+----+                    |     |
 |  |       |            |            |                          |     |
 |  |  +----v------------v------------v----+                    |     |
@@ -95,7 +95,7 @@ JAIAは仕訳データのAI監査を行うエンタープライズシステム�
 
 | サービス | ポート | プロトコル | 説明 |
 |----------|--------|----------|------|
-| Backend API | 8001 | HTTP | FastAPI アプリケーション |
+| Backend API | 8090 | HTTP | FastAPI アプリケーション |
 | Frontend | 80/443 | HTTP/HTTPS | Nginx 静的配信 |
 | Redis | 6379 | TCP | キャッシュ（本番のみ） |
 | DuckDB | - | ファイルI/O | 組み込みDB（ポート不要） |
@@ -612,7 +612,7 @@ is_blocked = ip_block_manager.is_blocked("192.168.1.100")
 
 ```python
 # 許可オリジン
-allow_origins = ["http://localhost:5180", "http://127.0.0.1:5180"]
+allow_origins = ["http://localhost:5290", "http://127.0.0.1:5290"]
 allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 allow_headers = ["*"]
 allow_credentials = True
@@ -706,7 +706,7 @@ gcloud run services update jaia-backend \
 
 ```dockerfile
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8001/health || exit 1
+    CMD curl -f http://localhost:8090/health || exit 1
 ```
 
 #### ALBヘルスチェック設定 (AWS)
@@ -1290,7 +1290,7 @@ find logs/ -name "jaia_performance.log.*" -mtime +14 -delete
 # Dockerfile CMD
 CMD ["python", "-m", "uvicorn", "app.main:app",
      "--host", "0.0.0.0",
-     "--port", "8001",
+     "--port", "8090",
      "--workers", "4"]
 
 # 本番環境での推奨設定
@@ -1734,10 +1734,10 @@ docker-compose up -d backend
 docker logs jaia-backend --tail 100
 
 # 2. ポート接続の確認
-curl -v http://localhost:8001/health
+curl -v http://localhost:8090/health
 
 # 3. DuckDB/SQLiteの状態確認
-curl -s http://localhost:8001/api/v1/status | jq .
+curl -s http://localhost:8090/api/v1/status | jq .
 
 # 4. リソース使用量の確認
 docker stats jaia-backend --no-stream
@@ -1970,7 +1970,7 @@ with open('logs/jaia_security.log') as f:
 | ENVIRONMENT | development | 環境名 (development/staging/production) | Yes |
 | DEBUG | false | デバッグモード | No |
 | HOST | 127.0.0.1 | バインドホスト | No |
-| PORT | 8001 | バインドポート | No |
+| PORT | 8090 | バインドポート | No |
 | LLM_PROVIDER | bedrock | LLMプロバイダー | Yes |
 | LLM_MODEL | us.anthropic.claude-opus-4-6-... | LLMモデル | Yes |
 | DATA_DIR | ./data | データディレクトリ | No |
@@ -2000,7 +2000,7 @@ with open('logs/jaia_security.log') as f:
 
 | サービス | イメージ | ポート | ボリューム | プロファイル |
 |---------|---------|--------|-----------|------------|
-| backend | ビルド (Dockerfile) | 8001:8001 | jaia-data:/app/data | デフォルト |
+| backend | ビルド (Dockerfile) | 8090:8090 | jaia-data:/app/data | デフォルト |
 | frontend | nginx:alpine | 80:80 | ./frontend/dist | デフォルト |
 | redis | redis:7-alpine | 6379:6379 | redis-data:/data | production |
 

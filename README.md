@@ -78,8 +78,8 @@ cd journal-ai-auditor
 .\scripts\start_all.ps1
 
 # または個別起動
-.\scripts\start_backend.ps1   # バックエンド: http://localhost:8001
-.\scripts\start_frontend.ps1  # フロントエンド: http://localhost:5180
+.\scripts\start_backend.ps1   # バックエンド: http://localhost:8090
+.\scripts\start_frontend.ps1  # フロントエンド: http://localhost:5290
 ```
 
 ### 動作確認

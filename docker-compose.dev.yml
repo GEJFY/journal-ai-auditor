@@ -11,12 +11,12 @@ services:
     container_name: jaia-backend-dev
     restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "8090:8090"
     environment:
       - APP_NAME=JAIA
       - ENVIRONMENT=development
       - DEBUG=true
-      - PORT=8001
+      - PORT=8090
       - HOST=0.0.0.0
       - DATA_DIR=/app/data
       - DUCKDB_PATH=/app/data/jaia.duckdb

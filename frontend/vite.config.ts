@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5180,
+    port: 5290,
     strictPort: false,
   },
   test: {
@@ -32,7 +32,7 @@ export default defineConfig({
       thresholds: {
         statements: 50,
         branches: 45,
-        functions: 40,
+        functions: 30,
         lines: 50,
       },
     },

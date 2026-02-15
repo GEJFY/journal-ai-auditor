@@ -14,7 +14,7 @@ JAIAアプリケーションのメインエントリーポイントです。
         uvicorn app.main:app --reload --log-level debug
 
     本番環境:
-        uvicorn app.main:app --workers 4 --host 0.0.0.0 --port 8000
+        uvicorn app.main:app --workers 4 --host 0.0.0.0 --port 8090
 """
 
 from collections.abc import AsyncGenerator
@@ -163,8 +163,8 @@ def create_app() -> FastAPI:
     # ========================================
     # 開発環境ではローカルホストからのアクセスを許可
     cors_origins = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
+        "http://localhost:5290",
+        "http://127.0.0.1:5290",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]

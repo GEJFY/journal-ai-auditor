@@ -9,7 +9,7 @@
 
 | 項目 | 値 |
 |------|-----|
-| ベースURL | `http://localhost:8000/api/v1` |
+| ベースURL | `http://localhost:8090/api/v1` |
 | 認証 | 不要（ローカル実行） |
 | Content-Type | `application/json` |
 | 文字コード | UTF-8 |
@@ -96,7 +96,7 @@
 ### ヘルスチェック
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8090/health
 ```
 
 レスポンス:
@@ -111,7 +111,7 @@ curl http://localhost:8000/health
 ### ダッシュボードサマリー取得
 
 ```bash
-curl "http://localhost:8000/api/v1/dashboard/summary?fiscal_year=2024"
+curl "http://localhost:8090/api/v1/dashboard/summary?fiscal_year=2024"
 ```
 
 レスポンス:
@@ -134,7 +134,7 @@ curl "http://localhost:8000/api/v1/dashboard/summary?fiscal_year=2024"
 ### KPI取得
 
 ```bash
-curl "http://localhost:8000/api/v1/dashboard/kpi?fiscal_year=2024"
+curl "http://localhost:8090/api/v1/dashboard/kpi?fiscal_year=2024"
 ```
 
 レスポンス:
@@ -155,7 +155,7 @@ curl "http://localhost:8000/api/v1/dashboard/kpi?fiscal_year=2024"
 ### Benford分析取得
 
 ```bash
-curl "http://localhost:8000/api/v1/dashboard/benford?fiscal_year=2024"
+curl "http://localhost:8090/api/v1/dashboard/benford?fiscal_year=2024"
 ```
 
 レスポンス:
@@ -176,13 +176,13 @@ curl "http://localhost:8000/api/v1/dashboard/benford?fiscal_year=2024"
 ### 違反仕訳一覧取得
 
 ```bash
-curl "http://localhost:8000/api/v1/analysis/violations?fiscal_year=2024&risk_level=Critical,High&limit=50"
+curl "http://localhost:8090/api/v1/analysis/violations?fiscal_year=2024&risk_level=Critical,High&limit=50"
 ```
 
 ### バッチ処理実行
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/batch/execute" \
+curl -X POST "http://localhost:8090/api/v1/batch/execute" \
   -H "Content-Type: application/json" \
   -d '{"fiscal_year": 2024, "run_rules": true, "run_ml": true}'
 ```
@@ -190,7 +190,7 @@ curl -X POST "http://localhost:8000/api/v1/batch/execute" \
 ### PPTレポートエクスポート
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/reports/export/ppt" \
+curl -X POST "http://localhost:8090/api/v1/reports/export/ppt" \
   -H "Content-Type: application/json" \
   -d '{
     "fiscal_year": 2024,
@@ -204,7 +204,7 @@ curl -X POST "http://localhost:8000/api/v1/reports/export/ppt" \
 ### PDFレポートエクスポート
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/reports/export/pdf" \
+curl -X POST "http://localhost:8090/api/v1/reports/export/pdf" \
   -H "Content-Type: application/json" \
   -d '{
     "fiscal_year": 2024,
@@ -293,9 +293,9 @@ curl -X POST "http://localhost:8000/api/v1/reports/export/pdf" \
 
 開発環境では Swagger UI が利用可能です:
 
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-- OpenAPI JSON: `http://localhost:8000/openapi.json`
+- Swagger UI: `http://localhost:8090/docs`
+- ReDoc: `http://localhost:8090/redoc`
+- OpenAPI JSON: `http://localhost:8090/openapi.json`
 
 ※ 本番環境（`debug=false`）ではセキュリティ上の理由で無効化されます。
 
@@ -306,7 +306,7 @@ curl -X POST "http://localhost:8000/api/v1/reports/export/pdf" \
 ```python
 import httpx
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "http://localhost:8090/api/v1"
 
 async def get_dashboard_summary(fiscal_year: int):
     """ダッシュボードサマリーを取得"""
@@ -345,7 +345,7 @@ async def export_ppt_report(fiscal_year: int, output_path: str):
 ## TypeScript クライアント例
 
 ```typescript
-const BASE_URL = "http://localhost:8000/api/v1";
+const BASE_URL = "http://localhost:8090/api/v1";
 
 interface DashboardSummary {
   total_entries: number;

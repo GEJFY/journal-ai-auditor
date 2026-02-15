@@ -202,7 +202,7 @@ class Settings(BaseSettings):
 
     # Server
     host: str = "127.0.0.1"
-    port: int = 8001
+    port: int = 8090
 
     # Database paths
     data_dir: Path = Field(default_factory=lambda: Path("./data"))

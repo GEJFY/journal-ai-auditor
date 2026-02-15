@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { API_BASE } from '@/lib/api';
 
 interface ImportStatus {
   step: 'idle' | 'validating' | 'mapping' | 'importing' | 'complete' | 'error';
@@ -77,7 +78,7 @@ export default function ImportPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:8000/api/v1/import/upload', {
+      const response = await fetch(`${API_BASE}/import/upload`, {
         method: 'POST',
         body: formData,
       });

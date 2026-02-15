@@ -6,7 +6,7 @@
 
 | 項目 | 仕様 |
 |------|------|
-| ベースURL | `http://localhost:8000/api/v1` |
+| ベースURL | `http://localhost:8090/api/v1` |
 | 認証 | ローカル実行のため不要（将来：JWT） |
 | Content-Type | `application/json` |
 | 文字コード | UTF-8 |
