@@ -22,6 +22,11 @@ vi.mock('lucide-react', () => ({
   ChevronDown: () => <span data-testid="icon-chevron" />,
   Bell: () => <span data-testid="icon-bell" />,
   User: () => <span data-testid="icon-user" />,
+  BookOpen: () => <span data-testid="icon-bookopen" />,
+  Keyboard: () => <span data-testid="icon-keyboard" />,
+  CheckCircle: () => <span data-testid="icon-check" />,
+  Info: () => <span data-testid="icon-info" />,
+  AlertTriangle: () => <span data-testid="icon-alert" />,
 }));
 
 // Mock clsx
