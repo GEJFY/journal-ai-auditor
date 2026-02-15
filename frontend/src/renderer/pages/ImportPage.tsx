@@ -141,9 +141,7 @@ async function uploadAndImportMaster(
   return {
     success: result.success,
     count: result.imported_rows ?? 0,
-    message: result.success
-      ? `${result.imported_rows} 件を取り込みました`
-      : `取込に失敗しました`,
+    message: result.success ? `${result.imported_rows} 件を取り込みました` : `取込に失敗しました`,
   };
 }
 
@@ -217,7 +215,9 @@ function MasterDataCard({
         <div className="min-w-0">
           <h4 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">
             {masterType.label}
-            <span className="ml-1.5 text-xs font-normal text-gray-400">({masterType.shortLabel})</span>
+            <span className="ml-1.5 text-xs font-normal text-gray-400">
+              ({masterType.shortLabel})
+            </span>
           </h4>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
             {masterType.description}
@@ -401,9 +401,7 @@ export default function ImportPage() {
             {completedMasters > 0 ? <CheckCircle size={16} /> : '1'}
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              マスタデータ
-            </span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">マスタデータ</span>
             <span className="text-xs text-gray-400 ml-1.5">（推奨）</span>
           </div>
         </div>
@@ -421,9 +419,7 @@ export default function ImportPage() {
             {jeStatus === 'complete' ? <CheckCircle size={16} /> : '2'}
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              仕訳データ
-            </span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">仕訳データ</span>
             <span className="text-xs text-red-500 ml-1.5">（必須）</span>
           </div>
         </div>
@@ -469,7 +465,10 @@ export default function ImportPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             AICPA GL_Detail形式またはCSV/Excelの仕訳明細データをアップロードしてください。
             <span className="text-xs text-gray-400 ml-1">
-              サンプル: <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">10_journal_entries.csv</code>
+              サンプル:{' '}
+              <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                10_journal_entries.csv
+              </code>
             </span>
           </p>
         </div>
