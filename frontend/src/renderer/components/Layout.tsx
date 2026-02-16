@@ -185,7 +185,9 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               <Activity className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-xl font-bold text-primary-900 dark:text-primary-100 tracking-tight">JAIA</span>
+              <span className="text-xl font-bold text-primary-900 dark:text-primary-100 tracking-tight">
+                JAIA
+              </span>
               <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium tracking-wide">
                 Journal Entry Analyzer
               </p>
@@ -276,7 +278,9 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               {currentPage?.label || 'JAIA'}
             </h1>
             {currentPage?.description && (
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{currentPage.description}</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+                {currentPage.description}
+              </p>
             )}
           </div>
 

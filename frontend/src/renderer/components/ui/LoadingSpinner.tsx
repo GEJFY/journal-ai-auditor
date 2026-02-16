@@ -32,9 +32,7 @@ export default function LoadingSpinner({
           sizeClasses[size]
         )}
       />
-      {label && (
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{label}</p>
-      )}
+      {label && <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{label}</p>}
     </div>
   );
 }
