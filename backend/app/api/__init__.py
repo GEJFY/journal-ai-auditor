@@ -11,6 +11,8 @@ Routes:
 - /agents - AI agent endpoints
 - /journals - Journal entry search endpoints
 - /settings - Application settings endpoints
+- /audit-trail - Audit trail endpoints
+- /rules - Rule management endpoints
 """
 
 from fastapi import APIRouter
@@ -18,12 +20,14 @@ from fastapi import APIRouter
 from app.api.endpoints import (
     agents,
     analysis,
+    audit,
     batch,
     dashboard,
     health,
     import_data,
     journals,
     reports,
+    rules,
     settings,
 )
 
@@ -73,4 +77,14 @@ router.include_router(
     settings.router,
     prefix="/settings",
     tags=["Settings"],
+)
+router.include_router(
+    audit.router,
+    prefix="/audit-trail",
+    tags=["Audit Trail"],
+)
+router.include_router(
+    rules.router,
+    prefix="/rules",
+    tags=["Rules"],
 )

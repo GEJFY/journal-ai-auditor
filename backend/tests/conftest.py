@@ -58,6 +58,14 @@ def app(test_settings):
     return create_app()
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """テスト毎にレートリミッターをリセットし、429エラーを防止します。"""
+    from app.core.middleware import rate_limiter
+
+    rate_limiter.requests.clear()
+
+
 @pytest.fixture
 def client(app) -> Generator[TestClient, None, None]:
     """
