@@ -14,9 +14,13 @@ from typing import Any
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+from app.core.cache import TTLCache
 from app.db import DuckDBManager
 
 router = APIRouter()
+
+# ダッシュボードクエリキャッシュ（TTL 5分）
+_dashboard_cache = TTLCache(max_size=128, ttl_seconds=300)
 
 
 def get_db() -> DuckDBManager:
@@ -115,6 +119,13 @@ async def get_dashboard_summary(
     period_to: int | None = Query(None, ge=1, le=12),
 ) -> SummaryResponse:
     """Get dashboard summary statistics."""
+    cache_key = _dashboard_cache._make_key(
+        "summary", fiscal_year, period_from, period_to
+    )
+    cached = _dashboard_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     db = get_db()
 
     period_filter = ""
@@ -143,7 +154,7 @@ async def get_dashboard_summary(
 
     if result:
         row = result[0]
-        return SummaryResponse(
+        response = SummaryResponse(
             total_entries=row[0] or 0,
             total_amount=row[1] or 0,
             debit_total=row[2] or 0,
@@ -157,18 +168,21 @@ async def get_dashboard_summary(
             high_risk_count=row[8] or 0,
             anomaly_count=row[9] or 0,
         )
+    else:
+        response = SummaryResponse(
+            total_entries=0,
+            total_amount=0.0,
+            debit_total=0.0,
+            credit_total=0.0,
+            unique_accounts=0,
+            unique_journals=0,
+            date_range={"from": "", "to": ""},
+            high_risk_count=0,
+            anomaly_count=0,
+        )
 
-    return SummaryResponse(
-        total_entries=0,
-        total_amount=0.0,
-        debit_total=0.0,
-        credit_total=0.0,
-        unique_accounts=0,
-        unique_journals=0,
-        date_range={"from": "", "to": ""},
-        high_risk_count=0,
-        anomaly_count=0,
-    )
+    _dashboard_cache.set(cache_key, response)
+    return response
 
 
 @router.get("/timeseries", response_model=TimeSeriesResponse)
@@ -298,44 +312,54 @@ async def get_risk_analysis(
     if period_to:
         period_filter += f" AND accounting_period <= {period_to}"
 
-    def get_risk_items(min_score: float, max_score: float) -> list[RiskItem]:
-        query = f"""
-            SELECT
-                journal_id,
-                gl_detail_id,
-                risk_score,
-                rule_violations,
-                amount,
-                effective_date,
-                je_line_description
-            FROM journal_entries
-            WHERE fiscal_year = ?
-                AND risk_score >= {min_score}
-                AND risk_score < {max_score}
-                {period_filter}
-            ORDER BY risk_score DESC
-            LIMIT {limit // 3}
-        """
-        result = db.execute(query, [fiscal_year])
+    # 1クエリでhigh/medium/lowを一括取得（旧: 3クエリ → 新: 1クエリ）
+    items_query = f"""
+        SELECT
+            journal_id,
+            gl_detail_id,
+            risk_score,
+            rule_violations,
+            amount,
+            effective_date,
+            je_line_description,
+            CASE
+                WHEN risk_score >= 60 THEN 'high'
+                WHEN risk_score >= 40 THEN 'medium'
+                ELSE 'low'
+            END as risk_level
+        FROM journal_entries
+        WHERE fiscal_year = ?
+            AND risk_score >= 20
+            {period_filter}
+        ORDER BY risk_score DESC
+        LIMIT {limit}
+    """
+    items_result = db.execute(items_query, [fiscal_year])
 
-        return [
-            RiskItem(
-                journal_id=row[0] or "",
-                gl_detail_id=row[1] or "",
-                risk_score=row[2] or 0,
-                risk_factors=(row[3] or "").split(",") if row[3] else [],
-                amount=row[4] or 0,
-                date=str(row[5]) if row[5] else "",
-                description=row[6] or "",
-            )
-            for row in result
-        ]
+    high_risk: list[RiskItem] = []
+    medium_risk: list[RiskItem] = []
+    low_risk: list[RiskItem] = []
+    per_level_limit = limit // 3
 
-    high_risk = get_risk_items(60, 101)
-    medium_risk = get_risk_items(40, 60)
-    low_risk = get_risk_items(20, 40)
+    for row in items_result:
+        item = RiskItem(
+            journal_id=row[0] or "",
+            gl_detail_id=row[1] or "",
+            risk_score=row[2] or 0,
+            risk_factors=(row[3] or "").split(",") if row[3] else [],
+            amount=row[4] or 0,
+            date=str(row[5]) if row[5] else "",
+            description=row[6] or "",
+        )
+        level = row[7]
+        if level == "high" and len(high_risk) < per_level_limit:
+            high_risk.append(item)
+        elif level == "medium" and len(medium_risk) < per_level_limit:
+            medium_risk.append(item)
+        elif level == "low" and len(low_risk) < per_level_limit:
+            low_risk.append(item)
 
-    # Get distribution
+    # リスク分布（集計のみ、軽量）
     dist_query = f"""
         SELECT
             CASE
@@ -372,6 +396,11 @@ async def get_risk_analysis(
 @router.get("/kpi")
 async def get_kpi(fiscal_year: int) -> dict[str, Any]:
     """Get key performance indicators."""
+    cache_key = _dashboard_cache._make_key("kpi", fiscal_year)
+    cached = _dashboard_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     db = get_db()
 
     query = """
@@ -393,7 +422,7 @@ async def get_kpi(fiscal_year: int) -> dict[str, Any]:
     if result:
         row = result[0]
         total = row[0] or 1
-        return {
+        response = {
             "fiscal_year": fiscal_year,
             "total_entries": row[0] or 0,
             "total_journals": row[1] or 0,
@@ -405,8 +434,11 @@ async def get_kpi(fiscal_year: int) -> dict[str, Any]:
             "avg_risk_score": round(row[6] or 0, 2),
             "self_approval_count": row[7] or 0,
         }
+    else:
+        response = {"fiscal_year": fiscal_year}
 
-    return {"fiscal_year": fiscal_year}
+    _dashboard_cache.set(cache_key, response)
+    return response
 
 
 class PeriodComparisonItem(BaseModel):

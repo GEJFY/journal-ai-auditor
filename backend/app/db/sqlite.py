@@ -286,6 +286,24 @@ class SQLiteManager:
                 )
             """)
 
+            # パフォーマンス向上用インデックス
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_audit_trail_timestamp "
+                "ON audit_trail(timestamp DESC)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_audit_trail_event_type "
+                "ON audit_trail(event_type)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_llm_usage_timestamp "
+                "ON llm_usage_log(timestamp DESC)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_llm_usage_provider "
+                "ON llm_usage_log(provider)"
+            )
+
             conn.commit()
 
 
