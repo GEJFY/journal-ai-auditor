@@ -55,6 +55,11 @@ vi.mock('../lib/api', () => ({
   },
 }));
 
+// Mock HelpTooltip
+vi.mock('../components/ui/HelpTooltip', () => ({
+  default: ({ id }: { id: string }) => <span data-testid={`help-${id}`} />,
+}));
+
 // Mock recharts to avoid rendering issues in tests
 vi.mock('recharts', () => ({
   AreaChart: ({ children }: any) => <div data-testid="area-chart">{children}</div>,

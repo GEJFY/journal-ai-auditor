@@ -6,6 +6,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useFiscalYear } from '@/lib/useFiscalYear';
 import { Send, Bot, User, Loader2, FileText, Search, AlertTriangle, Sparkles } from 'lucide-react';
 import { api, type AgentResponse } from '../lib/api';
 
@@ -41,6 +42,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function AIAnalysisPage() {
+  const [fiscalYear] = useFiscalYear();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '0',
@@ -63,7 +65,7 @@ export default function AIAnalysisPage() {
   }, [messages]);
 
   const mutation = useMutation({
-    mutationFn: (query: string) => api.askAgent(query, { fiscal_year: 2024 }),
+    mutationFn: (query: string) => api.askAgent(query, { fiscal_year: fiscalYear }),
     onSuccess: (response: AgentResponse) => {
       const assistantMessage: Message = {
         id: Date.now().toString(),

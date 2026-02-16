@@ -11,6 +11,11 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 
+// Mock useFiscalYear hook
+vi.mock('../lib/useFiscalYear', () => ({
+  useFiscalYear: () => [2024, vi.fn()],
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   Send: (props: Record<string, unknown>) => <span data-testid="icon-send" {...props} />,

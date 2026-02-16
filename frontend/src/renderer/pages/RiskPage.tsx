@@ -82,6 +82,7 @@ function RiskCard({ item, level }: RiskCardProps) {
 export default function RiskPage() {
   const [fiscalYear] = useFiscalYear();
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [displayCount, setDisplayCount] = useState(20);
 
   const { data: riskData, isLoading } = useQuery({
     queryKey: ['risk', fiscalYear],
@@ -231,13 +232,16 @@ export default function RiskPage() {
         </h3>
         {filteredItems.length > 0 ? (
           <div className="space-y-3">
-            {filteredItems.slice(0, 20).map((item, index) => (
+            {filteredItems.slice(0, displayCount).map((item, index) => (
               <RiskCard key={index} item={item} level={item.level} />
             ))}
-            {filteredItems.length > 20 && (
+            {filteredItems.length > displayCount && (
               <div className="text-center py-4">
-                <button className="btn-secondary">
-                  さらに表示
+                <button
+                  className="btn-secondary"
+                  onClick={() => setDisplayCount((prev) => prev + 20)}
+                >
+                  さらに表示（残り{filteredItems.length - displayCount}件）
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </button>
               </div>

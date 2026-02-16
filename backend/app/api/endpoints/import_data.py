@@ -16,6 +16,9 @@ router = APIRouter()
 UPLOAD_DIR = Path(tempfile.gettempdir()) / "jaia_uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# Maximum upload file size (500 MB)
+MAX_FILE_SIZE = 500 * 1024 * 1024
+
 
 class FilePreviewResponse(BaseModel):
     """Response for file preview."""
@@ -97,6 +100,16 @@ async def upload_file(
         raise HTTPException(
             status_code=400,
             detail=f"Unsupported file type: {suffix}. Supported: .csv, .xlsx, .xls",
+        )
+
+    # Validate file size
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large: {file_size / (1024 * 1024):.1f} MB. Maximum: {MAX_FILE_SIZE / (1024 * 1024):.0f} MB",
         )
 
     # Generate temp file ID
