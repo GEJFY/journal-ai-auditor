@@ -3,6 +3,9 @@
 Provides common infrastructure for all JAIA agents using LangGraph.
 """
 
+import asyncio
+import logging
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -14,6 +17,8 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langgraph.graph import StateGraph
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AgentType(StrEnum):
@@ -74,6 +79,17 @@ class AgentConfig:
     # Tool configuration
     enable_tools: bool = True
     tool_timeout: int = 30
+
+    # LLM resilience
+    fallback_models: list[tuple[str, str]] = field(
+        default_factory=lambda: [
+            ("anthropic", "claude-haiku-3-5-20241022"),
+            ("openai", "gpt-4o-mini"),
+        ]
+    )
+    max_retries: int = 3
+    retry_base_delay: float = 1.0
+    execution_timeout: int = 300  # seconds
 
 
 @dataclass
@@ -324,8 +340,41 @@ class BaseAgent(ABC):
             error=None,
         )
 
+    def _invoke_with_retry(self, llm: BaseChatModel, messages: list) -> Any:
+        """Invoke LLM with exponential backoff retry.
+
+        Args:
+            llm: LLM instance to invoke.
+            messages: Messages to send.
+
+        Returns:
+            LLM response.
+
+        Raises:
+            Exception: If all retries exhausted.
+        """
+        last_error: Exception | None = None
+        for attempt in range(self.config.max_retries):
+            try:
+                if self.tools and self.config.enable_tools:
+                    return llm.bind_tools(self.tools).invoke(messages)
+                return llm.invoke(messages)
+            except Exception as e:
+                last_error = e
+                if attempt < self.config.max_retries - 1:
+                    delay = self.config.retry_base_delay * (2**attempt)
+                    logger.warning(
+                        "LLM call attempt %d/%d failed: %s. Retrying in %.1fs...",
+                        attempt + 1,
+                        self.config.max_retries,
+                        str(e),
+                        delay,
+                    )
+                    time.sleep(delay)
+        raise last_error  # type: ignore[misc]
+
     def _think_node(self, state: AgentState) -> AgentState:
-        """Main thinking node that calls the LLM.
+        """Main thinking node that calls the LLM with retry and fallback.
 
         Args:
             state: Current state.
@@ -333,14 +382,42 @@ class BaseAgent(ABC):
         Returns:
             Updated state with LLM response.
         """
-        # Bind tools if available
-        if self.tools and self.config.enable_tools:
-            llm_with_tools = self.llm.bind_tools(self.tools)
-        else:
-            llm_with_tools = self.llm
+        # Try primary model with retry
+        try:
+            response = self._invoke_with_retry(self.llm, state["messages"])
+        except Exception as primary_err:
+            logger.warning(
+                "Primary model failed after retries: %s. Trying fallbacks...",
+                str(primary_err),
+            )
+            # Try fallback models
+            response = None
+            for provider, model_name in self.config.fallback_models:
+                try:
+                    fallback_config = AgentConfig(
+                        agent_type=self.config.agent_type,
+                        model_provider=provider,
+                        model_name=model_name,
+                        temperature=self.config.temperature,
+                        max_tokens=self.config.max_tokens,
+                    )
+                    fallback_llm = create_llm(fallback_config)
+                    response = self._invoke_with_retry(fallback_llm, state["messages"])
+                    logger.info("Fallback model %s/%s succeeded.", provider, model_name)
+                    break
+                except Exception as fb_err:
+                    logger.warning(
+                        "Fallback %s/%s failed: %s",
+                        provider,
+                        model_name,
+                        str(fb_err),
+                    )
+                    continue
 
-        # Call LLM
-        response = llm_with_tools.invoke(state["messages"])
+            if response is None:
+                raise RuntimeError(
+                    f"All LLM models failed. Primary: {primary_err}"
+                ) from primary_err
 
         # Update state
         new_messages = list(state["messages"])
@@ -398,9 +475,12 @@ class BaseAgent(ABC):
             # Create initial state
             state = self._create_initial_state(task, context)
 
-            # Compile and run graph
+            # Compile and run graph with timeout
             compiled = self.graph.compile()
-            final_state = await compiled.ainvoke(state)
+            final_state = await asyncio.wait_for(
+                compiled.ainvoke(state),
+                timeout=self.config.execution_timeout,
+            )
 
             # Extract results
             result = AgentResult(
