@@ -1,14 +1,16 @@
 """Agent API endpoints.
 
 Provides REST API access to AI agents:
-- /agents/ask - Q&A with journal data
+- /agents/ask - Q&A with journal data (cached)
 - /agents/analyze - Risk analysis
 - /agents/investigate - Deep-dive investigation
 - /agents/document - Generate documentation
 - /agents/review - Review findings
 - /agents/workflow - Run multi-agent workflows
+- /agents/cache/stats - Cache statistics
 """
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -21,6 +23,9 @@ from app.agents import (
     InvestigationAgent,
     ReviewAgent,
 )
+from app.core.cache import TTLCache, agent_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -110,8 +115,22 @@ async def ask_question(request: AskRequest) -> AskResponse:
 
     Uses the QA agent to answer questions about journal entries,
     risk scores, violations, and other audit-related queries.
+    Responses are cached to reduce redundant LLM calls.
     """
     try:
+        # キャッシュキーを生成
+        cache_key = TTLCache._make_key(
+            question=request.question,
+            fiscal_year=request.fiscal_year,
+            context=request.context,
+        )
+
+        # キャッシュヒットならそのまま返却
+        cached = agent_cache.get(cache_key)
+        if cached is not None:
+            logger.debug("Cache hit for question: %s", request.question[:50])
+            return AskResponse(**cached)
+
         orchestrator = get_orchestrator()
         context = request.context or {}
         if request.fiscal_year:
@@ -119,12 +138,18 @@ async def ask_question(request: AskRequest) -> AskResponse:
 
         result = await orchestrator.run_qa_session(request.question, context)
 
-        return AskResponse(
+        response = AskResponse(
             success=result.success,
             answer=result.final_output,
             data=result.agent_results.get("qa"),
             error=result.error,
         )
+
+        # 成功レスポンスのみキャッシュ
+        if response.success:
+            agent_cache.set(cache_key, response.model_dump())
+
+        return response
     except Exception as e:
         return AskResponse(
             success=False,
@@ -394,3 +419,16 @@ async def route_request(request: AskRequest) -> AgentResponse:
             success=False,
             error=str(e),
         )
+
+
+@router.get("/cache/stats")
+async def cache_stats() -> dict[str, int]:
+    """Return agent response cache statistics."""
+    return agent_cache.stats
+
+
+@router.post("/cache/clear")
+async def cache_clear() -> dict[str, str]:
+    """Clear agent response cache."""
+    agent_cache.clear()
+    return {"status": "cleared"}
