@@ -11,7 +11,7 @@ import { test as base, type Page } from '@playwright/test';
 // モックデータ定義
 // ============================================================
 
-export const MOCK_HEALTH = { status: 'healthy', version: '0.2.0' };
+export const MOCK_HEALTH = { status: 'healthy', app: 'JAIA', version: '0.2.0' };
 
 export const MOCK_SUMMARY = {
   total_entries: 784824,
@@ -119,8 +119,8 @@ export const MOCK_LLM_USAGE = {
 async function setupApiMocks(page: Page) {
   const API = '**/api/v1/**';
 
-  // Health check
-  await page.route('**/api/v1/health', (route) => route.fulfill({ json: MOCK_HEALTH }));
+  // Health check（/health は /api/v1 の外にある）
+  await page.route('**/health', (route) => route.fulfill({ json: MOCK_HEALTH }));
 
   // Dashboard endpoints
   await page.route('**/api/v1/dashboard/summary*', (route) =>

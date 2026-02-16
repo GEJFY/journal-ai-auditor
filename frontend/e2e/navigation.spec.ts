@@ -43,8 +43,8 @@ test.describe('Sidebar Navigation', () => {
     // リスク分析リンクがアクティブ状態を持つ
     const riskLink = page.locator('a').filter({ hasText: 'リスク分析' }).first();
     await expect(riskLink).toBeVisible();
-    // アクティブ状態のCSSクラス（bg-プレフィクス）が適用されている
-    await expect(riskLink).toHaveClass(/bg-/);
+    // アクティブ状態のCSSクラスが適用されている
+    await expect(riskLink).toHaveClass(/active/);
   });
 });
 
