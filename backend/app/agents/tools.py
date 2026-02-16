@@ -112,7 +112,14 @@ def get_high_risk_entries(
         JSON string of high-risk entries.
     """
     db = get_db()
-    fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
+    conditions = ["risk_score >= ?"]
+    params: list = [risk_threshold]
+
+    if fiscal_year:
+        conditions.append("fiscal_year = ?")
+        params.append(fiscal_year)
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT
@@ -128,12 +135,12 @@ def get_high_risk_entries(
             anomaly_flags,
             rule_violations
         FROM journal_entries
-        WHERE risk_score >= {risk_threshold} {fy_filter}
+        WHERE {where_clause}
         ORDER BY risk_score DESC
         LIMIT {limit}
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params)
     return result.write_json()
 
 
@@ -156,16 +163,20 @@ def get_rule_violations(
         JSON string of violations.
     """
     db = get_db()
-    conditions = []
+    conditions: list[str] = []
+    params: list = []
 
     if rule_id:
-        conditions.append(f"v.rule_id = '{rule_id}'")
+        conditions.append("v.rule_id = ?")
+        params.append(rule_id)
 
     if severity:
-        conditions.append(f"v.severity = '{severity}'")
+        conditions.append("v.severity = ?")
+        params.append(severity)
 
     if fiscal_year:
-        conditions.append(f"je.fiscal_year = {fiscal_year}")
+        conditions.append("je.fiscal_year = ?")
+        params.append(fiscal_year)
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 
@@ -194,7 +205,7 @@ def get_rule_violations(
         LIMIT {limit}
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params if params else None)
     return result.write_json()
 
 
@@ -213,7 +224,14 @@ def get_account_summary(
         JSON string with account summary.
     """
     db = get_db()
-    fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
+    conditions = ["gl_account_number LIKE ?"]
+    params: list = [f"{gl_account_number}%"]
+
+    if fiscal_year:
+        conditions.append("fiscal_year = ?")
+        params.append(fiscal_year)
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT
@@ -228,12 +246,12 @@ def get_account_summary(
             AVG(risk_score) as avg_risk_score,
             SUM(CASE WHEN risk_score >= 60 THEN 1 ELSE 0 END) as high_risk_count
         FROM journal_entries
-        WHERE gl_account_number LIKE '{gl_account_number}%' {fy_filter}
+        WHERE {where_clause}
         GROUP BY gl_account_number
         ORDER BY entry_count DESC
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params)
     return result.write_json()
 
 
@@ -252,7 +270,14 @@ def get_user_activity(
         JSON string with user activity summary.
     """
     db = get_db()
-    fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
+    conditions = ["prepared_by = ?"]
+    params: list = [user_id]
+
+    if fiscal_year:
+        conditions.append("fiscal_year = ?")
+        params.append(fiscal_year)
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT
@@ -267,11 +292,11 @@ def get_user_activity(
             SUM(CASE WHEN prepared_by = approved_by THEN 1 ELSE 0 END) as self_approval_count,
             COUNT(DISTINCT gl_account_number) as unique_accounts
         FROM journal_entries
-        WHERE prepared_by = '{user_id}' {fy_filter}
+        WHERE {where_clause}
         GROUP BY prepared_by
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params)
     return result.write_json()
 
 
@@ -290,11 +315,14 @@ def get_period_comparison(
         JSON string with period comparison data.
     """
     db = get_db()
-    account_filter = (
-        f"AND gl_account_number LIKE '{gl_account_number}%'"
-        if gl_account_number
-        else ""
-    )
+    conditions = ["fiscal_year = ?"]
+    params: list = [fiscal_year]
+
+    if gl_account_number:
+        conditions.append("gl_account_number LIKE ?")
+        params.append(f"{gl_account_number}%")
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT
@@ -305,12 +333,12 @@ def get_period_comparison(
             AVG(risk_score) as avg_risk_score,
             SUM(CASE WHEN risk_score >= 60 THEN 1 ELSE 0 END) as high_risk_count
         FROM journal_entries
-        WHERE fiscal_year = {fiscal_year} {account_filter}
+        WHERE {where_clause}
         GROUP BY accounting_period
         ORDER BY accounting_period
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params)
     return result.write_json()
 
 
@@ -329,10 +357,18 @@ def get_anomaly_patterns(
         JSON string with anomaly pattern summary.
     """
     db = get_db()
-    fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
-    pattern_filter = (
-        f"AND anomaly_flags LIKE '%{pattern_type}%'" if pattern_type else ""
-    )
+    conditions = ["anomaly_flags IS NOT NULL", "anomaly_flags <> ''"]
+    params: list = []
+
+    if fiscal_year:
+        conditions.append("fiscal_year = ?")
+        params.append(fiscal_year)
+
+    if pattern_type:
+        conditions.append("anomaly_flags LIKE ?")
+        params.append(f"%{pattern_type}%")
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT
@@ -346,10 +382,7 @@ def get_anomaly_patterns(
             SUM(ABS(amount)) as total_amount,
             AVG(risk_score) as avg_risk_score
         FROM journal_entries
-        WHERE anomaly_flags IS NOT NULL
-            AND anomaly_flags <> ''
-            {fy_filter}
-            {pattern_filter}
+        WHERE {where_clause}
         GROUP BY
             CASE
                 WHEN anomaly_flags LIKE '%CRITICAL%' THEN 'critical'
@@ -366,7 +399,7 @@ def get_anomaly_patterns(
             END
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params if params else None)
     return result.write_json()
 
 
@@ -381,7 +414,13 @@ def get_benford_analysis(fiscal_year: int | None = None) -> str:
         JSON string with Benford distribution data.
     """
     db = get_db()
-    fy_filter = f"WHERE fiscal_year = {fiscal_year}" if fiscal_year else ""
+    params: list = []
+
+    if fiscal_year:
+        where_clause = "WHERE fiscal_year = ?"
+        params.append(fiscal_year)
+    else:
+        where_clause = ""
 
     query = f"""
         SELECT
@@ -391,12 +430,12 @@ def get_benford_analysis(fiscal_year: int | None = None) -> str:
             expected_pct,
             actual_pct - expected_pct as deviation
         FROM agg_benford_distribution
-        {fy_filter}
+        {where_clause}
         ORDER BY first_digit
     """
 
     try:
-        result = db.execute_df(query)
+        result = db.execute_df(query, params if params else None)
         return result.write_json()
     except Exception:
         return '{"error": "Benford analysis data not available"}'
@@ -413,7 +452,13 @@ def get_dashboard_kpi(fiscal_year: int | None = None) -> str:
         JSON string with KPI data.
     """
     db = get_db()
-    fy_filter = f"WHERE fiscal_year = {fiscal_year}" if fiscal_year else ""
+    params: list = []
+
+    if fiscal_year:
+        where_clause = "WHERE fiscal_year = ?"
+        params.append(fiscal_year)
+    else:
+        where_clause = ""
 
     query = f"""
         SELECT
@@ -428,11 +473,11 @@ def get_dashboard_kpi(fiscal_year: int | None = None) -> str:
             avg_risk_score,
             self_approval_count
         FROM agg_dashboard_kpi
-        {fy_filter}
+        {where_clause}
     """
 
     try:
-        result = db.execute_df(query)
+        result = db.execute_df(query, params if params else None)
         return result.write_json()
     except Exception:
         return '{"error": "Dashboard KPI data not available"}'
@@ -455,7 +500,14 @@ def search_journal_description(
         JSON string of matching entries.
     """
     db = get_db()
-    fy_filter = f"AND fiscal_year = {fiscal_year}" if fiscal_year else ""
+    conditions = ["je_line_description LIKE ?"]
+    params: list = [f"%{search_term}%"]
+
+    if fiscal_year:
+        conditions.append("fiscal_year = ?")
+        params.append(fiscal_year)
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT
@@ -468,12 +520,12 @@ def search_journal_description(
             prepared_by,
             risk_score
         FROM journal_entries
-        WHERE je_line_description LIKE '%{search_term}%' {fy_filter}
+        WHERE {where_clause}
         ORDER BY ABS(amount) DESC
         LIMIT {limit}
     """
 
-    result = db.execute_df(query)
+    result = db.execute_df(query, params)
     return result.write_json()
 
 
@@ -556,19 +608,23 @@ def get_saved_findings(
         JSON string of saved findings.
     """
     db = get_db()
-    conditions = []
+    conditions: list[str] = []
+    params: list = []
 
     if fiscal_year:
-        conditions.append(f"fiscal_year = {fiscal_year}")
+        conditions.append("fiscal_year = ?")
+        params.append(fiscal_year)
     if workflow_id:
-        conditions.append(f"workflow_id = '{workflow_id}'")
+        conditions.append("workflow_id = ?")
+        params.append(workflow_id)
     if severity:
-        conditions.append(f"severity = '{severity.upper()}'")
+        conditions.append("severity = ?")
+        params.append(severity.upper())
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 
     try:
-        result = db.execute_df(f"""
+        query = f"""
             SELECT finding_id, workflow_id, agent_type, fiscal_year,
                    finding_title, finding_description, severity, category,
                    affected_amount, affected_count, recommendation, status,
@@ -581,7 +637,8 @@ def get_saved_findings(
                     WHEN 'MEDIUM' THEN 3 ELSE 4
                 END,
                 created_at DESC
-        """)
+        """
+        result = db.execute_df(query, params if params else None)
         return result.write_json()
     except Exception:
         return '{"findings": [], "note": "audit_findings table not yet initialized"}'

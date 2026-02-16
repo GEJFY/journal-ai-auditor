@@ -274,29 +274,45 @@ jobs:
       - name: Run Bandit security scan
         run: |
           bandit -r backend/app/ -f json -o bandit-report.json || true
-        continue-on-error: true
 
       - name: Run Safety dependency check
         run: |
           cd backend && safety check --json --output safety-report.json || true
-        continue-on-error: true
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: security-reports
           path: |
             bandit-report.json
             backend/safety-report.json
 
-      - name: Check for critical issues
+      - name: Fail on HIGH/CRITICAL security issues
         run: |
+          EXIT_CODE=0
           if [ -f bandit-report.json ]; then
-            CRITICAL=$(python -c "import json; data=json.load(open('bandit-report.json')); print(len([r for r in data.get('results', []) if r['issue_severity'] == 'HIGH']))")
+            CRITICAL=$(python -c "
+          import json, sys
+          data = json.load(open('bandit-report.json'))
+          results = data.get('results', [])
+          high = [r for r in results if r['issue_severity'] in ('HIGH', 'CRITICAL')]
+          print(len(high))
+          ")
             if [ "$CRITICAL" -gt 0 ]; then
-              echo "::warning::Found $CRITICAL high severity security issues"
+              echo "::error::Found $CRITICAL HIGH/CRITICAL severity security issues in Bandit scan"
+              python -c "
+          import json
+          data = json.load(open('bandit-report.json'))
+          for r in data.get('results', []):
+              if r['issue_severity'] in ('HIGH', 'CRITICAL'):
+                  print(f\"  - [{r['issue_severity']}] {r['test_id']}: {r['issue_text']} ({r['filename']}:{r['line_number']})\")"
+              EXIT_CODE=1
+            else
+              echo "No HIGH/CRITICAL issues found in Bandit scan"
             fi
           fi
+          exit $EXIT_CODE
 
   # ===========================================================================
   # Docker Build Test
