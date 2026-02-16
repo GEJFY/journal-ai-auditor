@@ -177,7 +177,11 @@ class ImportService:
                 encoding="utf-8",
             )
         elif file_type == "excel":
-            return pl.read_excel(file_path)
+            try:
+                return pl.read_excel(file_path)
+            except ImportError:
+                # fastexcel (calamine) が無い場合 openpyxl にフォールバック
+                return pl.read_excel(file_path, engine="openpyxl")
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
 
