@@ -1,23 +1,6 @@
 """Audit service and API tests."""
 
-import pytest
 from fastapi.testclient import TestClient
-
-from app.db import SQLiteManager
-from app.main import app
-
-
-@pytest.fixture(autouse=True)
-def _ensure_schema():
-    """Ensure SQLite schema is initialized before each test."""
-    db = SQLiteManager()
-    db.initialize_schema()
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
 
 
 class TestAuditTrailAPI:
