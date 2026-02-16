@@ -5,7 +5,7 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { ReactNode, useState, useEffect, useRef } from 'react';
+import { ReactNode, useState, useEffect, useRef, useCallback } from 'react';
 import {
   LayoutDashboard,
   Upload,
@@ -26,6 +26,8 @@ import {
   CheckCircle,
   Info,
   AlertTriangle,
+  Menu,
+  X,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -134,6 +136,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
   const location = useLocation();
   const [showHelp, setShowHelp] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -146,6 +149,11 @@ export default function Layout({ children, isConnected }: LayoutProps) {
     },
   ]);
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   // Close notifications dropdown when clicking outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -156,6 +164,8 @@ export default function Layout({ children, isConnected }: LayoutProps) {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -176,13 +186,29 @@ export default function Layout({ children, isConnected }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-neutral-50 dark:bg-neutral-900">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-[280px] bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col shadow-nav">
+      <aside
+        className={clsx(
+          'fixed inset-y-0 left-0 z-50 w-[280px] bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col shadow-nav transition-transform duration-200',
+          'lg:relative lg:translate-x-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+        aria-label="メインナビゲーション"
+      >
         {/* Logo */}
-        <div className="h-header flex items-center px-6 border-b border-neutral-100 dark:border-neutral-700">
+        <div className="h-header flex items-center justify-between px-6 border-b border-neutral-100 dark:border-neutral-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-brand rounded-xl flex items-center justify-center shadow-sm">
-              <Activity className="w-6 h-6 text-white" />
+              <Activity className="w-6 h-6 text-white" aria-hidden="true" />
             </div>
             <div>
               <span className="text-xl font-bold text-primary-900 dark:text-primary-100 tracking-tight">
@@ -193,14 +219,26 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               </p>
             </div>
           </div>
+          <button
+            onClick={closeSidebar}
+            className="btn-ghost btn-sm rounded-full p-1.5 lg:hidden"
+            aria-label="サイドバーを閉じる"
+          >
+            <X size={20} className="text-neutral-500" />
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-5 space-y-6 overflow-y-auto scrollbar-thin">
+        <nav
+          className="flex-1 px-4 py-5 space-y-6 overflow-y-auto scrollbar-thin"
+          aria-label="メインメニュー"
+        >
           {navGroups.map((group) => (
-            <div key={group.label}>
-              <div className="nav-group-label mb-2">{group.label}</div>
-              <div className="space-y-1">
+            <div key={group.label} role="group" aria-label={group.label}>
+              <div className="nav-group-label mb-2" id={`nav-group-${group.label}`}>
+                {group.label}
+              </div>
+              <div className="space-y-1" role="list" aria-labelledby={`nav-group-${group.label}`}>
                 {group.items.map((item) => (
                   <Link
                     key={item.path}
@@ -210,6 +248,8 @@ export default function Layout({ children, isConnected }: LayoutProps) {
                       location.pathname === item.path && 'nav-item-active'
                     )}
                     title={item.description}
+                    aria-current={location.pathname === item.path ? 'page' : undefined}
+                    role="listitem"
                   >
                     <span
                       className={clsx(
@@ -218,6 +258,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
                           ? 'text-primary-700'
                           : 'text-neutral-400 group-hover:text-neutral-600'
                       )}
+                      aria-hidden="true"
                     >
                       {item.icon}
                     </span>
@@ -236,12 +277,14 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               key={item.path}
               to={item.path}
               className={clsx('nav-item', location.pathname === item.path && 'nav-item-active')}
+              aria-current={location.pathname === item.path ? 'page' : undefined}
             >
               <span
                 className={clsx(
                   'transition-colors',
                   location.pathname === item.path ? 'text-primary-700' : 'text-neutral-400'
                 )}
+                aria-hidden="true"
               >
                 {item.icon}
               </span>
@@ -251,7 +294,11 @@ export default function Layout({ children, isConnected }: LayoutProps) {
         </div>
 
         {/* Status */}
-        <div className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
+        <div
+          className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900"
+          role="status"
+          aria-label="接続状態"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div
@@ -259,6 +306,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
                   'w-2.5 h-2.5 rounded-full ring-2 ring-offset-1',
                   isConnected ? 'bg-green-500 ring-green-200' : 'bg-red-500 ring-red-200'
                 )}
+                aria-hidden="true"
               />
               <span className="text-xs font-medium text-neutral-500">
                 {isConnected ? '接続中' : '未接続'}
@@ -270,28 +318,41 @@ export default function Layout({ children, isConnected }: LayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden" role="main">
         {/* Header */}
-        <header className="h-header bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between px-8 shadow-nav">
-          <div>
-            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-              {currentPage?.label || 'JAIA'}
-            </h1>
-            {currentPage?.description && (
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-                {currentPage.description}
-              </p>
-            )}
+        <header className="h-header bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between px-4 lg:px-8 shadow-nav">
+          <div className="flex items-center gap-3">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="btn-ghost btn-sm rounded-full p-2 lg:hidden"
+              aria-label="メニューを開く"
+              aria-expanded={sidebarOpen}
+              aria-controls="main-sidebar"
+            >
+              <Menu size={20} className="text-neutral-500" />
+            </button>
+            <div>
+              <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {currentPage?.label || 'JAIA'}
+              </h1>
+              {currentPage?.description && (
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5 hidden sm:block">
+                  {currentPage.description}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Help Button */}
             <button
               onClick={() => setShowHelp(!showHelp)}
               className="btn-ghost btn-sm rounded-full p-2"
-              title="ヘルプ"
+              aria-label="ヘルプを表示"
+              aria-expanded={showHelp}
             >
-              <HelpCircle size={20} className="text-neutral-500" />
+              <HelpCircle size={20} className="text-neutral-500" aria-hidden="true" />
             </button>
 
             {/* Notifications */}
@@ -299,15 +360,24 @@ export default function Layout({ children, isConnected }: LayoutProps) {
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="btn-ghost btn-sm rounded-full p-2 relative"
-                title="通知"
+                aria-label={`通知${unreadCount > 0 ? `（${unreadCount}件の未読）` : ''}`}
+                aria-expanded={showNotifications}
+                aria-haspopup="true"
               >
-                <Bell size={20} className="text-neutral-500" />
+                <Bell size={20} className="text-neutral-500" aria-hidden="true" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-accent-500 rounded-full" />
+                  <span
+                    className="absolute top-1 right-1 w-2 h-2 bg-accent-500 rounded-full"
+                    aria-hidden="true"
+                  />
                 )}
               </button>
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-neutral-800 rounded-lg shadow-dropdown border border-neutral-200 dark:border-neutral-700 z-50">
+                <div
+                  className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-neutral-800 rounded-lg shadow-dropdown border border-neutral-200 dark:border-neutral-700 z-50"
+                  role="menu"
+                  aria-label="通知一覧"
+                >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
                     <span className="font-semibold text-neutral-800 text-sm">通知</span>
                     {unreadCount > 0 && (
@@ -350,11 +420,15 @@ export default function Layout({ children, isConnected }: LayoutProps) {
             </div>
 
             {/* User Menu */}
-            <button className="flex items-center gap-2 btn-ghost btn-sm rounded-full pl-2 pr-3">
+            <button
+              className="flex items-center gap-2 btn-ghost btn-sm rounded-full pl-2 pr-3"
+              aria-label="ユーザーメニュー"
+              aria-haspopup="true"
+            >
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <User size={16} className="text-primary-700" />
+                <User size={16} className="text-primary-700" aria-hidden="true" />
               </div>
-              <ChevronDown size={16} className="text-neutral-400" />
+              <ChevronDown size={16} className="text-neutral-400" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -367,18 +441,25 @@ export default function Layout({ children, isConnected }: LayoutProps) {
 
       {/* Help Panel */}
       {showHelp && (
-        <div className="fixed inset-0 bg-black/20 z-50" onClick={() => setShowHelp(false)}>
+        <div
+          className="fixed inset-0 bg-black/20 z-50"
+          onClick={() => setShowHelp(false)}
+          aria-hidden="true"
+        >
           <div
-            className="absolute right-0 top-0 h-full w-96 bg-white shadow-dropdown p-6 animate-slide-up overflow-y-auto"
+            className="absolute right-0 top-0 h-full w-96 max-w-full bg-white shadow-dropdown p-6 animate-slide-up overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="ヘルプパネル"
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-neutral-900">ヘルプ</h2>
               <button
                 onClick={() => setShowHelp(false)}
                 className="btn-ghost btn-sm rounded-full p-1"
+                aria-label="ヘルプを閉じる"
               >
-                <span className="text-xl">&times;</span>
+                <X size={20} className="text-neutral-500" aria-hidden="true" />
               </button>
             </div>
             <div className="space-y-4">

@@ -27,6 +27,8 @@ vi.mock('lucide-react', () => ({
   CheckCircle: () => <span data-testid="icon-check" />,
   Info: () => <span data-testid="icon-info" />,
   AlertTriangle: () => <span data-testid="icon-alert" />,
+  Menu: () => <span data-testid="icon-menu" />,
+  X: () => <span data-testid="icon-x" />,
 }));
 
 // Mock clsx
@@ -116,10 +118,10 @@ describe('Layout', () => {
   it('toggles help panel', () => {
     renderLayout();
     // Help panel should not be visible initially
-    expect(screen.queryByText('ヘルプ')).not.toBeInTheDocument();
+    expect(screen.queryByText('クイックスタート')).not.toBeInTheDocument();
 
-    // Click help button
-    const helpButton = screen.getByTitle('ヘルプ');
+    // Click help button (now uses aria-label instead of title)
+    const helpButton = screen.getByLabelText('ヘルプを表示');
     fireEvent.click(helpButton);
 
     // Help panel should be visible
@@ -129,6 +131,6 @@ describe('Layout', () => {
 
   it('renders notification bell', () => {
     renderLayout();
-    expect(screen.getByTitle('通知')).toBeInTheDocument();
+    expect(screen.getByLabelText(/通知/)).toBeInTheDocument();
   });
 });
