@@ -1,14 +1,13 @@
 /**
  * AI Analysis Page
  *
- * Interactive AI chat interface for audit queries.
+ * Interactive AI chat interface with SSE streaming support.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFiscalYear } from '@/lib/useFiscalYear';
 import { Send, Bot, User, Loader2, FileText, Search, AlertTriangle, Sparkles } from 'lucide-react';
-import { api, type AgentResponse } from '../lib/api';
+import { streamSSE, type SSEEvent } from '../lib/api';
 
 interface Message {
   id: string;
@@ -16,6 +15,7 @@ interface Message {
   content: string;
   timestamp: Date;
   agentType?: string;
+  isStreaming?: boolean;
 }
 
 const QUICK_ACTIONS = [
@@ -54,7 +54,10 @@ export default function AIAnalysisPage() {
     },
   ]);
   const [input, setInput] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [thinkingText, setThinkingText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -62,34 +65,102 @@ export default function AIAnalysisPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, thinkingText]);
 
-  const mutation = useMutation({
-    mutationFn: (query: string) => api.askAgent(query, { fiscal_year: fiscalYear }),
-    onSuccess: (response: AgentResponse) => {
-      const assistantMessage: Message = {
-        id: Date.now().toString(),
+  const sendQuery = useCallback(
+    async (query: string) => {
+      if (isStreaming) return;
+
+      setIsStreaming(true);
+      setThinkingText('');
+      const messageId = Date.now().toString();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      // ストリーミングメッセージを追加（空で開始）
+      const streamingMessage: Message = {
+        id: messageId,
         role: 'assistant',
-        content: response.result?.response || '応答を取得できませんでした。',
+        content: '',
         timestamp: new Date(),
-        agentType: response.agent_type,
+        isStreaming: true,
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, streamingMessage]);
+
+      try {
+        await streamSSE(
+          '/agents/ask/stream',
+          { question: query, fiscal_year: fiscalYear },
+          (event: SSEEvent) => {
+            switch (event.type) {
+              case 'start':
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === messageId ? { ...m, agentType: event.agent } : m))
+                );
+                break;
+
+              case 'thinking':
+                setThinkingText(event.content || '');
+                break;
+
+              case 'chunk':
+                setThinkingText('');
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === messageId ? { ...m, content: m.content + (event.content || '') } : m
+                  )
+                );
+                break;
+
+              case 'complete':
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === messageId ? { ...m, isStreaming: false } : m))
+                );
+                break;
+
+              case 'error':
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === messageId
+                      ? {
+                          ...m,
+                          content: `エラーが発生しました: ${event.message}`,
+                          isStreaming: false,
+                        }
+                      : m
+                  )
+                );
+                break;
+            }
+          },
+          controller.signal
+        );
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    content: `エラーが発生しました: ${(error as Error).message}`,
+                    isStreaming: false,
+                  }
+                : m
+            )
+          );
+        }
+      } finally {
+        setIsStreaming(false);
+        setThinkingText('');
+        abortRef.current = null;
+      }
     },
-    onError: (error: Error) => {
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `エラーが発生しました: ${error.message}`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    },
-  });
+    [fiscalYear, isStreaming]
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || mutation.isPending) return;
+    if (!input.trim() || isStreaming) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -99,12 +170,12 @@ export default function AIAnalysisPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    mutation.mutate(input);
+    sendQuery(input);
     setInput('');
   };
 
   const handleQuickAction = (query: string) => {
-    if (mutation.isPending) return;
+    if (isStreaming) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -114,7 +185,7 @@ export default function AIAnalysisPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    mutation.mutate(query);
+    sendQuery(query);
   };
 
   return (
@@ -138,7 +209,7 @@ export default function AIAnalysisPage() {
           <button
             key={index}
             onClick={() => handleQuickAction(action.query)}
-            disabled={mutation.isPending}
+            disabled={isStreaming}
             className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
           >
             {action.icon}
@@ -179,30 +250,35 @@ export default function AIAnalysisPage() {
                   {message.agentType} Agent
                 </div>
               )}
-              <div className="whitespace-pre-wrap">{message.content}</div>
-              <div
-                className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-primary-200' : 'text-gray-400'
-                }`}
-              >
-                {message.timestamp.toLocaleTimeString('ja-JP', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+              <div className="whitespace-pre-wrap">
+                {message.content}
+                {message.isStreaming && <span className="animate-pulse">|</span>}
               </div>
+              {!message.isStreaming && (
+                <div
+                  className={`text-xs mt-2 ${
+                    message.role === 'user' ? 'text-primary-200' : 'text-gray-400'
+                  }`}
+                >
+                  {message.timestamp.toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </div>
+              )}
             </div>
           </div>
         ))}
 
-        {mutation.isPending && (
+        {thinkingText && (
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
               <Bot className="w-4 h-4 text-gray-600 dark:text-gray-400" />
             </div>
             <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-3">
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                分析中...
+                {thinkingText}
               </div>
             </div>
           </div>
@@ -220,11 +296,11 @@ export default function AIAnalysisPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="質問を入力してください..."
             className="flex-1 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            disabled={mutation.isPending}
+            disabled={isStreaming}
           />
           <button
             type="submit"
-            disabled={!input.trim() || mutation.isPending}
+            disabled={!input.trim() || isStreaming}
             className="px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />

@@ -2,6 +2,7 @@
 
 Provides REST API access to AI agents:
 - /agents/ask - Q&A with journal data (cached)
+- /agents/ask/stream - Q&A with SSE streaming
 - /agents/analyze - Risk analysis
 - /agents/investigate - Deep-dive investigation
 - /agents/document - Generate documentation
@@ -10,10 +11,13 @@ Provides REST API access to AI agents:
 - /agents/cache/stats - Cache statistics
 """
 
+import json
 import logging
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.agents import (
@@ -155,6 +159,82 @@ async def ask_question(request: AskRequest) -> AskResponse:
             success=False,
             error=str(e),
         )
+
+
+async def _sse_ask_generator(
+    question: str,
+    context: dict[str, Any],
+) -> AsyncGenerator[str, None]:
+    """SSEイベントを生成するジェネレーター。
+
+    イベント形式:
+    - {"type": "start", "agent": "qa"}
+    - {"type": "thinking", "content": "..."}
+    - {"type": "chunk", "content": "..."}
+    - {"type": "complete", "data": {...}}
+    - {"type": "error", "message": "..."}
+    """
+
+    def sse_event(data: dict[str, Any]) -> str:
+        return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    try:
+        yield sse_event({"type": "start", "agent": "qa"})
+
+        yield sse_event({"type": "thinking", "content": "質問を分析しています..."})
+
+        orchestrator = get_orchestrator()
+
+        yield sse_event(
+            {"type": "thinking", "content": "データベースを検索しています..."}
+        )
+
+        result = await orchestrator.run_qa_session(question, context)
+
+        # 回答をチャンク分割して送信
+        if result.final_output:
+            content = result.final_output
+            # 段落単位でチャンク化
+            paragraphs = content.split("\n\n")
+            for para in paragraphs:
+                if para.strip():
+                    yield sse_event({"type": "chunk", "content": para + "\n\n"})
+
+        yield sse_event(
+            {
+                "type": "complete",
+                "data": {
+                    "success": result.success,
+                    "answer": result.final_output,
+                    "agent_results": result.agent_results.get("qa"),
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error("SSE streaming error: %s", str(e))
+        yield sse_event({"type": "error", "message": str(e)})
+
+
+@router.post("/ask/stream")
+async def ask_question_stream(request: AskRequest) -> StreamingResponse:
+    """Ask a question with SSE streaming response.
+
+    Returns Server-Sent Events (SSE) stream with progressive updates.
+    """
+    context = request.context or {}
+    if request.fiscal_year:
+        context["fiscal_year"] = request.fiscal_year
+
+    return StreamingResponse(
+        _sse_ask_generator(request.question, context),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/analyze", response_model=AgentResponse)
