@@ -5,9 +5,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-// Mock scrollIntoView (not implemented in jsdom)
+// Mock browser APIs not implemented in jsdom
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 });
 
 // Mock recharts to avoid canvas rendering issues
@@ -68,6 +81,12 @@ vi.mock('../lib/api', () => ({
       conformity: 'close',
     }),
   },
+}));
+
+// Mock sonner
+vi.mock('sonner', () => ({
+  Toaster: () => null,
+  toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
 // Mock onboarding to skip it in tests
