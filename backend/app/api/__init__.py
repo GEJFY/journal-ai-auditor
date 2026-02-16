@@ -13,6 +13,7 @@ Routes:
 - /settings - Application settings endpoints
 - /audit-trail - Audit trail endpoints
 - /rules - Rule management endpoints
+- /llm-usage - LLM usage tracking endpoints
 """
 
 from fastapi import APIRouter
@@ -26,6 +27,7 @@ from app.api.endpoints import (
     health,
     import_data,
     journals,
+    llm_usage,
     reports,
     rules,
     settings,
@@ -87,4 +89,9 @@ router.include_router(
     rules.router,
     prefix="/rules",
     tags=["Rules"],
+)
+router.include_router(
+    llm_usage.router,
+    prefix="/llm-usage",
+    tags=["LLM Usage"],
 )

@@ -269,6 +269,23 @@ class SQLiteManager:
                 )
             """)
 
+            # LLM usage log
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS llm_usage_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    provider TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    input_tokens INTEGER DEFAULT 0,
+                    output_tokens INTEGER DEFAULT 0,
+                    estimated_cost_usd REAL DEFAULT 0,
+                    latency_ms REAL DEFAULT 0,
+                    request_type TEXT DEFAULT 'general',
+                    session_id TEXT,
+                    success BOOLEAN DEFAULT TRUE
+                )
+            """)
+
             conn.commit()
 
 
