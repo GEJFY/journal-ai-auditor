@@ -39,9 +39,7 @@ class TestCalculateCost:
         assert cost == 0.0
 
     def test_bedrock_nova_pro(self):
-        cost = calculate_cost(
-            "bedrock", "amazon.nova-pro-v1:0", 500_000, 250_000
-        )
+        cost = calculate_cost("bedrock", "amazon.nova-pro-v1:0", 500_000, 250_000)
         # input: $0.80/M * 0.5M = $0.40, output: $3.20/M * 0.25M = $0.80
         assert cost == pytest.approx(1.2, abs=0.01)
 
