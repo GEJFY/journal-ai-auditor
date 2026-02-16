@@ -12,7 +12,7 @@ test.describe('Settings Page', () => {
   });
 
   test('should display settings page title', async ({ page }) => {
-    await expect(page.getByText('設定')).toBeVisible();
+    await expect(page.getByText('設定').first()).toBeVisible();
   });
 
   test('should show LLM provider settings', async ({ page }) => {
@@ -32,7 +32,9 @@ test.describe('Settings Page', () => {
 
   test('should show rules section', async ({ page }) => {
     // ルール管理セクションが表示される
-    await expect(page.getByText(/ルール|監査ルール|Rules/i).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/ルール|監査ルール|Rules/i).first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 });
 

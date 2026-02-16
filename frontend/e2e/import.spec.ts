@@ -12,7 +12,7 @@ test.describe('Import Page', () => {
   });
 
   test('should display import page title', async ({ page }) => {
-    await expect(page.getByText('データ取込')).toBeVisible();
+    await expect(page.getByText('データ取込').first()).toBeVisible();
   });
 
   test('should display file upload area', async ({ page }) => {
