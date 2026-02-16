@@ -1,7 +1,5 @@
 """期間比較APIのテスト."""
 
-import pytest
-
 
 class TestPeriodComparisonAPI:
     """期間比較エンドポイントのテスト。"""
