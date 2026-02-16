@@ -175,18 +175,20 @@ export default function Layout({ children, isConnected }: LayoutProps) {
     bottomNavItems.find((item) => item.path === location.pathname);
 
   return (
-    <div className="flex h-screen bg-neutral-50">
+    <div className="flex h-screen bg-neutral-50 dark:bg-neutral-900">
       {/* Sidebar */}
-      <aside className="w-[280px] bg-white border-r border-neutral-200 flex flex-col shadow-nav">
+      <aside className="w-[280px] bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col shadow-nav">
         {/* Logo */}
-        <div className="h-header flex items-center px-6 border-b border-neutral-100">
+        <div className="h-header flex items-center px-6 border-b border-neutral-100 dark:border-neutral-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-brand rounded-xl flex items-center justify-center shadow-sm">
               <Activity className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-xl font-bold text-primary-900 tracking-tight">JAIA</span>
-              <p className="text-[10px] text-neutral-400 font-medium tracking-wide">
+              <span className="text-xl font-bold text-primary-900 dark:text-primary-100 tracking-tight">
+                JAIA
+              </span>
+              <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium tracking-wide">
                 Journal Entry Analyzer
               </p>
             </div>
@@ -228,7 +230,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="px-4 py-3 border-t border-neutral-100">
+        <div className="px-4 py-3 border-t border-neutral-100 dark:border-neutral-700">
           {bottomNavItems.map((item) => (
             <Link
               key={item.path}
@@ -249,7 +251,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
         </div>
 
         {/* Status */}
-        <div className="px-5 py-4 border-t border-neutral-100 bg-neutral-50">
+        <div className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div
@@ -270,13 +272,15 @@ export default function Layout({ children, isConnected }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-header bg-white border-b border-neutral-200 flex items-center justify-between px-8 shadow-nav">
+        <header className="h-header bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between px-8 shadow-nav">
           <div>
-            <h1 className="text-xl font-semibold text-neutral-900">
+            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
               {currentPage?.label || 'JAIA'}
             </h1>
             {currentPage?.description && (
-              <p className="text-sm text-neutral-500 mt-0.5">{currentPage.description}</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+                {currentPage.description}
+              </p>
             )}
           </div>
 
@@ -303,7 +307,7 @@ export default function Layout({ children, isConnected }: LayoutProps) {
                 )}
               </button>
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-dropdown border border-neutral-200 z-50">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-neutral-800 rounded-lg shadow-dropdown border border-neutral-200 dark:border-neutral-700 z-50">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
                     <span className="font-semibold text-neutral-800 text-sm">通知</span>
                     {unreadCount > 0 && (

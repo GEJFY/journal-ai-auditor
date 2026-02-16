@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import DashboardPage from './pages/DashboardPage';
@@ -32,9 +33,53 @@ const queryClient = new QueryClient({
   },
 });
 
+function useTheme() {
+  useEffect(() => {
+    const applyTheme = () => {
+      try {
+        const stored = localStorage.getItem('jaia-settings');
+        const settings = stored ? JSON.parse(stored) : {};
+        const theme = settings.theme || 'system';
+
+        if (
+          theme === 'dark' ||
+          (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'jaia-settings') applyTheme();
+    };
+    window.addEventListener('storage', handleStorage);
+
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', applyTheme);
+
+    // Poll for same-window localStorage changes
+    const interval = setInterval(applyTheme, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      mq.removeEventListener('change', applyTheme);
+      clearInterval(interval);
+    };
+  }, []);
+}
+
 function AppContent() {
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const { showOnboarding, completeOnboarding } = useOnboarding();
+
+  useTheme();
 
   // Check backend connection on mount
   useEffect(() => {
@@ -82,6 +127,7 @@ function App() {
         <BrowserRouter>
           <AppContent />
         </BrowserRouter>
+        <Toaster position="top-right" richColors closeButton />
       </QueryClientProvider>
     </ErrorBoundary>
   );
