@@ -1108,21 +1108,38 @@ cp data/jaia_meta.db-wal "backups/jaia_meta_${BACKUP_DATE}.db-wal" 2>/dev/null |
 cp data/jaia_meta.db-shm "backups/jaia_meta_${BACKUP_DATE}.db-shm" 2>/dev/null || true
 ```
 
-### 8.4 自動バックアップスケジュール（推奨）
+### 8.4 自動バックアップスクリプト
+
+プロジェクトに含まれるバックアップスクリプトを使用してください。
 
 ```bash
-# crontab設定例
-# 毎日午前2時にDuckDBバックアップ
-0 2 * * * /opt/jaia/scripts/backup_duckdb.sh
+# ローカルバックアップ
+./scripts/backup_db.sh
 
-# 毎日午前3時にSQLiteバックアップ
-0 3 * * * /opt/jaia/scripts/backup_sqlite.sh
+# Docker volume からバックアップ
+./scripts/backup_db.sh --docker
+
+# gzip 圧縮付き、14日保持
+./scripts/backup_db.sh --compress --retain 14
+
+# バックアップ一覧の確認
+./scripts/restore_db.sh --list
+
+# 最新バックアップからリストア
+./scripts/restore_db.sh --latest
+
+# 指定タイムスタンプでリストア
+./scripts/restore_db.sh --timestamp 20260216_020000
+```
+
+#### crontab 設定例（自動バックアップ）
+
+```bash
+# 毎日午前2時にバックアップ（圧縮、30日保持）
+0 2 * * * /opt/jaia/scripts/backup_db.sh --compress --retain 30
 
 # 毎週日曜午前4時にログアーカイブ
 0 4 * * 0 /opt/jaia/scripts/archive_logs.sh
-
-# 30日以前のバックアップを自動削除
-0 5 * * * find /opt/jaia/backups -name "*.duckdb" -mtime +30 -delete
 ```
 
 ### 8.5 リストア手順
