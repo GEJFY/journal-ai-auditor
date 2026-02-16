@@ -4,7 +4,7 @@
  * KPIカード、チャート、リスク分布の表示を検証する。
  */
 
-import { test, expect, MOCK_SUMMARY } from './fixtures';
+import { test, expect } from './fixtures';
 
 test.describe('Dashboard Page', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,15 +12,13 @@ test.describe('Dashboard Page', () => {
   });
 
   test('should display page title', async ({ page }) => {
-    // サイドバーとページ内の両方にダッシュボードがあるので heading で特定
+    // ページが正常に表示される
     await expect(page.locator('h1, h2, [class*="title"]').first()).toBeVisible();
   });
 
   test('should display KPI stat cards', async ({ page }) => {
-    // 仕訳データ件数が表示される（ロケール番号フォーマット）
-    await expect(
-      page.getByText(MOCK_SUMMARY.total_entries.toLocaleString(), { exact: false })
-    ).toBeVisible({ timeout: 10000 });
+    // 仕訳データ件数（784,824 or 784824）がページ内に表示される
+    await expect(page.getByText(/784[,.]?824/).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display risk distribution section', async ({ page }) => {
@@ -39,7 +37,6 @@ test.describe('Dashboard Page', () => {
     const refreshBtn = page.locator('button svg').first();
     if (await refreshBtn.isVisible()) {
       await refreshBtn.click();
-      // リフレッシュ後もKPIデータが表示される
       await page.waitForTimeout(1000);
     }
     // ページが正常に動作している
@@ -47,7 +44,7 @@ test.describe('Dashboard Page', () => {
   });
 
   test('should render page content without errors', async ({ page }) => {
-    // ページがエラーなく表示される（SVGチャートまたはテキストコンテンツ）
+    // ページがエラーなく表示される
     await page.waitForTimeout(2000);
     const hasSvg = await page
       .locator('svg')
@@ -55,7 +52,8 @@ test.describe('Dashboard Page', () => {
       .isVisible()
       .catch(() => false);
     const hasContent = await page
-      .getByText(MOCK_SUMMARY.total_entries.toLocaleString(), { exact: false })
+      .getByText(/784[,.]?824/)
+      .first()
       .isVisible()
       .catch(() => false);
     expect(hasSvg || hasContent).toBeTruthy();

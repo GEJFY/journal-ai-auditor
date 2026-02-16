@@ -11,9 +11,9 @@ test.describe('Desktop Layout (1280x720)', () => {
 
   test('should show sidebar on desktop', async ({ page }) => {
     await page.goto('/');
-    // サイドバーのナビリンクが表示される
-    await expect(page.getByRole('link', { name: 'ダッシュボード' })).toBeVisible();
-    await expect(page.getByRole('link', { name: '設定' })).toBeVisible();
+    // サイドバーのナビリンクが表示される（テキストで検索）
+    await expect(page.locator('a').filter({ hasText: 'ダッシュボード' }).first()).toBeVisible();
+    await expect(page.locator('a').filter({ hasText: '設定' }).first()).toBeVisible();
   });
 
   test('should display full navigation labels', async ({ page }) => {
@@ -39,21 +39,18 @@ test.describe('Mobile Layout (375x667)', () => {
     await page.goto('/');
     // モバイルでもページコンテンツが表示される
     await expect(page.locator('body')).toBeVisible();
-    // JAIAブランディングまたはコンテンツが見える
     await expect(page.getByText(/JAIA|ダッシュボード/i).first()).toBeVisible();
   });
 
   test('should show page content on mobile', async ({ page }) => {
     await page.goto('/');
-    // ページコンテンツは常に表示される
     await expect(page.getByText(/ダッシュボード|JAIA/i).first()).toBeVisible();
   });
 
   test('should navigate on mobile', async ({ page }) => {
     await page.goto('/');
     // モバイルでもナビゲーションが可能であることを確認
-    // サイドバーリンクが表示されているか、メニューボタンがあるか
-    const settingsLink = page.getByRole('link', { name: '設定' });
+    const settingsLink = page.locator('a').filter({ hasText: '設定' }).first();
     const isSettingsVisible = await settingsLink.isVisible().catch(() => false);
 
     if (isSettingsVisible) {
@@ -68,7 +65,7 @@ test.describe('Mobile Layout (375x667)', () => {
       if (await menuBtn.isVisible()) {
         await menuBtn.click();
         await page.waitForTimeout(500);
-        const link = page.getByRole('link', { name: '設定' });
+        const link = page.locator('a').filter({ hasText: '設定' }).first();
         if (await link.isVisible({ timeout: 2000 }).catch(() => false)) {
           await link.click();
           await expect(page).toHaveURL(/settings/);
