@@ -27,6 +27,14 @@ os.environ["DUCKDB_PATH"] = str(Path(_test_data_dir) / "test.duckdb")
 os.environ["SQLITE_PATH"] = str(Path(_test_data_dir) / "test.db")
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """テスト毎にレートリミッターをリセットし、429エラーを防止します。"""
+    from app.core.middleware import rate_limiter
+
+    rate_limiter.requests.clear()
+
+
 @pytest.fixture(scope="session")
 def temp_data_dir() -> Generator[Path, None, None]:
     """

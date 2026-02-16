@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Save, Database, Bot, Palette, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { API_BASE } from '@/lib/api';
+import RulesSection from '@/components/settings/RulesSection';
 
 interface Settings {
   fiscalYearStart: string;
@@ -198,6 +199,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Audit Rules */}
+      <RulesSection />
 
       {/* Save Button & Status */}
       <div className="flex items-center justify-end gap-3">

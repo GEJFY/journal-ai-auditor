@@ -230,6 +230,29 @@ export interface ReportTemplate {
 }
 
 // =============================================================================
+// Rule Management Types
+// =============================================================================
+
+export interface AuditRule {
+  rule_id: string;
+  rule_name: string;
+  rule_name_en: string | null;
+  category: string;
+  description: string | null;
+  severity: string;
+  is_enabled: boolean;
+  parameters: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RuleCategoryInfo {
+  category: string;
+  total: number;
+  enabled: number;
+}
+
+// =============================================================================
 // Fetch Wrapper
 // =============================================================================
 
@@ -512,5 +535,32 @@ export const api = {
     if (limit) params.append('limit', limit.toString());
 
     return fetchApi(`/reports/history?${params}`);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Rules
+  // ---------------------------------------------------------------------------
+  getRules: (category?: string): Promise<{ rules: AuditRule[]; total: number }> => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    return fetchApi(`/rules?${params}`);
+  },
+
+  getRuleCategories: (): Promise<{ categories: RuleCategoryInfo[] }> => {
+    return fetchApi('/rules/categories');
+  },
+
+  updateRule: (
+    ruleId: string,
+    data: { is_enabled?: boolean; severity?: string; parameters?: Record<string, unknown> }
+  ): Promise<AuditRule> => {
+    return fetchApi(`/rules/${ruleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  resetRule: (ruleId: string): Promise<AuditRule> => {
+    return fetchApi(`/rules/${ruleId}/reset`, { method: 'POST' });
   },
 };
