@@ -274,6 +274,63 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 }
 
 // =============================================================================
+// SSE Types & Helper
+// =============================================================================
+
+export interface SSEEvent {
+  type: 'start' | 'thinking' | 'chunk' | 'complete' | 'error';
+  agent?: string;
+  content?: string;
+  data?: Record<string, unknown>;
+  message?: string;
+}
+
+export async function streamSSE(
+  endpoint: string,
+  body: Record<string, unknown>,
+  onEvent: (event: SSEEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `API Error: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('No response body');
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        try {
+          const event: SSEEvent = JSON.parse(line.slice(6));
+          onEvent(event);
+        } catch {
+          // 不正なJSONは無視
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
 // API Methods
 // =============================================================================
 
