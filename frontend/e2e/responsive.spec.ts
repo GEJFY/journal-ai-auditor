@@ -1,0 +1,56 @@
+/**
+ * E2E: レスポンシブレイアウト
+ *
+ * デスクトップ・タブレット・モバイルでのレイアウト表示を検証する。
+ */
+
+import { test, expect } from './fixtures';
+
+test.describe('Desktop Layout (1280x720)', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test('should show sidebar on desktop', async ({ page }) => {
+    await page.goto('/');
+    // サイドバーのナビリンクが表示される（テキストで検索）
+    await expect(page.locator('a').filter({ hasText: 'ダッシュボード' }).first()).toBeVisible();
+    await expect(page.locator('a').filter({ hasText: '設定' }).first()).toBeVisible();
+  });
+
+  test('should display full navigation labels', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('データ管理').first()).toBeVisible();
+  });
+});
+
+test.describe('Tablet Layout (768x1024)', () => {
+  test.use({ viewport: { width: 768, height: 1024 } });
+
+  test('should render page content on tablet', async ({ page }) => {
+    await page.goto('/');
+    // ページコンテンツが表示される
+    await expect(page.getByText(/ダッシュボード|JAIA/i).first()).toBeVisible();
+  });
+});
+
+test.describe('Mobile Layout (375x667)', () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test('should display content on mobile', async ({ page }) => {
+    await page.goto('/');
+    // モバイルでもページコンテンツが表示される
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByText(/JAIA|ダッシュボード/i).first()).toBeVisible();
+  });
+
+  test('should show page content on mobile', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText(/ダッシュボード|JAIA/i).first()).toBeVisible();
+  });
+
+  test('should have navigation links accessible on mobile', async ({ page }) => {
+    await page.goto('/');
+    // モバイルでもナビゲーションリンクがDOMに存在する
+    const settingsLink = page.locator('a[href="/settings"]');
+    await expect(settingsLink).toBeAttached();
+  });
+});
