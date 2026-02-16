@@ -242,6 +242,23 @@ class SQLiteManager:
                 )
             """)
 
+            # Audit trail
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS audit_trail (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    event_type TEXT NOT NULL,
+                    event_action TEXT NOT NULL,
+                    user_id TEXT,
+                    resource_type TEXT,
+                    resource_id TEXT,
+                    description TEXT,
+                    details TEXT,
+                    ip_address TEXT,
+                    request_id TEXT
+                )
+            """)
+
             # Filter presets
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS filter_presets (
