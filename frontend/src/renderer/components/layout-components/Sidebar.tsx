@@ -164,10 +164,7 @@ export default function Sidebar({ currentPath, isConnected, sidebarOpen, onClose
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={clsx(
-                    'nav-item group',
-                    currentPath === item.path && 'nav-item-active'
-                  )}
+                  className={clsx('nav-item group', currentPath === item.path && 'nav-item-active')}
                   title={item.description}
                   aria-current={currentPath === item.path ? 'page' : undefined}
                   role="listitem"

@@ -160,9 +160,7 @@ export default function RulesSection() {
                     key={rule.rule_id}
                     className="border-b border-neutral-100 hover:bg-neutral-50"
                   >
-                    <td className="py-2 pr-2 font-mono text-xs text-neutral-400">
-                      {rule.rule_id}
-                    </td>
+                    <td className="py-2 pr-2 font-mono text-xs text-neutral-400">{rule.rule_id}</td>
                     <td className="py-2 pr-2">
                       <div className="font-medium text-neutral-800">{rule.rule_name}</div>
                       {rule.description && (
