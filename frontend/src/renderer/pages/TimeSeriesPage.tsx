@@ -29,11 +29,12 @@ import {
   Line,
   Legend,
 } from 'recharts';
-import { api } from '@/lib/api';
+import { api, type PeriodComparisonItem } from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader';
 import clsx from 'clsx';
 
 type Aggregation = 'daily' | 'weekly' | 'monthly';
+type ComparisonType = 'mom' | 'yoy';
 
 const CHART_COLORS = {
   amount: '#102a43',
@@ -48,6 +49,8 @@ export default function TimeSeriesPage() {
   const [aggregation, setAggregation] = useState<Aggregation>('monthly');
   const [chartType, setChartType] = useState<'area' | 'bar' | 'line'>('area');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [comparisonType, setComparisonType] = useState<ComparisonType>('mom');
+  const [comparisonPeriod, setComparisonPeriod] = useState(6);
 
   const {
     data: timeSeries,
@@ -56,6 +59,11 @@ export default function TimeSeriesPage() {
   } = useQuery({
     queryKey: ['timeseries', fiscalYear, aggregation],
     queryFn: () => api.getTimeSeries(fiscalYear, aggregation),
+  });
+
+  const { data: comparison, isLoading: comparisonLoading } = useQuery({
+    queryKey: ['period-comparison', fiscalYear, comparisonPeriod, comparisonType],
+    queryFn: () => api.getPeriodComparison(fiscalYear, comparisonPeriod, comparisonType, 20),
   });
 
   const handleRefresh = async () => {
@@ -348,6 +356,126 @@ export default function TimeSeriesPage() {
           </div>
         </div>
       )}
+
+      {/* Period Comparison */}
+      <div className="card">
+        <div className="card-header flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-neutral-400" />
+            <h3 className="font-semibold text-neutral-800">期間比較</h3>
+          </div>
+          <div className="flex gap-2 items-center">
+            <select
+              value={comparisonPeriod}
+              onChange={(e) => setComparisonPeriod(Number(e.target.value))}
+              className="input text-sm py-1 w-24"
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  第{i + 1}期
+                </option>
+              ))}
+            </select>
+            <div className="flex bg-neutral-100 rounded-lg p-0.5">
+              {(['mom', 'yoy'] as ComparisonType[]).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setComparisonType(type)}
+                  className={clsx(
+                    'px-3 py-1 rounded-md text-sm transition-colors',
+                    comparisonType === type
+                      ? 'bg-white shadow-sm text-neutral-900 font-medium'
+                      : 'text-neutral-500 hover:text-neutral-700'
+                  )}
+                >
+                  {type === 'mom' ? '前月比' : '前年比'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="card-body">
+          {comparisonLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="spinner" />
+            </div>
+          ) : comparison && comparison.items.length > 0 ? (
+            <div>
+              <div className="text-sm text-neutral-500 mb-3">
+                {comparison.current_period} vs {comparison.previous_period}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-200">
+                      <th className="text-left py-2 px-3 font-medium text-neutral-600">勘定科目</th>
+                      <th className="text-right py-2 px-3 font-medium text-neutral-600">当期</th>
+                      <th className="text-right py-2 px-3 font-medium text-neutral-600">前期</th>
+                      <th className="text-right py-2 px-3 font-medium text-neutral-600">増減額</th>
+                      <th className="text-right py-2 px-3 font-medium text-neutral-600">増減率</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparison.items.map((item: PeriodComparisonItem) => (
+                      <tr key={item.account_code} className="border-b border-neutral-100">
+                        <td className="py-2 px-3">
+                          <span className="text-neutral-500 text-xs mr-1">{item.account_code}</span>
+                          {item.account_name}
+                        </td>
+                        <td className="text-right py-2 px-3">
+                          ¥{item.current_amount.toLocaleString()}
+                        </td>
+                        <td className="text-right py-2 px-3">
+                          ¥{item.previous_amount.toLocaleString()}
+                        </td>
+                        <td
+                          className={clsx(
+                            'text-right py-2 px-3 font-medium',
+                            item.change_amount > 0
+                              ? 'text-red-600'
+                              : item.change_amount < 0
+                                ? 'text-green-600'
+                                : 'text-neutral-500'
+                          )}
+                        >
+                          <span className="inline-flex items-center gap-0.5">
+                            {item.change_amount > 0 ? (
+                              <ArrowUpRight className="w-3 h-3" />
+                            ) : item.change_amount < 0 ? (
+                              <ArrowDownRight className="w-3 h-3" />
+                            ) : null}
+                            ¥{Math.abs(item.change_amount).toLocaleString()}
+                          </span>
+                        </td>
+                        <td
+                          className={clsx(
+                            'text-right py-2 px-3',
+                            item.change_percent !== null && item.change_percent > 0
+                              ? 'text-red-600'
+                              : item.change_percent !== null && item.change_percent < 0
+                                ? 'text-green-600'
+                                : 'text-neutral-500'
+                          )}
+                        >
+                          {item.change_percent !== null
+                            ? `${item.change_percent.toFixed(1)}%`
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-neutral-500">
+              {comparison?.previous_period === 'N/A'
+                ? '第1期には前月比較データがありません'
+                : '比較データがありません'}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

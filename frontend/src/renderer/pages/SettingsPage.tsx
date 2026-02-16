@@ -5,8 +5,17 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Save, Database, Bot, Palette, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { API_BASE } from '@/lib/api';
+import {
+  Save,
+  Database,
+  Bot,
+  Palette,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Activity,
+} from 'lucide-react';
+import { API_BASE, api, type LLMUsageSummary } from '@/lib/api';
 import RulesSection from '@/components/settings/RulesSection';
 
 interface Settings {
@@ -31,6 +40,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [llmUsage, setLlmUsage] = useState<LLMUsageSummary | null>(null);
 
   useEffect(() => {
     // Load from localStorage first
@@ -43,6 +53,12 @@ export default function SettingsPage() {
         // 破損データは無視
       }
     }
+
+    // Fetch LLM usage
+    api
+      .getLLMUsageSummary(30)
+      .then(setLlmUsage)
+      .catch(() => {});
 
     // Then fetch from backend
     fetch(`${API_BASE}/settings`)
@@ -202,6 +218,57 @@ export default function SettingsPage() {
 
       {/* Audit Rules */}
       <RulesSection />
+
+      {/* LLM Usage */}
+      {llmUsage && llmUsage.total_requests > 0 && (
+        <div className="card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Activity className="w-5 h-5 text-primary-600" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              LLM使用状況（過去30日）
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">リクエスト数</p>
+              <p className="text-lg font-semibold">{llmUsage.total_requests.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">合計トークン</p>
+              <p className="text-lg font-semibold">
+                {(llmUsage.total_input_tokens + llmUsage.total_output_tokens).toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">推定コスト</p>
+              <p className="text-lg font-semibold">${llmUsage.total_cost_usd.toFixed(4)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">平均レイテンシ</p>
+              <p className="text-lg font-semibold">{llmUsage.avg_latency_ms.toFixed(0)}ms</p>
+            </div>
+          </div>
+
+          {Object.keys(llmUsage.by_provider).length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                プロバイダー別
+              </p>
+              <div className="space-y-1">
+                {Object.entries(llmUsage.by_provider).map(([provider, data]) => (
+                  <div key={provider} className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">{provider}</span>
+                    <span>
+                      {data.requests}件 / ${data.cost_usd.toFixed(4)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Save Button & Status */}
       <div className="flex items-center justify-end gap-3">

@@ -253,6 +253,60 @@ export interface RuleCategoryInfo {
 }
 
 // =============================================================================
+// Period Comparison Types
+// =============================================================================
+
+export interface PeriodComparisonItem {
+  account_code: string;
+  account_name: string;
+  current_amount: number;
+  previous_amount: number;
+  change_amount: number;
+  change_percent: number | null;
+}
+
+export interface PeriodComparisonResponse {
+  items: PeriodComparisonItem[];
+  comparison_type: string;
+  current_period: string;
+  previous_period: string;
+  total_current: number;
+  total_previous: number;
+}
+
+// =============================================================================
+// LLM Usage Types
+// =============================================================================
+
+export interface LLMUsageSummary {
+  total_requests: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_usd: number;
+  avg_latency_ms: number;
+  success_rate: number;
+  by_provider: Record<
+    string,
+    { requests: number; input_tokens: number; output_tokens: number; cost_usd: number }
+  >;
+  by_request_type: Record<string, { requests: number; cost_usd: number }>;
+}
+
+export interface LLMDailyUsage {
+  date: string;
+  requests: number;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
+}
+
+export interface LLMDailyResponse {
+  daily: LLMDailyUsage[];
+  total_cost_usd: number;
+  days: number;
+}
+
+// =============================================================================
 // Fetch Wrapper
 // =============================================================================
 
@@ -562,5 +616,37 @@ export const api = {
 
   resetRule: (ruleId: string): Promise<AuditRule> => {
     return fetchApi(`/rules/${ruleId}/reset`, { method: 'POST' });
+  },
+
+  // ---------------------------------------------------------------------------
+  // Period Comparison
+  // ---------------------------------------------------------------------------
+  getPeriodComparison: (
+    fiscalYear: number,
+    period: number,
+    comparisonType: 'mom' | 'yoy' = 'mom',
+    limit?: number
+  ): Promise<PeriodComparisonResponse> => {
+    const params = new URLSearchParams({
+      fiscal_year: fiscalYear.toString(),
+      period: period.toString(),
+      comparison_type: comparisonType,
+    });
+    if (limit) params.append('limit', limit.toString());
+
+    return fetchApi(`/dashboard/period-comparison?${params}`);
+  },
+
+  // ---------------------------------------------------------------------------
+  // LLM Usage
+  // ---------------------------------------------------------------------------
+  getLLMUsageSummary: (days?: number): Promise<LLMUsageSummary> => {
+    const params = days ? `?days=${days}` : '';
+    return fetchApi(`/llm-usage/summary${params}`);
+  },
+
+  getLLMDailyUsage: (days?: number): Promise<LLMDailyResponse> => {
+    const params = days ? `?days=${days}` : '';
+    return fetchApi(`/llm-usage/daily${params}`);
   },
 };

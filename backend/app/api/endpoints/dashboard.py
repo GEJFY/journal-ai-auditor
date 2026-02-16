@@ -409,6 +409,135 @@ async def get_kpi(fiscal_year: int) -> dict[str, Any]:
     return {"fiscal_year": fiscal_year}
 
 
+class PeriodComparisonItem(BaseModel):
+    """期間比較データ項目。"""
+
+    account_code: str
+    account_name: str
+    current_amount: float
+    previous_amount: float
+    change_amount: float
+    change_percent: float | None
+
+
+class PeriodComparisonResponse(BaseModel):
+    """期間比較レスポンス。"""
+
+    items: list[PeriodComparisonItem]
+    comparison_type: str
+    current_period: str
+    previous_period: str
+    total_current: float
+    total_previous: float
+
+
+@router.get("/period-comparison", response_model=PeriodComparisonResponse)
+async def get_period_comparison(
+    fiscal_year: int = Query(...),
+    period: int = Query(..., ge=1, le=12, description="比較対象の会計期間"),
+    comparison_type: str = Query(
+        "mom", regex="^(mom|yoy)$", description="mom=前月比, yoy=前年同月比"
+    ),
+    limit: int = Query(20, le=100),
+) -> PeriodComparisonResponse:
+    """勘定科目別の期間比較データを取得する。"""
+    db = get_db()
+
+    if comparison_type == "mom":
+        # 前月比: 同一年度内で前月と比較
+        current_period = period
+        previous_period = period - 1
+        current_year = fiscal_year
+        previous_year = fiscal_year
+        current_label = f"{fiscal_year}年 第{current_period}期"
+        previous_label = f"{fiscal_year}年 第{previous_period}期"
+
+        if previous_period < 1:
+            return PeriodComparisonResponse(
+                items=[],
+                comparison_type=comparison_type,
+                current_period=current_label,
+                previous_period="N/A",
+                total_current=0,
+                total_previous=0,
+            )
+    else:
+        # 前年同月比
+        current_period = period
+        previous_period = period
+        current_year = fiscal_year
+        previous_year = fiscal_year - 1
+        current_label = f"{current_year}年 第{current_period}期"
+        previous_label = f"{previous_year}年 第{previous_period}期"
+
+    query = f"""
+        WITH current_data AS (
+            SELECT
+                gl_account_number,
+                SUM(CASE WHEN debit_credit_indicator = 'D' THEN amount ELSE -amount END) as net_amount
+            FROM journal_entries
+            WHERE fiscal_year = ? AND accounting_period = ?
+            GROUP BY gl_account_number
+        ),
+        previous_data AS (
+            SELECT
+                gl_account_number,
+                SUM(CASE WHEN debit_credit_indicator = 'D' THEN amount ELSE -amount END) as net_amount
+            FROM journal_entries
+            WHERE fiscal_year = ? AND accounting_period = ?
+            GROUP BY gl_account_number
+        )
+        SELECT
+            COALESCE(c.gl_account_number, p.gl_account_number) as account_code,
+            COALESCE(coa.account_name, COALESCE(c.gl_account_number, p.gl_account_number)) as account_name,
+            COALESCE(c.net_amount, 0) as current_amount,
+            COALESCE(p.net_amount, 0) as previous_amount
+        FROM current_data c
+        FULL OUTER JOIN previous_data p
+            ON c.gl_account_number = p.gl_account_number
+        LEFT JOIN chart_of_accounts coa
+            ON COALESCE(c.gl_account_number, p.gl_account_number) = coa.account_code
+        ORDER BY ABS(COALESCE(c.net_amount, 0) - COALESCE(p.net_amount, 0)) DESC
+        LIMIT {limit}
+    """
+
+    result = db.execute(
+        query, [current_year, current_period, previous_year, previous_period]
+    )
+
+    items = []
+    total_current = 0.0
+    total_previous = 0.0
+
+    for row in result:
+        current_amt = row[2] or 0.0
+        previous_amt = row[3] or 0.0
+        change = current_amt - previous_amt
+        pct = (change / previous_amt * 100) if previous_amt != 0 else None
+
+        items.append(
+            PeriodComparisonItem(
+                account_code=row[0] or "",
+                account_name=row[1] or "",
+                current_amount=current_amt,
+                previous_amount=previous_amt,
+                change_amount=change,
+                change_percent=round(pct, 2) if pct is not None else None,
+            )
+        )
+        total_current += abs(current_amt)
+        total_previous += abs(previous_amt)
+
+    return PeriodComparisonResponse(
+        items=items,
+        comparison_type=comparison_type,
+        current_period=current_label,
+        previous_period=previous_label,
+        total_current=total_current,
+        total_previous=total_previous,
+    )
+
+
 @router.get("/benford")
 async def get_benford_distribution(fiscal_year: int) -> dict[str, Any]:
     """Get Benford's Law distribution analysis."""

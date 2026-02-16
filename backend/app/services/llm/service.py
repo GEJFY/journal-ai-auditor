@@ -144,6 +144,22 @@ class LLMService:
             raise ValueError(f"Unknown provider: {provider}")
 
         response.latency_ms = (time.perf_counter() - start_time) * 1000
+
+        # LLM使用ログを記録
+        try:
+            from app.services.llm.cost_tracker import log_usage
+
+            log_usage(
+                provider=response.provider,
+                model=response.model,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+                latency_ms=response.latency_ms,
+                request_type=kwargs.get("request_type", "general"),
+            )
+        except Exception:
+            pass  # ログ記録失敗はLLMレスポンスに影響させない
+
         return response
 
     def _generate_anthropic(
