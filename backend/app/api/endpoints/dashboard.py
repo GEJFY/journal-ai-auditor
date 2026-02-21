@@ -52,7 +52,7 @@ class FilterParams(BaseModel):
 def build_filter_clause(params: FilterParams) -> tuple[str, list[Any]]:
     """Build SQL WHERE clause and parameters from filter params."""
     clauses = ["je.fiscal_year = ?"]
-    args = [params.fiscal_year]
+    args: list[Any] = [params.fiscal_year]
 
     if params.period_from:
         clauses.append("je.accounting_period >= ?")
