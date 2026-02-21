@@ -25,7 +25,7 @@ Aggregation tables (17 total):
 
 from dataclasses import dataclass
 
-from app.db import DuckDBManager
+from app.db import DuckDBManager, duckdb_manager
 
 
 @dataclass
@@ -48,7 +48,7 @@ class AggregationService:
         Args:
             db: DuckDB manager instance.
         """
-        self.db = db or DuckDBManager()
+        self.db = db or duckdb_manager
 
     def update_all(self, fiscal_year: int | None = None) -> list[AggregationResult]:
         """Update all aggregation tables.
@@ -85,6 +85,7 @@ class AggregationService:
         # Pattern aggregations
         results.append(self._update_approval_patterns(fiscal_year))
         results.append(self._update_account_activity(fiscal_year))
+        results.append(self._update_account_flow(fiscal_year))
 
         # Summary aggregations
         results.append(self._update_ml_scores(fiscal_year))
@@ -524,6 +525,32 @@ class AggregationService:
             GROUP BY gl_account_number, fiscal_year
         """
         return self._execute_aggregation("agg_account_activity", query)
+
+    def _update_account_flow(self, fiscal_year: int | None) -> AggregationResult:
+        """Update account-to-account fund flow aggregation."""
+        fy_filter = f"AND d.fiscal_year = {fiscal_year}" if fiscal_year else ""
+
+        query = f"""
+            INSERT INTO agg_account_flow
+            SELECT
+                d.fiscal_year,
+                d.accounting_period,
+                d.gl_account_number as source_account,
+                c.gl_account_number as target_account,
+                SUM(d.amount) as flow_amount,
+                COUNT(DISTINCT d.journal_id) as transaction_count
+            FROM journal_entries d
+            JOIN journal_entries c
+                ON d.journal_id = c.journal_id
+                AND d.debit_credit_indicator = 'D'
+                AND c.debit_credit_indicator = 'C'
+                AND d.gl_detail_id <> c.gl_detail_id
+            WHERE 1=1 {fy_filter}
+              AND d.fiscal_year = c.fiscal_year
+            GROUP BY d.fiscal_year, d.accounting_period,
+                     d.gl_account_number, c.gl_account_number
+        """
+        return self._execute_aggregation("agg_account_flow", query)
 
     def _update_anomaly_summary(self, fiscal_year: int | None) -> AggregationResult:
         """Update anomaly detection summary."""

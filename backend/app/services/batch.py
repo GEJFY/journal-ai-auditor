@@ -435,3 +435,15 @@ class BatchScheduler:
             reverse=True,
         )
         return [job.to_dict() for job in sorted_jobs[:limit]]
+
+
+# Module-level singleton
+_scheduler: BatchScheduler | None = None
+
+
+def get_scheduler() -> BatchScheduler:
+    """Get or create the singleton BatchScheduler instance."""
+    global _scheduler  # noqa: PLW0603
+    if _scheduler is None:
+        _scheduler = BatchScheduler()
+    return _scheduler
