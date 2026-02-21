@@ -59,7 +59,7 @@ class TestPPTManagementReport:
         """経営陣向けPPTのスライド数が7以下であること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -76,7 +76,7 @@ class TestPPTManagementReport:
         """タイトルスライドに対象読者ラベルがあること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -100,7 +100,7 @@ class TestPPTManagementReport:
         """経営陣向けPPTにベンフォード分析スライドがないこと."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -121,7 +121,7 @@ class TestPPTManagementReport:
         """経営陣向けPPTに付録スライドがないこと."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -144,7 +144,7 @@ class TestPPTAuditorReport:
         """監査実務者向けPPTのスライド数が10以上であること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -160,7 +160,7 @@ class TestPPTAuditorReport:
         """タイトルスライドに「監査実務者向け」ラベルがあること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -183,7 +183,7 @@ class TestPPTAuditorReport:
         """監査実務者向けPPTにベンフォードスライドがあること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -204,7 +204,7 @@ class TestPPTAuditorReport:
         """監査実務者向けPPTに付録スライドがあること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PPTReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -234,7 +234,7 @@ class TestPDFManagementReport:
         """経営陣向けPDFが生成されること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PDFReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -251,7 +251,7 @@ class TestPDFManagementReport:
         """経営陣向けPDFに検証手法セクションがないこと."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PDFReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -277,7 +277,7 @@ class TestPDFAuditorReport:
         """監査実務者向けPDFが生成されること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PDFReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -293,7 +293,7 @@ class TestPDFAuditorReport:
         """監査実務者向けPDFに検証手法セクションがあること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PDFReportGenerator, ReportConfig
 
             config = ReportConfig(
@@ -314,7 +314,7 @@ class TestPDFAuditorReport:
         """監査実務者向けPDFにベンフォードセクションがあること."""
         mock_db = _make_mock_db()
 
-        with patch("app.services.report_generator.DuckDBManager", return_value=mock_db):
+        with patch("app.services.report_generator.duckdb_manager", mock_db):
             from app.services.report_generator import PDFReportGenerator, ReportConfig
 
             config = ReportConfig(
