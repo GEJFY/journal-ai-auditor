@@ -6,6 +6,8 @@ Coordinates the execution of multiple agents for complex audit tasks:
 - Automated finding review
 """
 
+import logging
+import uuid as uuid_mod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -18,6 +20,9 @@ from app.agents.documentation import DocumentationAgent
 from app.agents.investigation import InvestigationAgent
 from app.agents.qa import QAAgent
 from app.agents.review import ReviewAgent
+from app.db import duckdb_manager
+
+logger = logging.getLogger(__name__)
 
 ORCHESTRATOR_SYSTEM_PROMPT = """あなたはJAIA (Journal entry AI Analyzer) のオーケストレーターです。
 複数の専門エージェントを調整して、複雑な監査タスクを実行します。
@@ -86,6 +91,63 @@ class AgentOrchestrator:
         self.qa_agent = QAAgent(config)
         self.review_agent = ReviewAgent(config)
 
+    def _persist_findings(
+        self,
+        workflow_id: str,
+        agent_type: str,
+        fiscal_year: int,
+        findings: list[dict[str, Any]],
+    ) -> int:
+        """発見事項をaudit_findingsテーブルに永続化する.
+
+        Args:
+            workflow_id: ワークフローID.
+            agent_type: エージェント種別 (analysis, investigation, review).
+            fiscal_year: 会計年度.
+            findings: 発見事項リスト.
+
+        Returns:
+            永続化した件数.
+        """
+        db = duckdb_manager
+        count = 0
+        for f in findings:
+            finding_id = f"AF-{uuid_mod.uuid4().hex[:8].upper()}"
+            try:
+                db.execute(
+                    """INSERT INTO audit_findings
+                       (finding_id, workflow_id, agent_type, fiscal_year,
+                        finding_title, finding_description, severity, category,
+                        affected_amount, affected_count, recommendation)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    [
+                        finding_id,
+                        workflow_id,
+                        agent_type,
+                        fiscal_year,
+                        str(f.get("title", ""))[:500],
+                        str(f.get("description", f.get("title", "")))[:2000],
+                        str(f.get("severity", "MEDIUM")).upper(),
+                        str(f.get("category", "")),
+                        float(f.get("affected_amount", 0)),
+                        int(f.get("affected_count", 0)),
+                        str(f.get("recommendation", "")),
+                    ],
+                )
+                count += 1
+            except Exception as e:
+                logger.warning("Failed to persist finding: %s", e)
+                continue
+        if count > 0:
+            logger.info(
+                "Persisted %d/%d findings for %s (workflow=%s)",
+                count,
+                len(findings),
+                agent_type,
+                workflow_id,
+            )
+        return count
+
     async def run_full_audit_workflow(
         self,
         fiscal_year: int,
@@ -104,10 +166,8 @@ class AgentOrchestrator:
         Returns:
             Workflow result with all agent outputs.
         """
-        import uuid
-
         result = WorkflowResult(
-            workflow_id=str(uuid.uuid4()),
+            workflow_id=str(uuid_mod.uuid4()),
             workflow_type="full_audit",
         )
 
@@ -121,6 +181,11 @@ class AgentOrchestrator:
             # 分析結果から発見事項を構造化抽出
             analysis_findings = self._extract_findings_from_result(
                 analysis_result, "analysis"
+            )
+
+            # 分析発見事項をDBに永続化
+            self._persist_findings(
+                result.workflow_id, "analysis", fiscal_year, analysis_findings
             )
 
             # Step 2: 調査 - 分析結果をコンテキストとして渡す
@@ -138,6 +203,11 @@ class AgentOrchestrator:
                 investigation_result.messages, "investigation"
             )
 
+            # 調査発見事項をDBに永続化
+            self._persist_findings(
+                result.workflow_id, "investigation", fiscal_year, investigation_findings
+            )
+
             # Step 3: レビュー - 分析+調査の全発見事項を渡す
             all_findings = analysis_findings + investigation_findings
             review_prompt = self._build_review_prompt(fiscal_year, all_findings)
@@ -150,6 +220,17 @@ class AgentOrchestrator:
                 if hasattr(review_result, "to_dict")
                 else review_result
             )
+
+            # レビュー結果から追加の発見事項を抽出・永続化
+            review_findings = self._extract_findings_from_messages(
+                review_result.messages if hasattr(review_result, "messages") else [],
+                "review",
+            )
+            self._persist_findings(
+                result.workflow_id, "review", fiscal_year, review_findings
+            )
+
+            all_findings = all_findings + review_findings
 
             # Step 4: 文書化 - 全エージェントの成果物を統合してレポート生成
             doc_context = self._build_documentation_context(
@@ -168,7 +249,8 @@ class AgentOrchestrator:
             result.success = True
             result.final_output = (
                 f"監査ワークフローが正常に完了しました "
-                f"(発見事項: {len(all_findings)}件)"
+                f"(発見事項: {len(all_findings)}件, "
+                f"workflow_id: {result.workflow_id})"
             )
 
         except Exception as e:
@@ -373,10 +455,8 @@ class AgentOrchestrator:
         Returns:
             Workflow result.
         """
-        import uuid
-
         result = WorkflowResult(
-            workflow_id=str(uuid.uuid4()),
+            workflow_id=str(uuid_mod.uuid4()),
             workflow_type="investigation",
         )
 
@@ -419,10 +499,8 @@ class AgentOrchestrator:
         Returns:
             Workflow result with answer.
         """
-        import uuid
-
         result = WorkflowResult(
-            workflow_id=str(uuid.uuid4()),
+            workflow_id=str(uuid_mod.uuid4()),
             workflow_type="qa",
         )
 
@@ -460,10 +538,8 @@ class AgentOrchestrator:
         Returns:
             Workflow result with generated document.
         """
-        import uuid
-
         result = WorkflowResult(
-            workflow_id=str(uuid.uuid4()),
+            workflow_id=str(uuid_mod.uuid4()),
             workflow_type="documentation",
         )
 
@@ -510,10 +586,8 @@ class AgentOrchestrator:
         Returns:
             Workflow result.
         """
-        import uuid
-
         result = WorkflowResult(
-            workflow_id=str(uuid.uuid4()),
+            workflow_id=str(uuid_mod.uuid4()),
             workflow_type="routed",
         )
 

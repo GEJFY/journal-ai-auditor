@@ -174,3 +174,8 @@ class DuckDBManager:
 
 # Global instance
 duckdb_manager = DuckDBManager()
+
+
+def get_db() -> DuckDBManager:
+    """Get global DuckDB manager instance."""
+    return duckdb_manager
