@@ -228,10 +228,12 @@ class PeriodEntryCountAnomalyRule(AuditRule):
         if len(monthly_counts) < 3:
             return result
 
-        mean_count = monthly_counts["entry_count"].mean()
-        std_count = monthly_counts["entry_count"].std()
-        if mean_count is None or std_count is None or std_count == 0:
+        _mean_count = monthly_counts["entry_count"].mean()
+        _std_count = monthly_counts["entry_count"].std()
+        if _mean_count is None or _std_count is None or _std_count == 0:
             return result
+        mean_count = float(_mean_count)
+        std_count = float(_std_count)
 
         upper_bound = mean_count + std_multiplier * std_count
 
@@ -503,9 +505,10 @@ class SeasonalDeviationRule(AuditRule):
         if len(monthly) < 6:
             return result
 
-        overall_mean = monthly["period_total"].mean()
-        if overall_mean is None or overall_mean == 0:
+        _overall_mean = monthly["period_total"].mean()
+        if _overall_mean is None or _overall_mean == 0:
             return result
+        overall_mean = float(_overall_mean)
 
         # 各月の平均からの逸脱を検出
         deviating = monthly.filter(
