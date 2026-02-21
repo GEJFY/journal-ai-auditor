@@ -68,9 +68,11 @@ class MonthOverMonthSpikeRule(AuditRule):
         spikes = monthly.filter(
             (pl.col("prior_total") > 0)
             & (
-                ((pl.col("period_total") - pl.col("prior_total")).abs()
-                 / pl.col("prior_total")
-                 * 100)
+                (
+                    (pl.col("period_total") - pl.col("prior_total")).abs()
+                    / pl.col("prior_total")
+                    * 100
+                )
                 >= change_pct_threshold
             )
         )
@@ -95,8 +97,7 @@ class MonthOverMonthSpikeRule(AuditRule):
                         gl_detail_id=row["gl_detail_id"],
                         journal_id=row["journal_id"],
                         message=(
-                            f"月次急変動: 科目{acct} 期間{period} "
-                            f"前月比{change:+.1f}%"
+                            f"月次急変動: 科目{acct} 期間{period} 前月比{change:+.1f}%"
                         ),
                         details={
                             "account": acct,
@@ -144,12 +145,9 @@ class PeriodEndConcentrationRule(AuditRule):
         # 四半期末月: 3, 6, 9, 12
         quarter_end_months = {3, 6, 9, 12}
 
-        monthly_counts = (
-            df.group_by("accounting_period")
-            .agg(
-                pl.len().alias("entry_count"),
-                pl.col("amount").abs().sum().alias("total_amount"),
-            )
+        monthly_counts = df.group_by("accounting_period").agg(
+            pl.len().alias("entry_count"),
+            pl.col("amount").abs().sum().alias("total_amount"),
         )
 
         if len(monthly_counts) == 0:
@@ -223,9 +221,8 @@ class PeriodEntryCountAnomalyRule(AuditRule):
 
         std_multiplier = self.get_threshold("count_std_multiplier", 2.0)
 
-        monthly_counts = (
-            df.group_by("accounting_period")
-            .agg(pl.len().alias("entry_count"))
+        monthly_counts = df.group_by("accounting_period").agg(
+            pl.len().alias("entry_count")
         )
 
         if len(monthly_counts) < 3:
@@ -315,9 +312,11 @@ class YearOverYearDeviationRule(AuditRule):
         deviations = yearly.filter(
             (pl.col("prior_year_total") > 0)
             & (
-                ((pl.col("yearly_total") - pl.col("prior_year_total")).abs()
-                 / pl.col("prior_year_total")
-                 * 100)
+                (
+                    (pl.col("yearly_total") - pl.col("prior_year_total")).abs()
+                    / pl.col("prior_year_total")
+                    * 100
+                )
                 >= yoy_threshold
             )
         )
@@ -332,18 +331,14 @@ class YearOverYearDeviationRule(AuditRule):
             )
 
             entries = df.filter(
-                (pl.col("gl_account_number") == acct)
-                & (pl.col("fiscal_year") == fy)
+                (pl.col("gl_account_number") == acct) & (pl.col("fiscal_year") == fy)
             )
             for row in entries.iter_rows(named=True):
                 result.violations.append(
                     self._create_violation(
                         gl_detail_id=row["gl_detail_id"],
                         journal_id=row["journal_id"],
-                        message=(
-                            f"前年同期比変動: 科目{acct} "
-                            f"FY{fy} {change:+.1f}%"
-                        ),
+                        message=(f"前年同期比変動: 科目{acct} FY{fy} {change:+.1f}%"),
                         details={
                             "account": acct,
                             "fiscal_year": fy,
@@ -375,7 +370,9 @@ class ConsecutiveTrendRule(AuditRule):
 
     @property
     def description(self) -> str:
-        return "勘定科目の月次合計が連続して増加または減少する異常トレンドを検出します。"
+        return (
+            "勘定科目の月次合計が連続して増加または減少する異常トレンドを検出します。"
+        )
 
     @property
     def default_severity(self) -> RuleSeverity:
@@ -408,9 +405,8 @@ class ConsecutiveTrendRule(AuditRule):
         flagged: set[tuple[str, int]] = set()
 
         for acct in monthly["gl_account_number"].unique().to_list():
-            acct_data = (
-                monthly.filter(pl.col("gl_account_number") == acct)
-                .sort("accounting_period")
+            acct_data = monthly.filter(pl.col("gl_account_number") == acct).sort(
+                "accounting_period"
             )
             diffs = acct_data["diff"].to_list()
             periods = acct_data["accounting_period"].to_list()
@@ -500,9 +496,8 @@ class SeasonalDeviationRule(AuditRule):
         deviation_threshold = self.get_threshold("seasonal_deviation_pct", 100.0)
 
         # 月別の平均金額を算出（季節性ベースライン）
-        monthly = (
-            df.group_by("accounting_period")
-            .agg(pl.col("amount").abs().sum().alias("period_total"))
+        monthly = df.group_by("accounting_period").agg(
+            pl.col("amount").abs().sum().alias("period_total")
         )
 
         if len(monthly) < 6:
@@ -514,9 +509,7 @@ class SeasonalDeviationRule(AuditRule):
 
         # 各月の平均からの逸脱を検出
         deviating = monthly.filter(
-            ((pl.col("period_total") - overall_mean).abs()
-             / overall_mean
-             * 100)
+            ((pl.col("period_total") - overall_mean).abs() / overall_mean * 100)
             > deviation_threshold
         )
 
@@ -530,10 +523,7 @@ class SeasonalDeviationRule(AuditRule):
                     self._create_violation(
                         gl_detail_id=entry["gl_detail_id"],
                         journal_id=entry["journal_id"],
-                        message=(
-                            f"季節性逸脱: 期間{period} "
-                            f"平均比{dev_pct:+.1f}%"
-                        ),
+                        message=(f"季節性逸脱: 期間{period} 平均比{dev_pct:+.1f}%"),
                         details={
                             "period": period,
                             "period_total": row["period_total"],

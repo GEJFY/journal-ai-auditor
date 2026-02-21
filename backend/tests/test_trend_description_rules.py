@@ -65,11 +65,13 @@ def _monthly_data(periods: list[int], amounts: list[float]) -> pl.DataFrame:
     """月別データを生成."""
     rows = []
     for p, a in zip(periods, amounts, strict=True):
-        rows.append({
-            "accounting_period": p,
-            "amount": a,
-            "gl_account_number": "4111",
-        })
+        rows.append(
+            {
+                "accounting_period": p,
+                "amount": a,
+                "gl_account_number": "4111",
+            }
+        )
     return _make_df(rows)
 
 
@@ -113,10 +115,12 @@ class TestPeriodEndConcentration:
         for p in range(1, 13):
             count = 50 if p in (3, 6, 9, 12) else 5
             for _j in range(count):
-                rows.append({
-                    "accounting_period": p,
-                    "amount": 100_000,
-                })
+                rows.append(
+                    {
+                        "accounting_period": p,
+                        "amount": 100_000,
+                    }
+                )
         df = _make_df(rows)
         rule = PeriodEndConcentrationRule()
         result = rule.execute(df)
@@ -214,21 +218,25 @@ class TestSeasonalDeviation:
 class TestEmptyDescription:
     def test_detects_empty(self):
         """空欄摘要を検出."""
-        df = _make_df([
-            {"je_line_description": ""},
-            {"je_line_description": None},
-            {"je_line_description": "OK仕訳"},
-        ])
+        df = _make_df(
+            [
+                {"je_line_description": ""},
+                {"je_line_description": None},
+                {"je_line_description": "OK仕訳"},
+            ]
+        )
         rule = EmptyDescriptionRule()
         result = rule.execute(df)
         assert result.violations_found == 2
 
     def test_detects_short(self):
         """2文字以下の短い摘要を検出."""
-        df = _make_df([
-            {"je_line_description": "ab"},
-            {"je_line_description": "正常な摘要です"},
-        ])
+        df = _make_df(
+            [
+                {"je_line_description": "ab"},
+                {"je_line_description": "正常な摘要です"},
+            ]
+        )
         rule = EmptyDescriptionRule()
         result = rule.execute(df)
         assert result.violations_found == 1
@@ -242,11 +250,13 @@ class TestEmptyDescription:
 class TestVagueDescription:
     def test_detects_vague(self):
         """汎用キーワードのみの摘要を検出."""
-        df = _make_df([
-            {"je_line_description": "その他"},
-            {"je_line_description": "調整"},
-            {"je_line_description": "売上計上 顧客A"},
-        ])
+        df = _make_df(
+            [
+                {"je_line_description": "その他"},
+                {"je_line_description": "調整"},
+                {"je_line_description": "売上計上 顧客A"},
+            ]
+        )
         rule = VagueDescriptionRule()
         result = rule.execute(df)
         assert result.violations_found == 2
@@ -281,11 +291,16 @@ class TestDuplicateDescription:
 class TestHighValueWeakDescription:
     def test_detects_weak_desc_on_high_value(self):
         """高額取引で摘要が短い場合を検出."""
-        df = _make_df([
-            {"amount": 100_000_000, "je_line_description": "調整"},
-            {"amount": 100_000_000, "je_line_description": "期末決算調整 顧客A向け売上計上"},
-            {"amount": 1_000, "je_line_description": "x"},
-        ])
+        df = _make_df(
+            [
+                {"amount": 100_000_000, "je_line_description": "調整"},
+                {
+                    "amount": 100_000_000,
+                    "je_line_description": "期末決算調整 顧客A向け売上計上",
+                },
+                {"amount": 1_000, "je_line_description": "x"},
+            ]
+        )
         rule = HighValueWeakDescriptionRule()
         result = rule.execute(df)
         assert result.violations_found == 1
@@ -300,21 +315,25 @@ class TestHighValueWeakDescription:
 class TestSuspiciousKeyword:
     def test_detects_suspicious(self):
         """不正リスクキーワードを検出."""
-        df = _make_df([
-            {"je_line_description": "架空売上の計上"},
-            {"je_line_description": "水増し請求"},
-            {"je_line_description": "通常の売上計上"},
-        ])
+        df = _make_df(
+            [
+                {"je_line_description": "架空売上の計上"},
+                {"je_line_description": "水増し請求"},
+                {"je_line_description": "通常の売上計上"},
+            ]
+        )
         rule = SuspiciousKeywordRule()
         result = rule.execute(df)
         assert result.violations_found == 2
 
     def test_no_false_positive(self):
         """通常の摘要では検出しない."""
-        df = _make_df([
-            {"je_line_description": "売上計上 顧客A"},
-            {"je_line_description": "仕入計上 取引先B"},
-        ])
+        df = _make_df(
+            [
+                {"je_line_description": "売上計上 顧客A"},
+                {"je_line_description": "仕入計上 取引先B"},
+            ]
+        )
         rule = SuspiciousKeywordRule()
         result = rule.execute(df)
         assert result.violations_found == 0

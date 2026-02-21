@@ -53,8 +53,10 @@ class EmptyDescriptionRule(AuditRule):
 
         empty_desc = df.filter(
             pl.col("je_line_description").is_null()
-            | (pl.col("je_line_description").str.strip_chars().str.len_chars()
-               < min_length)
+            | (
+                pl.col("je_line_description").str.strip_chars().str.len_chars()
+                < min_length
+            )
         )
 
         for row in empty_desc.iter_rows(named=True):
@@ -220,8 +222,7 @@ class DuplicateDescriptionRule(AuditRule):
                         gl_detail_id=row["gl_detail_id"],
                         journal_id=row["journal_id"],
                         message=(
-                            f"重複摘要: 「{desc_text[:30]}」"
-                            f"({count}件, {ratio:.1f}%)"
+                            f"重複摘要: 「{desc_text[:30]}」({count}件, {ratio:.1f}%)"
                         ),
                         details={
                             "description": desc_text,
@@ -264,7 +265,8 @@ class HighValueWeakDescriptionRule(AuditRule):
         result.total_checked = len(df)
 
         amount_threshold = self.get_threshold(
-            "high_value_threshold", 50_000_000,
+            "high_value_threshold",
+            50_000_000,
         )
         min_desc_length = self.get_threshold("min_desc_length_high_value", 10)
 
