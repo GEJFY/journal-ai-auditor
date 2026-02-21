@@ -17,6 +17,7 @@ import {
   Shield,
   Bot,
   ClipboardList,
+  Building2,
   X,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -88,6 +89,12 @@ export const navGroups: NavGroup[] = [
         label: 'AI分析',
         icon: <Bot size={20} />,
         description: 'AIによる自動分析',
+      },
+      {
+        path: '/analytics',
+        label: '詳細分析',
+        icon: <Building2 size={20} />,
+        description: '部門・取引先・フロー分析',
       },
     ],
   },

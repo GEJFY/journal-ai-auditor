@@ -29,6 +29,7 @@ vi.mock('lucide-react', () => ({
   AlertTriangle: () => <span data-testid="icon-alert" />,
   Menu: () => <span data-testid="icon-menu" />,
   X: () => <span data-testid="icon-x" />,
+  Building2: () => <span data-testid="icon-building" />,
 }));
 
 // Mock clsx
@@ -73,6 +74,7 @@ describe('Layout', () => {
     expect(screen.getByText('時系列分析')).toBeInTheDocument();
     expect(screen.getByText('勘定科目分析')).toBeInTheDocument();
     expect(screen.getByText('AI分析')).toBeInTheDocument();
+    expect(screen.getByText('詳細分析')).toBeInTheDocument();
     expect(screen.getByText('レポート生成')).toBeInTheDocument();
   });
 

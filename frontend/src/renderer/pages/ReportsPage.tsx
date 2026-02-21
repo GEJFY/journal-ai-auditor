@@ -40,10 +40,13 @@ interface GeneratedReport {
   data: Record<string, unknown>;
 }
 
+type ReportPurpose = 'auditor' | 'management';
+
 export default function ReportsPage() {
   const [fiscalYear] = useFiscalYear();
   const [selectedReport, setSelectedReport] = useState<GeneratedReport | null>(null);
   const [generatedReports, setGeneratedReports] = useState<GeneratedReport[]>([]);
+  const [reportPurpose, setReportPurpose] = useState<ReportPurpose>('auditor');
 
   const { data: templates, isLoading: templatesLoading } = useQuery({
     queryKey: ['report-templates'],
@@ -86,11 +89,17 @@ export default function ReportsPage() {
   };
 
   const handleExportPpt = () => {
-    window.open(`${API_BASE}/reports/export/ppt?fiscal_year=${fiscalYear}`, '_blank');
+    window.open(
+      `${API_BASE}/reports/export/ppt?fiscal_year=${fiscalYear}&report_purpose=${reportPurpose}`,
+      '_blank'
+    );
   };
 
   const handleExportPdf = () => {
-    window.open(`${API_BASE}/reports/export/pdf?fiscal_year=${fiscalYear}`, '_blank');
+    window.open(
+      `${API_BASE}/reports/export/pdf?fiscal_year=${fiscalYear}&report_purpose=${reportPurpose}`,
+      '_blank'
+    );
   };
 
   if (templatesLoading) {
@@ -104,11 +113,33 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">レポート生成</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {fiscalYear}年度の監査レポートを生成
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">レポート生成</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {fiscalYear}年度の監査レポートを生成
+          </p>
+        </div>
+
+        {/* Export buttons with purpose selection */}
+        <div className="flex items-center gap-3">
+          <select
+            value={reportPurpose}
+            onChange={(e) => setReportPurpose(e.target.value as ReportPurpose)}
+            className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white"
+          >
+            <option value="auditor">監査実務者向け</option>
+            <option value="management">経営陣向け</option>
+          </select>
+          <button className="btn-secondary flex items-center gap-2" onClick={handleExportPpt}>
+            <FileBarChart className="w-4 h-4" />
+            PPTエクスポート
+          </button>
+          <button className="btn-secondary flex items-center gap-2" onClick={handleExportPdf}>
+            <FileText className="w-4 h-4" />
+            PDFエクスポート
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
