@@ -135,7 +135,7 @@ class TestReportConfig:
 class TestPPTReportGenerator:
     """PowerPointレポート生成のテスト（チャート付き）"""
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_returns_bytes(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -149,7 +149,7 @@ class TestPPTReportGenerator:
         assert isinstance(result, bytes)
         assert len(result) > 0
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_empty_dataset(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -174,7 +174,7 @@ class TestPPTReportGenerator:
         result = generator.generate()
         assert isinstance(result, bytes)
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_has_pptx_signature(self, mock_db_cls):
         """PPTXファイルの先頭バイトがZIP形式であることを確認"""
         from app.services.report_generator import PPTReportGenerator, ReportConfig
@@ -189,7 +189,7 @@ class TestPPTReportGenerator:
         # PPTX is a ZIP file - starts with PK signature
         assert result[:2] == b"PK"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_assessment_high_risk(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -201,7 +201,7 @@ class TestPPTReportGenerator:
         label, detail, color = generator._get_assessment()
         assert label == "要注意"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_assessment_medium_risk(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -213,7 +213,7 @@ class TestPPTReportGenerator:
         label, detail, color = generator._get_assessment()
         assert label == "注意"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_assessment_low_risk(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -225,7 +225,7 @@ class TestPPTReportGenerator:
         label, detail, color = generator._get_assessment()
         assert label == "概ね良好"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_recommendations(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -241,7 +241,7 @@ class TestPPTReportGenerator:
             assert "title" in rec
             assert "detail" in rec
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_next_steps(self, mock_db_cls):
         from app.services.report_generator import PPTReportGenerator, ReportConfig
 
@@ -267,7 +267,7 @@ class TestPPTReportGenerator:
 class TestPDFReportGenerator:
     """PDFレポート生成のテスト（チャート付き）"""
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_returns_bytes(self, mock_db_cls):
         from app.services.report_generator import PDFReportGenerator, ReportConfig
 
@@ -281,7 +281,7 @@ class TestPDFReportGenerator:
         assert isinstance(result, bytes)
         assert len(result) > 0
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_has_pdf_signature(self, mock_db_cls):
         """PDFファイルの先頭がPDFヘッダであることを確認"""
         from app.services.report_generator import PDFReportGenerator, ReportConfig
@@ -295,7 +295,7 @@ class TestPDFReportGenerator:
         result = generator.generate()
         assert result[:5] == b"%PDF-"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_empty_dataset(self, mock_db_cls):
         from app.services.report_generator import PDFReportGenerator, ReportConfig
 
@@ -320,7 +320,7 @@ class TestPDFReportGenerator:
         result = generator.generate()
         assert isinstance(result, bytes)
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_create_table(self, mock_db_cls):
         from app.services.report_generator import PDFReportGenerator, ReportConfig
 
@@ -334,7 +334,7 @@ class TestPDFReportGenerator:
         table = generator._create_table(data, header=True)
         assert table is not None
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_create_risk_pie_chart(self, mock_db_cls):
         """リスク分布円グラフが生成されることを確認"""
         from app.services.report_generator import PDFReportGenerator, ReportConfig
@@ -351,7 +351,7 @@ class TestPDFReportGenerator:
         result.seek(0)
         assert result.read(4) == b"\x89PNG"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_create_risk_pie_chart_empty(self, mock_db_cls):
         """空データでNoneを返すことを確認"""
         from app.services.report_generator import PDFReportGenerator, ReportConfig
@@ -365,7 +365,7 @@ class TestPDFReportGenerator:
         result = generator._create_risk_pie_chart()
         assert result is None
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_create_benford_bar_chart(self, mock_db_cls):
         """ベンフォードチャートが生成されることを確認"""
         from app.services.report_generator import PDFReportGenerator, ReportConfig
@@ -381,7 +381,7 @@ class TestPDFReportGenerator:
         result.seek(0)
         assert result.read(4) == b"\x89PNG"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_create_trend_line_chart(self, mock_db_cls):
         """月次トレンドチャートが生成されることを確認"""
         from app.services.report_generator import PDFReportGenerator, ReportConfig
@@ -397,7 +397,7 @@ class TestPDFReportGenerator:
         result.seek(0)
         assert result.read(4) == b"\x89PNG"
 
-    @patch("app.services.report_generator.DuckDBManager")
+    @patch("app.services.report_generator.duckdb_manager")
     def test_generate_recommendations(self, mock_db_cls):
         from app.services.report_generator import PDFReportGenerator, ReportConfig
 

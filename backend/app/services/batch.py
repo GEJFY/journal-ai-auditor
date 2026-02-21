@@ -24,17 +24,19 @@ from typing import Any
 
 import polars as pl
 
-from app.db import DuckDBManager
+from app.db import DuckDBManager, duckdb_manager
 from app.services.aggregation import AggregationService
 from app.services.rules.account_rules import create_account_rule_set
 from app.services.rules.amount_rules import create_amount_rule_set
 from app.services.rules.approval_rules import create_approval_rule_set
 from app.services.rules.base import RuleCategory
 from app.services.rules.benford import create_benford_rule_set
+from app.services.rules.description_rules import create_description_rule_set
 from app.services.rules.ml_detection import create_ml_rule_set
 from app.services.rules.rule_engine import RuleEngine
 from app.services.rules.scoring import RiskScoringService
 from app.services.rules.time_rules import create_time_rule_set
+from app.services.rules.trend_rules import create_trend_rule_set
 
 
 class BatchMode(StrEnum):
@@ -126,7 +128,7 @@ class BatchOrchestrator:
         Args:
             db: DuckDB manager instance.
         """
-        self.db = db or DuckDBManager()
+        self.db = db or duckdb_manager
         self.rule_engine = RuleEngine(db=self.db)
         self.scoring_service = RiskScoringService(db=self.db)
         self.aggregation_service = AggregationService(db=self.db)
@@ -142,6 +144,8 @@ class BatchOrchestrator:
         self.rule_engine.register_rule_set(create_approval_rule_set())
         self.rule_engine.register_rule_set(create_ml_rule_set())
         self.rule_engine.register_rule_set(create_benford_rule_set())
+        self.rule_engine.register_rule_set(create_trend_rule_set())
+        self.rule_engine.register_rule_set(create_description_rule_set())
 
     def execute(
         self,
@@ -435,3 +439,15 @@ class BatchScheduler:
             reverse=True,
         )
         return [job.to_dict() for job in sorted_jobs[:limit]]
+
+
+# Global scheduler instance
+_scheduler: BatchScheduler | None = None
+
+
+def get_scheduler() -> BatchScheduler:
+    """Get or create global scheduler instance."""
+    global _scheduler
+    if _scheduler is None:
+        _scheduler = BatchScheduler()
+    return _scheduler

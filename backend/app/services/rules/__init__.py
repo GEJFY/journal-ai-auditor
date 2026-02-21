@@ -8,13 +8,15 @@ This package provides:
 - Benford's Law analysis
 - Integrated risk scoring
 
-Rule categories (58 total rules):
+Rule categories (70 total rules):
 - Amount rules (15): AMT-001 to AMT-015
 - Time rules (10): TIM-001 to TIM-010
 - Account rules (20): ACC-001 to ACC-020
 - Approval rules (8): APR-001 to APR-008
 - ML detection (5): ML-001 to ML-005
 - Benford analysis (5): BEN-001 to BEN-005
+- Trend rules (6): TRD-001 to TRD-006
+- Description rules (6): DESC-001 to DESC-006
 """
 
 from app.services.rules.account_rules import create_account_rule_set
@@ -29,10 +31,12 @@ from app.services.rules.base import (
     RuleViolation,
 )
 from app.services.rules.benford import BenfordAnalyzer, create_benford_rule_set
+from app.services.rules.description_rules import create_description_rule_set
 from app.services.rules.ml_detection import create_ml_rule_set
 from app.services.rules.rule_engine import EngineResult, RuleEngine
 from app.services.rules.scoring import RiskScore, RiskScoringService, ScoringConfig
 from app.services.rules.time_rules import create_time_rule_set
+from app.services.rules.trend_rules import create_trend_rule_set
 
 __all__ = [
     # Base classes
@@ -52,6 +56,8 @@ __all__ = [
     "create_approval_rule_set",
     "create_ml_rule_set",
     "create_benford_rule_set",
+    "create_trend_rule_set",
+    "create_description_rule_set",
     # Benford
     "BenfordAnalyzer",
     # Scoring
