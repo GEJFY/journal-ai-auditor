@@ -10,7 +10,7 @@ Provides LangChain tools that agents can use to:
 
 from langchain_core.tools import tool
 
-from app.db import DuckDBManager
+from app.db import DuckDBManager, duckdb_manager
 
 # Global DB instance for tools
 _db: DuckDBManager | None = None
@@ -18,10 +18,7 @@ _db: DuckDBManager | None = None
 
 def get_db() -> DuckDBManager:
     """Get or create DB instance."""
-    global _db
-    if _db is None:
-        _db = DuckDBManager()
-    return _db
+    return duckdb_manager
 
 
 @tool
@@ -805,6 +802,7 @@ ANALYSIS_TOOLS = [
     analyze_vendor_concentration,
     analyze_account_flow,
     save_audit_finding,
+    get_saved_findings,
 ]
 
 INVESTIGATION_TOOLS = [

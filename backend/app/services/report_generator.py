@@ -29,6 +29,8 @@ from reportlab.lib import colors as rl_colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.platypus import (
     Image,
     PageBreak,
@@ -39,7 +41,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from app.db import DuckDBManager
+from app.db import duckdb_manager
 
 # matplotlib 日本語フォント設定
 plt.rcParams["font.family"] = ["Meiryo", "Yu Gothic", "IPAGothic", "sans-serif"]
@@ -70,6 +72,7 @@ class ReportConfig:
     report_title: str = "仕訳検証レポート"
     prepared_by: str = "JAIA"
     include_details: bool = True
+    include_agent_findings: bool = True
 
 
 class PPTReportGenerator:
@@ -94,7 +97,7 @@ class PPTReportGenerator:
     def __init__(self, config: ReportConfig):
         """Initialize PPT generator."""
         self.config = config
-        self.db = DuckDBManager()
+        self.db = duckdb_manager
         self.prs = Presentation()
         self.prs.slide_width = Inches(13.333)
         self.prs.slide_height = Inches(7.5)
@@ -106,6 +109,7 @@ class PPTReportGenerator:
         self._benford_digits: list[dict[str, Any]] = []
         self._benford_summary: dict[str, Any] = {}
         self._monthly_trend: list[dict[str, Any]] = []
+        self._agent_findings: list[dict[str, Any]] = []
 
     def generate(self) -> bytes:
         """Generate PPT report with charts.
@@ -122,6 +126,8 @@ class PPTReportGenerator:
         self._add_findings_chart_slide()
         self._add_benford_chart_slide()
         self._add_trend_chart_slide()
+        if self._agent_findings:
+            self._add_agent_findings_slide()
         self._add_recommendations_slide()
         self._add_next_steps_slide()
         self._add_appendix_slide()
@@ -142,6 +148,8 @@ class PPTReportGenerator:
         self._benford_digits = digits
         self._benford_summary = summary
         self._monthly_trend = self._query_monthly_trend()
+        if self.config.include_agent_findings:
+            self._agent_findings = self._query_agent_findings()
 
     def _query_summary_stats(self) -> dict[str, Any]:
         """Get summary statistics from DB."""
@@ -284,6 +292,42 @@ class PPTReportGenerator:
             }
             for row in result
         ]
+
+    def _query_agent_findings(self) -> list[dict[str, Any]]:
+        """audit_findingsテーブルからエージェント発見事項を取得する."""
+        query = """
+            SELECT finding_id, agent_type, finding_title, finding_description,
+                   severity, category, affected_amount, affected_count,
+                   recommendation, status
+            FROM audit_findings
+            WHERE fiscal_year = ?
+            ORDER BY
+                CASE severity
+                    WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2
+                    WHEN 'MEDIUM' THEN 3 ELSE 4
+                END,
+                created_at DESC
+            LIMIT 30
+        """
+        try:
+            result = self.db.execute(query, [self.config.fiscal_year])
+            return [
+                {
+                    "finding_id": r[0],
+                    "agent_type": r[1],
+                    "title": r[2],
+                    "description": r[3],
+                    "severity": r[4],
+                    "category": r[5],
+                    "affected_amount": r[6] or 0,
+                    "affected_count": r[7] or 0,
+                    "recommendation": r[8],
+                    "status": r[9],
+                }
+                for r in result
+            ]
+        except Exception:
+            return []
 
     # ========== ヘルパー ==========
 
@@ -1109,6 +1153,99 @@ class PPTReportGenerator:
             p.alignment = PP_ALIGN.CENTER
             p.font.name = self.FONT_JP
 
+    def _add_agent_findings_slide(self) -> None:
+        """AI Agent findings slide with severity-colored table."""
+        slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
+        self._add_slide_title(slide, "AI分析による発見事項")
+
+        # 発見事項テーブル
+        findings = self._agent_findings[:12]
+        rows = len(findings) + 1
+        cols = 4
+
+        table_shape = slide.shapes.add_table(
+            rows,
+            cols,
+            Inches(0.75),
+            Inches(1.4),
+            Inches(11.833),
+            Inches(5.3),
+        )
+        table = table_shape.table
+
+        # ヘッダー
+        headers = ["重要度", "発見事項", "エージェント", "影響額"]
+        widths = [Inches(1.5), Inches(6.333), Inches(2.0), Inches(2.0)]
+        for i, (header, width) in enumerate(zip(headers, widths, strict=True)):
+            table.columns[i].width = width
+            cell = table.cell(0, i)
+            cell.text = header
+            for paragraph in cell.text_frame.paragraphs:
+                paragraph.font.bold = True
+                paragraph.font.size = Pt(12)
+                paragraph.font.color.rgb = self.WHITE
+                paragraph.font.name = self.FONT_JP
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = self.PRIMARY
+
+        # データ行
+        severity_colors = {
+            "CRITICAL": self.COLOR_HIGH,
+            "HIGH": self.COLOR_HIGH,
+            "MEDIUM": self.COLOR_MEDIUM,
+            "LOW": self.COLOR_MINIMAL,
+        }
+        agent_labels = {
+            "analysis": "分析",
+            "investigation": "調査",
+            "review": "レビュー",
+            "documentation": "文書化",
+        }
+        for row_idx, finding in enumerate(findings, start=1):
+            sev = finding.get("severity", "MEDIUM").upper()
+            data = [
+                sev,
+                finding.get("title", "")[:60],
+                agent_labels.get(
+                    finding.get("agent_type", ""), finding.get("agent_type", "")
+                ),
+                f"¥{finding.get('affected_amount', 0):,.0f}"
+                if finding.get("affected_amount")
+                else "-",
+            ]
+            for col_idx, text in enumerate(data):
+                cell = table.cell(row_idx, col_idx)
+                cell.text = str(text)
+                for paragraph in cell.text_frame.paragraphs:
+                    paragraph.font.size = Pt(10)
+                    paragraph.font.name = self.FONT_JP
+                    if col_idx == 0:
+                        paragraph.font.color.rgb = severity_colors.get(
+                            sev, self.SECONDARY
+                        )
+                        paragraph.font.bold = True
+
+            # 交互行の背景色
+            if row_idx % 2 == 0:
+                for col_idx in range(cols):
+                    table.cell(row_idx, col_idx).fill.solid()
+                    table.cell(row_idx, col_idx).fill.fore_color.rgb = self.LIGHT_BG
+
+        # 件数サマリー
+        total = len(self._agent_findings)
+        if total > 12:
+            note_box = slide.shapes.add_textbox(
+                Inches(0.75),
+                Inches(6.9),
+                Inches(11.833),
+                Inches(0.4),
+            )
+            p = note_box.text_frame.paragraphs[0]
+            p.text = f"※ 全{total}件中上位12件を表示"
+            p.font.size = Pt(10)
+            p.font.color.rgb = self.SECONDARY
+            p.font.name = self.FONT_JP
+
     def _add_recommendations_slide(self) -> None:
         """Slide 8: Data-driven recommendations."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
@@ -1437,8 +1574,16 @@ class PDFReportGenerator:
     def __init__(self, config: ReportConfig):
         """Initialize PDF generator."""
         self.config = config
-        self.db = DuckDBManager()
+        self.db = duckdb_manager
         self.styles = getSampleStyleSheet()
+
+        # 日本語フォント登録
+        try:
+            pdfmetrics.registerFont(UnicodeCIDFont("HeiseiKakuGo-W5"))
+            self.font_name = "HeiseiKakuGo-W5"
+        except Exception:
+            self.font_name = "Helvetica"
+
         self._setup_styles()
 
         # データキャッシュ
@@ -1448,6 +1593,7 @@ class PDFReportGenerator:
         self._benford_digits: list[dict[str, Any]] = []
         self._benford_summary: dict[str, Any] = {}
         self._monthly_trend: list[dict[str, Any]] = []
+        self._agent_findings: list[dict[str, Any]] = []
 
     def _setup_styles(self) -> None:
         """Setup custom styles."""
@@ -1458,6 +1604,7 @@ class PDFReportGenerator:
                 leading=30,
                 alignment=1,
                 spaceAfter=20,
+                fontName=self.font_name,
             )
         )
         self.styles.add(
@@ -1467,6 +1614,7 @@ class PDFReportGenerator:
                 leading=20,
                 spaceBefore=15,
                 spaceAfter=10,
+                fontName=self.font_name,
             )
         )
         self.styles.add(
@@ -1474,6 +1622,7 @@ class PDFReportGenerator:
                 name="JapaneseBody",
                 fontSize=10,
                 leading=14,
+                fontName=self.font_name,
             )
         )
 
@@ -1616,8 +1765,38 @@ class PDFReportGenerator:
             )
         story.append(Spacer(1, 20))
 
-        # 6. Recommendations
-        story.append(Paragraph("6. 推奨事項", self.styles["JapaneseHeading"]))
+        # 6. AI Agent Findings
+        if self._agent_findings:
+            story.append(
+                Paragraph("6. AI分析による発見事項", self.styles["JapaneseHeading"])
+            )
+            agent_data = [["重要度", "発見事項", "エージェント", "影響額"]]
+            agent_labels = {
+                "analysis": "分析",
+                "investigation": "調査",
+                "review": "レビュー",
+                "documentation": "文書化",
+            }
+            for af in self._agent_findings[:15]:
+                agent_data.append(
+                    [
+                        af.get("severity", "MEDIUM"),
+                        str(af.get("title", ""))[:50],
+                        agent_labels.get(
+                            af.get("agent_type", ""), af.get("agent_type", "")
+                        ),
+                        f"¥{af.get('affected_amount', 0):,.0f}"
+                        if af.get("affected_amount")
+                        else "-",
+                    ]
+                )
+            story.append(
+                self._create_table(agent_data, header=True, col_widths=[20, 70, 20, 30])
+            )
+            story.append(Spacer(1, 20))
+
+        # 7. Recommendations
+        story.append(Paragraph("7. 推奨事項", self.styles["JapaneseHeading"]))
         recs = self._generate_recommendations()
         for i, rec in enumerate(recs, 1):
             story.append(Paragraph(f"{i}. {rec}", self.styles["JapaneseBody"]))
@@ -1637,6 +1816,44 @@ class PDFReportGenerator:
         self._findings = self._query_top_findings()
         self._benford_digits, self._benford_summary = self._query_benford_data()
         self._monthly_trend = self._query_monthly_trend()
+        if self.config.include_agent_findings:
+            self._agent_findings = self._query_agent_findings()
+
+    def _query_agent_findings(self) -> list[dict[str, Any]]:
+        """audit_findingsテーブルからエージェント発見事項を取得する."""
+        query = """
+            SELECT finding_id, agent_type, finding_title, finding_description,
+                   severity, category, affected_amount, affected_count,
+                   recommendation, status
+            FROM audit_findings
+            WHERE fiscal_year = ?
+            ORDER BY
+                CASE severity
+                    WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2
+                    WHEN 'MEDIUM' THEN 3 ELSE 4
+                END,
+                created_at DESC
+            LIMIT 30
+        """
+        try:
+            result = self.db.execute(query, [self.config.fiscal_year])
+            return [
+                {
+                    "finding_id": r[0],
+                    "agent_type": r[1],
+                    "title": r[2],
+                    "description": r[3],
+                    "severity": r[4],
+                    "category": r[5],
+                    "affected_amount": r[6] or 0,
+                    "affected_count": r[7] or 0,
+                    "recommendation": r[8],
+                    "status": r[9],
+                }
+                for r in result
+            ]
+        except Exception:
+            return []
 
     def _query_summary_stats(self) -> dict[str, Any]:
         """Get summary statistics."""
@@ -1970,6 +2187,7 @@ class PDFReportGenerator:
             ("GRID", (0, 0), (-1, -1), 0.5, rl_colors.grey),
             ("FONTSIZE", (0, 0), (-1, -1), 10),
             ("PADDING", (0, 0), (-1, -1), 5),
+            ("FONTNAME", (0, 0), (-1, -1), self.font_name),
         ]
         if header:
             style.extend(
