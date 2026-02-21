@@ -410,8 +410,8 @@ class DescriptionLengthOutlierRule(AuditRule):
         _std_len = non_empty["desc_length"].std()
         if _mean_len is None or _std_len is None or _std_len == 0:
             return result
-        mean_len = float(_mean_len)
-        std_len = float(_std_len)
+        mean_len = float(_mean_len)  # type: ignore[arg-type]
+        std_len = float(_std_len)  # type: ignore[arg-type]
 
         upper_bound = mean_len + std_multiplier * std_len
 

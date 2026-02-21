@@ -153,9 +153,10 @@ class PeriodEndConcentrationRule(AuditRule):
         if len(monthly_counts) == 0:
             return result
 
-        avg_count = monthly_counts["entry_count"].mean()
-        if avg_count is None or avg_count == 0:
+        _avg_count = monthly_counts["entry_count"].mean()
+        if _avg_count is None or _avg_count == 0:
             return result
+        avg_count = float(_avg_count)  # type: ignore[arg-type]
 
         # 期末月で平均の concentration_ratio 倍以上の月を検出
         concentrated = monthly_counts.filter(
@@ -232,8 +233,8 @@ class PeriodEntryCountAnomalyRule(AuditRule):
         _std_count = monthly_counts["entry_count"].std()
         if _mean_count is None or _std_count is None or _std_count == 0:
             return result
-        mean_count = float(_mean_count)
-        std_count = float(_std_count)
+        mean_count = float(_mean_count)  # type: ignore[arg-type]
+        std_count = float(_std_count)  # type: ignore[arg-type]
 
         upper_bound = mean_count + std_multiplier * std_count
 
@@ -508,7 +509,7 @@ class SeasonalDeviationRule(AuditRule):
         _overall_mean = monthly["period_total"].mean()
         if _overall_mean is None or _overall_mean == 0:
             return result
-        overall_mean = float(_overall_mean)
+        overall_mean = float(_overall_mean)  # type: ignore[arg-type]
 
         # 各月の平均からの逸脱を検出
         deviating = monthly.filter(
