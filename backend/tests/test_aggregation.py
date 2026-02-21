@@ -68,8 +68,8 @@ class TestAggregationService:
         service = AggregationService(db=mock_db)
         results = service.update_all()
 
-        # ドキュメントによると17テーブル
-        assert len(results) == 17
+        # 17テーブル + agg_account_flow = 18テーブル
+        assert len(results) == 18
 
     def test_execute_aggregation_success(self):
         """集計クエリの成功パス"""
@@ -114,4 +114,4 @@ class TestAggregationService:
         results = service.update_all(fiscal_year=None)
 
         assert isinstance(results, list)
-        assert len(results) == 17
+        assert len(results) == 18

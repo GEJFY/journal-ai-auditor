@@ -15,21 +15,10 @@ from app.services.batch import (
     BatchConfig,
     BatchMode,
     BatchOrchestrator,
-    BatchScheduler,
+    get_scheduler,
 )
 
 router = APIRouter()
-
-# Global scheduler instance
-_scheduler: BatchScheduler | None = None
-
-
-def get_scheduler() -> BatchScheduler:
-    """Get or create scheduler instance."""
-    global _scheduler
-    if _scheduler is None:
-        _scheduler = BatchScheduler()
-    return _scheduler
 
 
 class BatchJobRequest(BaseModel):

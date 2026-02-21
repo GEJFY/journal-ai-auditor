@@ -641,6 +641,154 @@ def get_saved_findings(
         return '{"findings": [], "note": "audit_findings table not yet initialized"}'
 
 
+@tool
+def analyze_department_patterns(
+    fiscal_year: int,
+    min_risk_score: float | None = None,
+) -> str:
+    """Analyze journal entry patterns by department.
+
+    Args:
+        fiscal_year: Fiscal year to analyze.
+        min_risk_score: Optional minimum average risk score filter.
+
+    Returns:
+        JSON string with department-level aggregation.
+    """
+    db = get_db()
+    conditions = ["fiscal_year = ?"]
+    params: list = [fiscal_year]
+
+    query = f"""
+        SELECT
+            dept_code,
+            COUNT(*) as entry_count,
+            COUNT(DISTINCT journal_id) as journal_count,
+            SUM(CASE WHEN debit_credit_indicator = 'D' THEN amount ELSE 0 END) as debit_total,
+            SUM(CASE WHEN debit_credit_indicator = 'C' THEN amount ELSE 0 END) as credit_total,
+            AVG(ABS(amount)) as avg_amount,
+            MAX(ABS(amount)) as max_amount,
+            COUNT(DISTINCT prepared_by) as unique_users,
+            AVG(risk_score) as avg_risk_score,
+            SUM(CASE WHEN risk_score >= 60 THEN 1 ELSE 0 END) as high_risk_count,
+            SUM(CASE WHEN prepared_by = approved_by THEN 1 ELSE 0 END) as self_approval_count
+        FROM journal_entries
+        WHERE {" AND ".join(conditions)}
+          AND dept_code IS NOT NULL
+          AND dept_code <> ''
+        GROUP BY dept_code
+        {"HAVING AVG(risk_score) >= ?" if min_risk_score else ""}
+        ORDER BY high_risk_count DESC, entry_count DESC
+    """
+    if min_risk_score:
+        params.append(min_risk_score)
+
+    try:
+        result = db.execute_df(query, params)
+        return result.write_json()
+    except Exception:
+        return '{"error": "Department data not available"}'
+
+
+@tool
+def analyze_vendor_concentration(
+    fiscal_year: int,
+    top_n: int = 20,
+) -> str:
+    """Analyze vendor transaction concentration and risk.
+
+    Args:
+        fiscal_year: Fiscal year to analyze.
+        top_n: Number of top vendors to return.
+
+    Returns:
+        JSON string with vendor concentration analysis.
+    """
+    db = get_db()
+
+    query = """
+        SELECT
+            vendor_code,
+            COUNT(*) as transaction_count,
+            COUNT(DISTINCT journal_id) as journal_count,
+            SUM(ABS(amount)) as total_amount,
+            AVG(ABS(amount)) as avg_amount,
+            MAX(ABS(amount)) as max_amount,
+            AVG(risk_score) as avg_risk_score,
+            MAX(risk_score) as max_risk_score,
+            SUM(CASE WHEN risk_score >= 60 THEN 1 ELSE 0 END) as high_risk_count,
+            MIN(effective_date) as first_transaction,
+            MAX(effective_date) as last_transaction
+        FROM journal_entries
+        WHERE fiscal_year = ?
+          AND vendor_code IS NOT NULL
+          AND vendor_code <> ''
+        GROUP BY vendor_code
+        ORDER BY total_amount DESC
+        LIMIT ?
+    """
+
+    try:
+        result = db.execute_df(query, [fiscal_year, top_n])
+        return result.write_json()
+    except Exception:
+        return '{"error": "Vendor data not available"}'
+
+
+@tool
+def analyze_account_flow(
+    fiscal_year: int,
+    min_amount: float | None = None,
+    limit: int = 50,
+) -> str:
+    """Analyze fund flow between accounts (debit-credit pairs within journals).
+
+    Args:
+        fiscal_year: Fiscal year to analyze.
+        min_amount: Minimum flow amount to include.
+        limit: Maximum flow pairs to return.
+
+    Returns:
+        JSON string with account flow data.
+    """
+    db = get_db()
+    params: list = [fiscal_year, fiscal_year]
+
+    having = ""
+    if min_amount:
+        having = "HAVING SUM(d.amount) >= ?"
+        params.append(min_amount)
+
+    params.append(limit)
+
+    query = f"""
+        SELECT
+            d.gl_account_number as source_account,
+            c.gl_account_number as target_account,
+            COUNT(DISTINCT d.journal_id) as transaction_count,
+            SUM(d.amount) as flow_amount,
+            AVG(d.amount) as avg_amount
+        FROM journal_entries d
+        JOIN journal_entries c
+            ON d.journal_id = c.journal_id
+            AND d.debit_credit_indicator = 'D'
+            AND c.debit_credit_indicator = 'C'
+            AND d.gl_detail_id <> c.gl_detail_id
+        WHERE d.fiscal_year = ?
+          AND c.fiscal_year = ?
+        GROUP BY d.gl_account_number, c.gl_account_number
+        {having}
+        ORDER BY flow_amount DESC
+        LIMIT ?
+    """
+
+    try:
+        result = db.execute_df(query, params)
+        return result.write_json()
+    except Exception:
+        return '{"error": "Account flow data not available"}'
+
+
 # Tool collections for different agent types
 ANALYSIS_TOOLS = [
     query_journal_entries,
@@ -650,6 +798,9 @@ ANALYSIS_TOOLS = [
     get_anomaly_patterns,
     get_benford_analysis,
     get_dashboard_kpi,
+    analyze_department_patterns,
+    analyze_vendor_concentration,
+    analyze_account_flow,
     save_audit_finding,
     get_saved_findings,
 ]
@@ -661,6 +812,9 @@ INVESTIGATION_TOOLS = [
     get_user_activity,
     get_account_summary,
     search_journal_description,
+    analyze_department_patterns,
+    analyze_vendor_concentration,
+    analyze_account_flow,
     save_audit_finding,
     get_saved_findings,
 ]

@@ -447,7 +447,7 @@ _scheduler: BatchScheduler | None = None
 
 def get_scheduler() -> BatchScheduler:
     """Get or create global scheduler instance."""
-    global _scheduler
+    global _scheduler  # noqa: PLW0603
     if _scheduler is None:
         _scheduler = BatchScheduler()
     return _scheduler
