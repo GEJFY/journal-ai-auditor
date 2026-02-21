@@ -253,6 +253,60 @@ export interface RuleCategoryInfo {
 }
 
 // =============================================================================
+// Department / Vendor / Account Flow Types
+// =============================================================================
+
+export interface DepartmentItem {
+  dept_code: string;
+  entry_count: number;
+  journal_count: number;
+  total_debit: number;
+  total_credit: number;
+  avg_amount: number;
+  high_risk_count: number;
+  avg_risk_score: number;
+  self_approval_count: number;
+  self_approval_rate: number;
+}
+
+export interface DepartmentResponse {
+  departments: DepartmentItem[];
+  total: number;
+}
+
+export interface VendorItem {
+  vendor_code: string;
+  entry_count: number;
+  journal_count: number;
+  total_amount: number;
+  avg_amount: number;
+  max_amount: number;
+  avg_risk_score: number;
+  concentration_pct: number;
+  high_risk_count: number;
+  first_transaction: string;
+  last_transaction: string;
+}
+
+export interface VendorResponse {
+  vendors: VendorItem[];
+  total: number;
+}
+
+export interface AccountFlowItem {
+  source_account: string;
+  target_account: string;
+  transaction_count: number;
+  flow_amount: number;
+  avg_amount: number;
+}
+
+export interface AccountFlowResponse {
+  flows: AccountFlowItem[];
+  total: number;
+}
+
+// =============================================================================
 // Period Comparison Types
 // =============================================================================
 
@@ -468,6 +522,35 @@ export const api = {
 
   getBenford: (fiscalYear: number): Promise<BenfordResponse> => {
     return fetchApi(`/dashboard/benford?fiscal_year=${fiscalYear}`);
+  },
+
+  getDepartments: (fiscalYear: number, limit?: number): Promise<DepartmentResponse> => {
+    const params = new URLSearchParams({
+      fiscal_year: fiscalYear.toString(),
+    });
+    if (limit) params.append('limit', limit.toString());
+    return fetchApi(`/dashboard/departments?${params}`);
+  },
+
+  getVendors: (fiscalYear: number, limit?: number): Promise<VendorResponse> => {
+    const params = new URLSearchParams({
+      fiscal_year: fiscalYear.toString(),
+    });
+    if (limit) params.append('limit', limit.toString());
+    return fetchApi(`/dashboard/vendors?${params}`);
+  },
+
+  getAccountFlow: (
+    fiscalYear: number,
+    minAmount?: number,
+    limit?: number
+  ): Promise<AccountFlowResponse> => {
+    const params = new URLSearchParams({
+      fiscal_year: fiscalYear.toString(),
+    });
+    if (minAmount) params.append('min_amount', minAmount.toString());
+    if (limit) params.append('limit', limit.toString());
+    return fetchApi(`/dashboard/account-flow?${params}`);
   },
 
   // ---------------------------------------------------------------------------
