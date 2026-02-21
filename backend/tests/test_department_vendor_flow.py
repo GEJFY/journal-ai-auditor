@@ -27,7 +27,7 @@ class TestAgentToolsDepartment:
             }
         )
 
-        with patch("app.agents.tools._db", mock_db):
+        with patch("app.agents.tools.duckdb_manager", mock_db):
             from app.agents.tools import analyze_department_patterns
 
             result = analyze_department_patterns.invoke(
@@ -43,7 +43,7 @@ class TestAgentToolsDepartment:
         mock_db = MagicMock()
         mock_db.execute_df.side_effect = Exception("table not found")
 
-        with patch("app.agents.tools._db", mock_db):
+        with patch("app.agents.tools.duckdb_manager", mock_db):
             from app.agents.tools import analyze_department_patterns
 
             result = analyze_department_patterns.invoke(
@@ -68,7 +68,7 @@ class TestAgentToolsVendor:
             }
         )
 
-        with patch("app.agents.tools._db", mock_db):
+        with patch("app.agents.tools.duckdb_manager", mock_db):
             from app.agents.tools import analyze_vendor_concentration
 
             result = analyze_vendor_concentration.invoke(
@@ -95,7 +95,7 @@ class TestAgentToolsAccountFlow:
             }
         )
 
-        with patch("app.agents.tools._db", mock_db):
+        with patch("app.agents.tools.duckdb_manager", mock_db):
             from app.agents.tools import analyze_account_flow
 
             result = analyze_account_flow.invoke(
