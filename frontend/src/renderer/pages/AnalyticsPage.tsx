@@ -16,12 +16,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
-import {
-  api,
-  type DepartmentItem,
-  type VendorItem,
-  type AccountFlowItem,
-} from '../lib/api';
+import { api, type DepartmentItem, type VendorItem, type AccountFlowItem } from '../lib/api';
 
 type Tab = 'departments' | 'vendors' | 'account-flow';
 
@@ -40,8 +35,7 @@ function formatAmount(value: number): string {
 
 function riskBadge(score: number): string {
   if (score >= 60) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
-  if (score >= 40)
-    return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+  if (score >= 40) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
   if (score >= 20)
     return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
   return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';

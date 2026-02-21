@@ -524,10 +524,7 @@ export const api = {
     return fetchApi(`/dashboard/benford?fiscal_year=${fiscalYear}`);
   },
 
-  getDepartments: (
-    fiscalYear: number,
-    limit?: number
-  ): Promise<DepartmentResponse> => {
+  getDepartments: (fiscalYear: number, limit?: number): Promise<DepartmentResponse> => {
     const params = new URLSearchParams({
       fiscal_year: fiscalYear.toString(),
     });
