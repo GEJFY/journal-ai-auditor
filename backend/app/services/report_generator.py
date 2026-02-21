@@ -70,6 +70,7 @@ class ReportConfig:
     report_title: str = "仕訳検証レポート"
     prepared_by: str = "JAIA"
     include_details: bool = True
+    report_purpose: str = "auditor"  # "management" or "auditor"
 
 
 class PPTReportGenerator:
@@ -115,21 +116,48 @@ class PPTReportGenerator:
         """
         self._prefetch_data()
 
-        self._add_title_slide()
-        self._add_summary_slide()
-        self._add_metrics_slide()
-        self._add_risk_chart_slide()
-        self._add_findings_chart_slide()
-        self._add_benford_chart_slide()
-        self._add_trend_chart_slide()
-        self._add_recommendations_slide()
-        self._add_next_steps_slide()
-        self._add_appendix_slide()
+        if self.config.report_purpose == "management":
+            self._generate_management_slides()
+        else:
+            self._generate_auditor_slides()
 
         output = io.BytesIO()
         self.prs.save(output)
         output.seek(0)
         return output.getvalue()
+
+    def _generate_management_slides(self) -> None:
+        """Generate management-focused slides (6-7 slides).
+
+        Focus: business impact, KPIs, critical findings only,
+        action items. No technical details or methodology.
+        """
+        total = 7
+        self._add_title_slide(audience_label="経営陣向け")
+        self._add_summary_slide(slide_num=2, total=total)
+        self._add_metrics_slide(slide_num=3, total=total)
+        self._add_risk_chart_slide(slide_num=4, total=total)
+        self._add_critical_findings_slide(slide_num=5, total=total)
+        self._add_recommendations_slide(slide_num=6, total=total)
+        self._add_next_steps_slide(slide_num=7, total=total)
+
+    def _generate_auditor_slides(self) -> None:
+        """Generate auditor-focused slides (10+ slides).
+
+        Full detail: all charts, Benford analysis, trend analysis,
+        methodology appendix.
+        """
+        total = 10
+        self._add_title_slide(audience_label="監査実務者向け")
+        self._add_summary_slide(slide_num=2, total=total)
+        self._add_metrics_slide(slide_num=3, total=total)
+        self._add_risk_chart_slide(slide_num=4, total=total)
+        self._add_findings_chart_slide(slide_num=5, total=total)
+        self._add_benford_chart_slide(slide_num=6, total=total)
+        self._add_trend_chart_slide(slide_num=7, total=total)
+        self._add_recommendations_slide(slide_num=8, total=total)
+        self._add_next_steps_slide(slide_num=9, total=total)
+        self._add_appendix_slide(slide_num=10, total=total)
 
     # ========== データ取得 ==========
 
@@ -445,7 +473,7 @@ class PPTReportGenerator:
 
     # ========== スライド生成 ==========
 
-    def _add_title_slide(self) -> None:
+    def _add_title_slide(self, audience_label: str = "") -> None:
         """Slide 1: Title slide with branding."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
 
@@ -479,6 +507,22 @@ class PPTReportGenerator:
         sub.text = "Journal entry AI Analyzer"
         sub.font.size = Pt(11)
         sub.font.color.rgb = RGBColor(0xAA, 0xBB, 0xCC)
+
+        # 対象読者ラベル（右上）
+        if audience_label:
+            label_box = slide.shapes.add_textbox(
+                Inches(9.5),
+                Inches(0.5),
+                Inches(3.5),
+                Inches(0.5),
+            )
+            tf = label_box.text_frame
+            p = tf.paragraphs[0]
+            p.text = f"【{audience_label}】"
+            p.font.size = Pt(16)
+            p.font.bold = True
+            p.font.color.rgb = self.WHITE
+            p.alignment = PP_ALIGN.RIGHT
 
         # メインタイトル
         title_box = slide.shapes.add_textbox(
@@ -526,11 +570,11 @@ class PPTReportGenerator:
         p.font.color.rgb = self.SECONDARY
         p.font.name = self.FONT_JP
 
-    def _add_summary_slide(self) -> None:
+    def _add_summary_slide(self, slide_num: int = 2, total: int = 10) -> None:
         """Slide 2: Executive summary with traffic light."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "エグゼクティブサマリー")
-        self._add_slide_number(slide, 2)
+        self._add_slide_number(slide, slide_num, total)
 
         stats = self._stats
         assessment, detail, color = self._get_assessment()
@@ -662,11 +706,11 @@ class PPTReportGenerator:
                 point.format.fill.solid()
                 point.format.fill.fore_color.rgb = clr
 
-    def _add_metrics_slide(self) -> None:
+    def _add_metrics_slide(self, slide_num: int = 3, total: int = 10) -> None:
         """Slide 3: Key metrics dashboard with KPI cards."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "主要指標ダッシュボード")
-        self._add_slide_number(slide, 3)
+        self._add_slide_number(slide, slide_num, total)
 
         stats = self._stats
 
@@ -729,11 +773,11 @@ class PPTReportGenerator:
             p.font.name = self.FONT_JP
             p.space_before = Pt(6)
 
-    def _add_risk_chart_slide(self) -> None:
+    def _add_risk_chart_slide(self, slide_num: int = 4, total: int = 10) -> None:
         """Slide 4: Risk distribution with doughnut chart."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "リスク分布分析")
-        self._add_slide_number(slide, 4)
+        self._add_slide_number(slide, slide_num, total)
 
         dist = self._risk_dist
         total = sum(dist.values()) or 1
@@ -822,11 +866,11 @@ class PPTReportGenerator:
             p.font.name = self.FONT_JP
             p.space_before = Pt(4)
 
-    def _add_findings_chart_slide(self) -> None:
+    def _add_findings_chart_slide(self, slide_num: int = 5, total: int = 10) -> None:
         """Slide 5: Top findings with horizontal bar chart."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "主要な発見事項")
-        self._add_slide_number(slide, 5)
+        self._add_slide_number(slide, slide_num, total)
 
         findings = self._findings[:7]
 
@@ -911,11 +955,11 @@ class PPTReportGenerator:
             p.alignment = PP_ALIGN.CENTER
             p.font.name = self.FONT_JP
 
-    def _add_benford_chart_slide(self) -> None:
+    def _add_benford_chart_slide(self, slide_num: int = 6, total: int = 10) -> None:
         """Slide 6: Benford analysis with grouped column chart."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "ベンフォードの法則分析")
-        self._add_slide_number(slide, 6)
+        self._add_slide_number(slide, slide_num, total)
 
         digits = self._benford_digits
         summary = self._benford_summary
@@ -1006,11 +1050,11 @@ class PPTReportGenerator:
             p.font.name = self.FONT_JP
             p.space_before = Pt(3)
 
-    def _add_trend_chart_slide(self) -> None:
+    def _add_trend_chart_slide(self, slide_num: int = 7, total: int = 10) -> None:
         """Slide 7: Monthly trend with line chart."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "月次トレンド分析")
-        self._add_slide_number(slide, 7)
+        self._add_slide_number(slide, slide_num, total)
 
         trend = self._monthly_trend
 
@@ -1109,11 +1153,11 @@ class PPTReportGenerator:
             p.alignment = PP_ALIGN.CENTER
             p.font.name = self.FONT_JP
 
-    def _add_recommendations_slide(self) -> None:
+    def _add_recommendations_slide(self, slide_num: int = 8, total: int = 10) -> None:
         """Slide 8: Data-driven recommendations."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "推奨事項")
-        self._add_slide_number(slide, 8)
+        self._add_slide_number(slide, slide_num, total)
 
         recs = self._generate_recommendations()
 
@@ -1150,11 +1194,11 @@ class PPTReportGenerator:
             p.font.color.rgb = self.SECONDARY
             p.font.name = self.FONT_JP
 
-    def _add_next_steps_slide(self) -> None:
+    def _add_next_steps_slide(self, slide_num: int = 9, total: int = 10) -> None:
         """Slide 9: Next steps with priority indicators."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "次のステップ")
-        self._add_slide_number(slide, 9)
+        self._add_slide_number(slide, slide_num, total)
 
         steps = self._generate_next_steps()
 
@@ -1197,11 +1241,11 @@ class PPTReportGenerator:
             p.font.color.rgb = self.SECONDARY
             p.font.name = self.FONT_JP
 
-    def _add_appendix_slide(self) -> None:
+    def _add_appendix_slide(self, slide_num: int = 10, total: int = 10) -> None:
         """Slide 10: Appendix - methodology."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         self._add_slide_title(slide, "付録：検証手法")
-        self._add_slide_number(slide, 10)
+        self._add_slide_number(slide, slide_num, total)
 
         # 左列: ルールベース
         left_box = slide.shapes.add_textbox(
@@ -1291,6 +1335,74 @@ class PPTReportGenerator:
             p.font.size = size
             p.font.bold = bold
             p.font.color.rgb = self.PRIMARY if bold else self.SECONDARY
+            p.font.name = self.FONT_JP
+
+    def _add_critical_findings_slide(self, slide_num: int = 5, total: int = 7) -> None:
+        """Management-focused slide: Critical findings only (HIGH/CRITICAL)."""
+        slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
+        self._add_slide_title(slide, "重要な発見事項")
+        self._add_slide_number(slide, slide_num, total)
+
+        findings = self._findings[:5]
+
+        content_box = slide.shapes.add_textbox(
+            Inches(0.75),
+            Inches(1.5),
+            Inches(11.833),
+            Inches(5.5),
+        )
+        tf = content_box.text_frame
+        tf.word_wrap = True
+
+        if findings:
+            p = tf.paragraphs[0]
+            p.text = "対応が必要な主要項目:"
+            p.font.size = Pt(18)
+            p.font.bold = True
+            p.font.color.rgb = self.PRIMARY
+            p.font.name = self.FONT_JP
+
+            for i, f in enumerate(findings, 1):
+                color = self.COLOR_HIGH if i <= 2 else self.COLOR_MEDIUM
+
+                p = tf.add_paragraph()
+                p.text = f"{i}. {f['rule_name']}"
+                p.font.size = Pt(16)
+                p.font.bold = True
+                p.font.color.rgb = color
+                p.font.name = self.FONT_JP
+                p.space_before = Pt(16)
+
+                p = tf.add_paragraph()
+                p.text = f"   検出件数: {f['count']:,}件"
+                p.font.size = Pt(14)
+                p.font.color.rgb = self.SECONDARY
+                p.font.name = self.FONT_JP
+        else:
+            p = tf.paragraphs[0]
+            p.text = "重大な発見事項はありません。"
+            p.font.size = Pt(20)
+            p.font.color.rgb = self.COLOR_MINIMAL
+            p.alignment = PP_ALIGN.CENTER
+            p.font.name = self.FONT_JP
+
+        # 右下: 影響度サマリー
+        stats = self._stats
+        high_risk = stats.get("high_risk_count", 0)
+        if high_risk > 0:
+            impact_box = slide.shapes.add_textbox(
+                Inches(9),
+                Inches(5.5),
+                Inches(4),
+                Inches(1.5),
+            )
+            tf = impact_box.text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            p.text = f"高リスク仕訳: {high_risk:,}件"
+            p.font.size = Pt(14)
+            p.font.bold = True
+            p.font.color.rgb = self.COLOR_HIGH
             p.font.name = self.FONT_JP
 
     # ========== データ駆動コンテンツ生成 ==========
@@ -1495,10 +1607,29 @@ class PDFReportGenerator:
             bottomMargin=20 * mm,
         )
 
-        story = []
+        if self.config.report_purpose == "management":
+            story = self._build_management_story()
+        else:
+            story = self._build_auditor_story()
 
-        # Title
-        story.append(Paragraph(self.config.report_title, self.styles["JapaneseTitle"]))
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    def _build_title_section(self) -> list:
+        """Build title section common to both report types."""
+        story: list = []
+        audience = (
+            "経営陣向け"
+            if self.config.report_purpose == "management"
+            else "監査実務者向け"
+        )
+        story.append(
+            Paragraph(
+                f"{self.config.report_title}　【{audience}】",
+                self.styles["JapaneseTitle"],
+            )
+        )
         story.append(
             Paragraph(
                 f"{self.config.fiscal_year}年度 {self.config.company_name}",
@@ -1512,10 +1643,16 @@ class PDFReportGenerator:
             )
         )
         story.append(Spacer(1, 30))
+        return story
 
-        # 1. Executive Summary
+    def _build_summary_section(self, section_num: int = 1) -> list:
+        """Build executive summary section."""
+        story: list = []
         story.append(
-            Paragraph("1. エグゼクティブサマリー", self.styles["JapaneseHeading"])
+            Paragraph(
+                f"{section_num}. エグゼクティブサマリー",
+                self.styles["JapaneseHeading"],
+            )
         )
         stats = self._stats
         summary_data = [
@@ -1532,9 +1669,14 @@ class PDFReportGenerator:
         ]
         story.append(self._create_table(summary_data, header=True))
         story.append(Spacer(1, 20))
+        return story
 
-        # 2. Risk Distribution with chart
-        story.append(Paragraph("2. リスク分布", self.styles["JapaneseHeading"]))
+    def _build_risk_section(self, section_num: int = 2) -> list:
+        """Build risk distribution section."""
+        story: list = []
+        story.append(
+            Paragraph(f"{section_num}. リスク分布", self.styles["JapaneseHeading"])
+        )
         dist = self._risk_dist
         dist_data = [
             ["リスクレベル", "件数", "割合"],
@@ -1563,12 +1705,62 @@ class PDFReportGenerator:
             self._create_table(dist_data, header=True, col_widths=[60, 40, 30])
         )
         story.append(Spacer(1, 10))
-
-        # リスク分布円グラフ
         risk_chart = self._create_risk_pie_chart()
         if risk_chart:
             story.append(Image(risk_chart, width=130 * mm, height=80 * mm))
         story.append(Spacer(1, 20))
+        return story
+
+    def _build_findings_section(self, section_num: int = 5, limit: int = 10) -> list:
+        """Build findings section."""
+        story: list = []
+        story.append(
+            Paragraph(f"{section_num}. 主要な発見事項", self.styles["JapaneseHeading"])
+        )
+        findings = self._findings
+        if findings:
+            findings_data = [["順位", "ルール名", "違反件数"]]
+            for i, f in enumerate(findings[:limit], 1):
+                findings_data.append([str(i), f["rule_name"], f"{f['count']:,}"])
+            story.append(
+                self._create_table(findings_data, header=True, col_widths=[15, 95, 30])
+            )
+        else:
+            story.append(
+                Paragraph(
+                    "検出された重大な発見事項はありません。",
+                    self.styles["JapaneseBody"],
+                )
+            )
+        story.append(Spacer(1, 20))
+        return story
+
+    def _build_recommendations_section(self, section_num: int = 6) -> list:
+        """Build recommendations section."""
+        story: list = []
+        story.append(
+            Paragraph(f"{section_num}. 推奨事項", self.styles["JapaneseHeading"])
+        )
+        recs = self._generate_recommendations()
+        for i, rec in enumerate(recs, 1):
+            story.append(Paragraph(f"{i}. {rec}", self.styles["JapaneseBody"]))
+            story.append(Spacer(1, 5))
+        return story
+
+    def _build_management_story(self) -> list:
+        """Build management-focused PDF (summary + KPI + critical findings + actions)."""
+        story = self._build_title_section()
+        story.extend(self._build_summary_section(1))
+        story.extend(self._build_risk_section(2))
+        story.extend(self._build_findings_section(3, limit=5))
+        story.extend(self._build_recommendations_section(4))
+        return story
+
+    def _build_auditor_story(self) -> list:
+        """Build auditor-focused PDF (full detail with all analysis sections)."""
+        story = self._build_title_section()
+        story.extend(self._build_summary_section(1))
+        story.extend(self._build_risk_section(2))
 
         # 3. Benford Analysis with chart
         story.append(
@@ -1583,7 +1775,6 @@ class PDFReportGenerator:
             )
         )
         story.append(Spacer(1, 10))
-
         benford_chart = self._create_benford_bar_chart()
         if benford_chart:
             story.append(Image(benford_chart, width=150 * mm, height=80 * mm))
@@ -1598,35 +1789,25 @@ class PDFReportGenerator:
         story.append(Spacer(1, 20))
 
         # 5. Top Findings
-        story.append(Paragraph("5. 主要な発見事項", self.styles["JapaneseHeading"]))
-        findings = self._findings
-        if findings:
-            findings_data = [["順位", "ルール名", "違反件数"]]
-            for i, f in enumerate(findings[:10], 1):
-                findings_data.append([str(i), f["rule_name"], f"{f['count']:,}"])
-            story.append(
-                self._create_table(findings_data, header=True, col_widths=[15, 95, 30])
-            )
-        else:
-            story.append(
-                Paragraph(
-                    "検出された重大な発見事項はありません。",
-                    self.styles["JapaneseBody"],
-                )
-            )
-        story.append(Spacer(1, 20))
+        story.extend(self._build_findings_section(5, limit=10))
 
         # 6. Recommendations
-        story.append(Paragraph("6. 推奨事項", self.styles["JapaneseHeading"]))
-        recs = self._generate_recommendations()
-        for i, rec in enumerate(recs, 1):
-            story.append(Paragraph(f"{i}. {rec}", self.styles["JapaneseBody"]))
-            story.append(Spacer(1, 5))
+        story.extend(self._build_recommendations_section(6))
 
-        # Build PDF
-        doc.build(story)
-        buffer.seek(0)
-        return buffer.getvalue()
+        # 7. Methodology appendix
+        story.append(PageBreak())
+        story.append(Paragraph("7. 検証手法（付録）", self.styles["JapaneseHeading"]))
+        methodology_items = [
+            "ルールベース検証: 58種類の監査ルールを全件に適用",
+            "機械学習異常検出: Isolation Forest, LOF, One-Class SVM, Autoencoder, アンサンブル投票",
+            "ベンフォードの法則分析: 先頭桁分布のMAD適合度評価",
+            "リスクスコアリング: ルール違反(60%) + ML異常(40%)の加重スコア",
+        ]
+        for item in methodology_items:
+            story.append(Paragraph(f"• {item}", self.styles["JapaneseBody"]))
+            story.append(Spacer(1, 3))
+
+        return story
 
     # ========== データ取得 ==========
 

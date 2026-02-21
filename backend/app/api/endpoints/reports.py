@@ -823,24 +823,18 @@ async def get_report_history(
 async def export_ppt_report(
     fiscal_year: int = Query(..., description="Fiscal year"),
     company_name: str = Query("Sample Company", description="Company name"),
+    report_purpose: str = Query(
+        "auditor",
+        pattern="^(management|auditor)$",
+        description="Report purpose: 'management' or 'auditor'",
+    ),
 ) -> StreamingResponse:
     """Export report as PowerPoint presentation.
-
-    Generates a 10-slide presentation with:
-    - Title slide
-    - Executive summary
-    - Key metrics
-    - Risk distribution
-    - Top findings
-    - Benford analysis
-    - Trend analysis
-    - Recommendations
-    - Next steps
-    - Appendix
 
     Args:
         fiscal_year: Fiscal year for the report.
         company_name: Company name for the report.
+        report_purpose: 'management' (6-7 slides) or 'auditor' (10 slides).
 
     Returns:
         PowerPoint file as streaming response.
@@ -852,11 +846,13 @@ async def export_ppt_report(
             fiscal_year=fiscal_year,
             company_name=company_name,
             report_title="仕訳検証レポート",
+            report_purpose=report_purpose,
         )
         generator = PPTReportGenerator(config)
         ppt_bytes = generator.generate()
 
-        filename = f"JAIA_Report_{fiscal_year}_{datetime.now().strftime('%Y%m%d')}.pptx"
+        purpose_label = "mgmt" if report_purpose == "management" else "audit"
+        filename = f"JAIA_Report_{fiscal_year}_{purpose_label}_{datetime.now().strftime('%Y%m%d')}.pptx"
 
         return StreamingResponse(
             iter([ppt_bytes]),
@@ -882,18 +878,18 @@ async def export_ppt_report(
 async def export_pdf_report(
     fiscal_year: int = Query(..., description="Fiscal year"),
     company_name: str = Query("Sample Company", description="Company name"),
+    report_purpose: str = Query(
+        "auditor",
+        pattern="^(management|auditor)$",
+        description="Report purpose: 'management' or 'auditor'",
+    ),
 ) -> StreamingResponse:
     """Export report as PDF document.
-
-    Generates a comprehensive PDF report with:
-    - Executive summary
-    - Risk distribution tables
-    - Top findings
-    - Recommendations
 
     Args:
         fiscal_year: Fiscal year for the report.
         company_name: Company name for the report.
+        report_purpose: 'management' (summary) or 'auditor' (full detail).
 
     Returns:
         PDF file as streaming response.
@@ -905,11 +901,13 @@ async def export_pdf_report(
             fiscal_year=fiscal_year,
             company_name=company_name,
             report_title="仕訳検証レポート",
+            report_purpose=report_purpose,
         )
         generator = PDFReportGenerator(config)
         pdf_bytes = generator.generate()
 
-        filename = f"JAIA_Report_{fiscal_year}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        purpose_label = "mgmt" if report_purpose == "management" else "audit"
+        filename = f"JAIA_Report_{fiscal_year}_{purpose_label}_{datetime.now().strftime('%Y%m%d')}.pdf"
 
         return StreamingResponse(
             iter([pdf_bytes]),
