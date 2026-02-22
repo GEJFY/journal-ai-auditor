@@ -20,6 +20,7 @@ import RiskPage from './pages/RiskPage';
 import AIAnalysisPage from './pages/AIAnalysisPage';
 import ReportsPage from './pages/ReportsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import AutonomousAuditPage from './pages/AutonomousAuditPage';
 import Onboarding, { useOnboarding } from './components/onboarding/Onboarding';
 import { api } from './lib/api';
 
@@ -114,6 +115,7 @@ function AppContent() {
           <Route path="/risk" element={<RiskPage />} />
           <Route path="/ai-analysis" element={<AIAnalysisPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/autonomous-audit" element={<AutonomousAuditPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

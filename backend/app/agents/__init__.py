@@ -14,6 +14,7 @@ Architecture:
 """
 
 from app.agents.analysis import AnalysisAgent
+from app.agents.autonomous import AutonomousAuditAgent
 from app.agents.base import AgentConfig, AgentState, BaseAgent
 from app.agents.documentation import DocumentationAgent
 from app.agents.investigation import InvestigationAgent
@@ -34,4 +35,6 @@ __all__ = [
     "DocumentationAgent",
     "QAAgent",
     "ReviewAgent",
+    # Autonomous
+    "AutonomousAuditAgent",
 ]
