@@ -19,7 +19,9 @@ JAIA（Journal entry AI Analyzer）は、仕訳データの自動分析と内部
 - **5つのML異常検知**: Isolation Forest、LOF、One-Class SVM、Autoencoder、アンサンブル
 - **Benford分析**: 第1桁・第2桁分析、MAD適合性テスト
 - **リスクスコアリング**: 0-100の統合スコア、Critical/High/Medium/Low分類
-- **レポート自動生成**: PPT・PDF形式での監査報告書出力
+- **レポート自動生成**: PPT・PDF形式での監査報告書出力（目的別: 監査人向け/経営層向け）
+- **カラムマッピング**: ファイル取込時にカラム自動マッピング提案、手動調整、バリデーション
+- **詳細分析**: 部門分析、取引先集中度分析、勘定科目フロー分析
 - **AICPA準拠**: Audit Data Standards（GL_Detail）に完全対応
 
 ---
@@ -87,6 +89,23 @@ cd journal-ai-auditor
 ```powershell
 .\scripts\start_backend.ps1   # バックエンドのみ
 .\scripts\start_frontend.ps1  # フロントエンドのみ
+```
+
+### Docker で起動（Web版）
+
+```bash
+# 本番モード: バックエンド + フロントエンド（Nginx）が起動
+docker-compose up --build
+# → http://localhost でアクセス
+
+# 開発モード（推奨）: バックエンドのみDocker + フロントエンドはローカル
+docker-compose -f docker-compose.dev.yml up --build
+cd frontend && npm run dev
+# → http://localhost:5173 でアクセス
+
+# 開発モード（全Docker）
+docker-compose -f docker-compose.dev.yml --profile full up
+# → http://localhost:5173 でアクセス
 ```
 
 ### 動作確認

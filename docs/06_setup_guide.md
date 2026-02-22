@@ -623,22 +623,51 @@ RATE_LIMIT_WINDOW=60
 
 ## 7. Docker によるデプロイ
 
-### 7.1 Docker Compose で起動
+JAIAはバックエンド・フロントエンドの両方をDockerで起動できます。
 
-プロジェクトにはDockerfileとdocker-compose.ymlが含まれています。
+### 7.1 本番モード（Web版 — これだけで完結）
 
 ```bash
-# ビルドと起動
+# バックエンド + フロントエンド（Nginx）を一括起動
 docker-compose up -d --build
 
+# → http://localhost でアクセス（ポート80）
+# → http://localhost:8090/docs でAPI仕様書
+
 # ログ確認
-docker-compose logs -f backend
+docker-compose logs -f
 
 # 停止
 docker-compose down
 ```
 
-### 7.2 バックエンド単体ビルド
+フロントエンドはマルチステージビルド（Node.js でビルド → Nginx Alpine で配信）で、`frontend/Dockerfile` で定義されています。
+
+### 7.2 開発モード（推奨 — バックエンドDocker + ローカルVite）
+
+```bash
+# バックエンドをDocker、フロントエンドはローカル（HMR高速）
+docker-compose -f docker-compose.dev.yml up --build
+
+# 別ターミナルでフロントエンド起動
+cd frontend
+npm run dev
+
+# → http://localhost:5173 でアクセス
+```
+
+### 7.3 開発モード（全Docker）
+
+```bash
+# バックエンド + フロントエンド両方Docker（--profile full）
+docker-compose -f docker-compose.dev.yml --profile full up
+
+# → http://localhost:5173 でアクセス
+```
+
+> **注意**: Windows Docker上ではファイル監視にポーリングを使用するため、HMRが若干遅くなります。高速な開発にはセクション 7.2 を推奨します。
+
+### 7.4 バックエンド単体ビルド
 
 ```bash
 # backend/ ディレクトリをコンテキストとしてビルド
@@ -655,7 +684,7 @@ docker run -d \
   jaia-backend:latest
 ```
 
-### 7.3 ファイアウォール設定
+### 7.5 ファイアウォール設定
 
 ```bash
 # バックエンドポート

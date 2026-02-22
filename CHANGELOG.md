@@ -4,6 +4,29 @@ All notable changes to JAIA (Journal entry AI Analyzer) will be documented in th
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-02-23
+
+### Added
+- Column mapping UI for journal entry import with auto-suggestion based on column name similarity
+- Multi-step import flow: upload → column mapping → validation → import execution
+- Analytics page with 3 tabs: department analysis, vendor concentration, account flow
+- Report purpose selection (auditor vs management) for PPT/PDF exports
+- Frontend Dockerfile (multi-stage: Node build → Nginx serve) for web deployment
+- Docker Compose frontend service for production (`docker-compose up --build`)
+- Optional full-Docker development mode (`--profile full`)
+- Frontend `.dockerignore` for build context optimization
+- AnalyticsPage tests and extended ImportPage tests for column mapping
+
+### Changed
+- DuckDB connection lifecycle: use module-level singleton and close on shutdown
+- `docker-compose.yml` frontend service now builds from Dockerfile instead of mounting pre-built dist
+- `Dockerfile.dev` limits `--reload` file watching to `app/` directory to prevent memory errors
+
+### Fixed
+- DuckDB file lock conflict on uvicorn reload (close connection during lifespan shutdown)
+- Docker watchfiles `Cannot allocate memory` error with `--reload-dir app`
+- FastAPI `regex` → `pattern` deprecation warnings in dashboard.py
+
 ## [0.2.1] - 2026-02-15
 
 ### Added
