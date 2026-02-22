@@ -28,7 +28,7 @@ from app.api import router as api_router
 from app.core.config import settings
 from app.core.logging import audit_log, get_logger, setup_logging
 from app.core.middleware import setup_audit_middleware, setup_middleware
-from app.db import DuckDBManager, SQLiteManager
+from app.db import DuckDBManager, SQLiteManager, duckdb_manager
 
 # ロギングシステムを初期化
 setup_logging()
@@ -80,10 +80,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # データベースの初期化
     logger.info("データベースを初期化しています...")
     try:
-        duckdb = DuckDBManager()
         sqlite = SQLiteManager()
 
-        duckdb.initialize_schema()
+        duckdb_manager.initialize_schema()
         logger.info(f"DuckDB スキーマを初期化しました: {settings.duckdb_path}")
 
         sqlite.initialize_schema()
@@ -106,6 +105,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # シャットダウン処理
     # ========================================
     logger.info(f"{settings.app_name} をシャットダウンします...")
+
+    # DuckDB接続を閉じる（reload時のロック競合を防止）
+    duckdb_manager.close()
+    logger.info("DuckDB 接続を閉じました")
 
     # 監査ログに記録
     audit_log.info(
