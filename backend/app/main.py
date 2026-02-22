@@ -28,7 +28,7 @@ from app.api import router as api_router
 from app.core.config import settings
 from app.core.logging import audit_log, get_logger, setup_logging
 from app.core.middleware import setup_audit_middleware, setup_middleware
-from app.db import DuckDBManager, SQLiteManager, duckdb_manager
+from app.db import SQLiteManager, duckdb_manager
 
 # ロギングシステムを初期化
 setup_logging()
