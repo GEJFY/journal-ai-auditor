@@ -430,7 +430,7 @@ async def get_dashboard_summary(
 @router.get("/timeseries", response_model=TimeSeriesResponse)
 async def get_time_series(
     fiscal_year: int = Query(...),
-    aggregation: str = Query("daily", regex="^(daily|weekly|monthly)$"),
+    aggregation: str = Query("daily", pattern="^(daily|weekly|monthly)$"),
     period_from: int | None = Query(None, ge=1, le=12),
     period_to: int | None = Query(None, ge=1, le=12),
     # Advanced filters
@@ -736,7 +736,7 @@ async def get_period_comparison(
     fiscal_year: int = Query(...),
     period: int = Query(..., ge=1, le=12, description="比較対象の会計期間"),
     comparison_type: str = Query(
-        "mom", regex="^(mom|yoy)$", description="mom=前月比, yoy=前年同月比"
+        "mom", pattern="^(mom|yoy)$", description="mom=前月比, yoy=前年同月比"
     ),
     limit: int = Query(20, le=100),
 ) -> PeriodComparisonResponse:

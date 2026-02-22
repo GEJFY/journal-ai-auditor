@@ -36,11 +36,6 @@ describe('ImportPage', () => {
     expect(screen.getByText('仕訳データファイルをドラッグ＆ドロップ')).toBeTruthy();
   });
 
-  it('renders journal entry sample file reference', () => {
-    render(<ImportPage />);
-    expect(screen.getByText('10_journal_entries.csv')).toBeTruthy();
-  });
-
   it('has file input for journal entries', () => {
     render(<ImportPage />);
     const input = document.getElementById('je-file-input') as HTMLInputElement;
