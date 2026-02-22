@@ -27,6 +27,8 @@ services:
     volumes:
       - ./backend:/app
       - jaia-data-dev:/app/data
+      - /app/__pycache__
+      - /app/.pytest_cache
     networks:
       - jaia-network-dev
 

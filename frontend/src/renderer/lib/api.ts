@@ -150,6 +150,32 @@ export interface RulesSummaryResponse {
 }
 
 // =============================================================================
+// Import Preview / Mapping Types
+// =============================================================================
+
+export interface FilePreviewResponse {
+  filename: string;
+  total_rows: number;
+  columns: string[];
+  column_count: number;
+  suggested_mapping: Record<string, string>;
+  unmapped_columns: string[];
+  missing_required: string[];
+  sample_data: Record<string, unknown>[];
+  dtypes: Record<string, string>;
+}
+
+export interface ImportValidationResponse {
+  is_valid: boolean;
+  total_rows: number;
+  error_count: number;
+  warning_count: number;
+  errors: Array<Record<string, unknown>>;
+  warnings: Array<Record<string, unknown>>;
+  check_results: Record<string, unknown>;
+}
+
+// =============================================================================
 // Batch Types
 // =============================================================================
 
@@ -788,5 +814,22 @@ export const api = {
   getLLMDailyUsage: (days?: number): Promise<LLMDailyResponse> => {
     const params = days ? `?days=${days}` : '';
     return fetchApi(`/llm-usage/daily${params}`);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Import Preview & Mapping
+  // ---------------------------------------------------------------------------
+  getFilePreview: (tempFileId: string): Promise<FilePreviewResponse> => {
+    return fetchApi(`/import/preview/${tempFileId}`);
+  },
+
+  validateImportFile: (
+    tempFileId: string,
+    columnMapping: Record<string, string>
+  ): Promise<ImportValidationResponse> => {
+    return fetchApi(`/import/validate/${tempFileId}`, {
+      method: 'POST',
+      body: JSON.stringify({ column_mapping: columnMapping }),
+    });
   },
 };
