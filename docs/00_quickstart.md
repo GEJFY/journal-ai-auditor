@@ -125,7 +125,7 @@ npm run dev
 | ポートが使用中 | 他のアプリを停止するか、`backend\.env` の `PORT=8090` を変更 |
 | LLMエラー | `backend\.env` のAPIキーとプロバイダー設定を確認 |
 | フロントエンドが開かない | `cd frontend && npm install` で依存パッケージを再インストール |
-| Electronエラー | `cd frontend && npm run build:main` でElectronメインプロセスをビルド |
+| ビルドエラー | `cd frontend && npm run build` でフロントエンドを再ビルド |
 
 詳細は [トラブルシューティングガイド](15_troubleshooting.md) を参照。
 

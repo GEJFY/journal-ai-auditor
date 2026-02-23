@@ -38,8 +38,8 @@ npm install
 # ポート5290が使用中
 # → vite.config.ts の server.port を変更、または他プロセスを停止
 
-# Electron の dist/main/index.js が見つからない
-npm run build:main
+# ビルドエラーが出る場合
+npm run build
 ```
 
 ### API に接続できない

@@ -20,8 +20,8 @@ COPY frontend/ .
 ARG VITE_API_BASE=/api/v1
 ENV VITE_API_BASE=${VITE_API_BASE}
 
-# Build the React app (renderer only, no Electron)
-RUN npm run build:vite
+# Build the React app
+RUN npm run build
 
 # Stage 2: Production
 FROM nginx:alpine AS production
