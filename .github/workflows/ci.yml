@@ -171,7 +171,7 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
-        run: npm run build:vite
+        run: npm run build
 
   # ===========================================================================
   # E2E Tests (Playwright)

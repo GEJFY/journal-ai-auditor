@@ -19,10 +19,16 @@ vi.mock('lucide-react', () => ({
   Calendar: (props: Record<string, unknown>) => <span data-testid="icon-calendar" {...props} />,
   BarChart3: (props: Record<string, unknown>) => <span data-testid="icon-bar-chart" {...props} />,
   RefreshCw: (props: Record<string, unknown>) => <span data-testid="icon-refresh" {...props} />,
-  ArrowUpRight: (props: Record<string, unknown>) => <span data-testid="icon-arrow-up" {...props} />,
-  ArrowDownRight: (props: Record<string, unknown>) => (
-    <span data-testid="icon-arrow-down" {...props} />
+  ArrowUpRight: (props: Record<string, unknown>) => (
+    <span data-testid="icon-arrow-up-right" {...props} />
   ),
+  ArrowDownRight: (props: Record<string, unknown>) => (
+    <span data-testid="icon-arrow-down-right" {...props} />
+  ),
+  ArrowUpDown: (props: Record<string, unknown>) => <span data-testid="icon-sort" {...props} />,
+  ArrowUp: (props: Record<string, unknown>) => <span data-testid="icon-arrow-up" {...props} />,
+  ArrowDown: (props: Record<string, unknown>) => <span data-testid="icon-arrow-down" {...props} />,
+  Loader2: (props: Record<string, unknown>) => <span data-testid="icon-loader2" {...props} />,
 }));
 
 // Mock recharts

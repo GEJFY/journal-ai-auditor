@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
+import { type ColumnDef } from '@tanstack/react-table';
 import {
   AreaChart,
   Area,
@@ -31,6 +32,7 @@ import {
 } from 'recharts';
 import { api, type PeriodComparisonItem } from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader';
+import { DataTable } from '@/components/ui/DataTable';
 import clsx from 'clsx';
 
 type Aggregation = 'daily' | 'weekly' | 'monthly';
@@ -43,6 +45,124 @@ const CHART_COLORS = {
   credit: '#dc2626',
   area: 'rgba(16, 42, 67, 0.1)',
 };
+
+// =============================================================================
+// Period Comparison Table
+// =============================================================================
+
+const comparisonColumns: ColumnDef<PeriodComparisonItem, any>[] = [
+  {
+    accessorKey: 'account_code',
+    header: '勘定科目',
+    cell: ({ row }) => (
+      <>
+        <span className="text-neutral-500 text-xs mr-1">{row.original.account_code}</span>
+        {row.original.account_name}
+      </>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: 'current_amount',
+    header: () => <span className="flex justify-end">当期</span>,
+    cell: ({ getValue }) => (
+      <span className="flex justify-end">¥{getValue<number>().toLocaleString()}</span>
+    ),
+  },
+  {
+    accessorKey: 'previous_amount',
+    header: () => <span className="flex justify-end">前期</span>,
+    cell: ({ getValue }) => (
+      <span className="flex justify-end">¥{getValue<number>().toLocaleString()}</span>
+    ),
+  },
+  {
+    accessorKey: 'change_amount',
+    header: () => <span className="flex justify-end">増減額</span>,
+    cell: ({ getValue }) => {
+      const amount = getValue<number>();
+      return (
+        <span
+          className={clsx(
+            'flex items-center justify-end gap-0.5 font-medium',
+            amount > 0 ? 'text-red-600' : amount < 0 ? 'text-green-600' : 'text-neutral-500'
+          )}
+        >
+          {amount > 0 ? (
+            <ArrowUpRight className="w-3 h-3" />
+          ) : amount < 0 ? (
+            <ArrowDownRight className="w-3 h-3" />
+          ) : null}
+          ¥{Math.abs(amount).toLocaleString()}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: 'change_percent',
+    header: () => <span className="flex justify-end">増減率</span>,
+    cell: ({ getValue }) => {
+      const pct = getValue<number | null>();
+      return (
+        <span
+          className={clsx(
+            'flex justify-end',
+            pct !== null && pct > 0
+              ? 'text-red-600'
+              : pct !== null && pct < 0
+                ? 'text-green-600'
+                : 'text-neutral-500'
+          )}
+        >
+          {pct !== null ? `${pct.toFixed(1)}%` : '-'}
+        </span>
+      );
+    },
+  },
+];
+
+function ComparisonTable({
+  items,
+  isLoading,
+  currentPeriod,
+  previousPeriod,
+}: {
+  items: PeriodComparisonItem[];
+  isLoading: boolean;
+  currentPeriod?: string;
+  previousPeriod?: string;
+}) {
+  if (!isLoading && items.length === 0) {
+    return (
+      <div className="text-center py-8 text-neutral-500">
+        {previousPeriod === 'N/A'
+          ? '第1期には前月比較データがありません'
+          : '比較データがありません'}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {currentPeriod && previousPeriod && items.length > 0 && (
+        <div className="text-sm text-neutral-500 mb-3">
+          {currentPeriod} vs {previousPeriod}
+        </div>
+      )}
+      <DataTable
+        columns={comparisonColumns}
+        data={items}
+        isLoading={isLoading}
+        enableSorting={false}
+        emptyTitle="比較データがありません"
+      />
+    </div>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
 
 export default function TimeSeriesPage() {
   const [fiscalYear] = useFiscalYear();
@@ -395,85 +515,12 @@ export default function TimeSeriesPage() {
           </div>
         </div>
         <div className="card-body">
-          {comparisonLoading ? (
-            <div className="flex items-center justify-center h-40">
-              <div className="spinner" />
-            </div>
-          ) : comparison && comparison.items.length > 0 ? (
-            <div>
-              <div className="text-sm text-neutral-500 mb-3">
-                {comparison.current_period} vs {comparison.previous_period}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-200">
-                      <th className="text-left py-2 px-3 font-medium text-neutral-600">勘定科目</th>
-                      <th className="text-right py-2 px-3 font-medium text-neutral-600">当期</th>
-                      <th className="text-right py-2 px-3 font-medium text-neutral-600">前期</th>
-                      <th className="text-right py-2 px-3 font-medium text-neutral-600">増減額</th>
-                      <th className="text-right py-2 px-3 font-medium text-neutral-600">増減率</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comparison.items.map((item: PeriodComparisonItem) => (
-                      <tr key={item.account_code} className="border-b border-neutral-100">
-                        <td className="py-2 px-3">
-                          <span className="text-neutral-500 text-xs mr-1">{item.account_code}</span>
-                          {item.account_name}
-                        </td>
-                        <td className="text-right py-2 px-3">
-                          ¥{item.current_amount.toLocaleString()}
-                        </td>
-                        <td className="text-right py-2 px-3">
-                          ¥{item.previous_amount.toLocaleString()}
-                        </td>
-                        <td
-                          className={clsx(
-                            'text-right py-2 px-3 font-medium',
-                            item.change_amount > 0
-                              ? 'text-red-600'
-                              : item.change_amount < 0
-                                ? 'text-green-600'
-                                : 'text-neutral-500'
-                          )}
-                        >
-                          <span className="inline-flex items-center gap-0.5">
-                            {item.change_amount > 0 ? (
-                              <ArrowUpRight className="w-3 h-3" />
-                            ) : item.change_amount < 0 ? (
-                              <ArrowDownRight className="w-3 h-3" />
-                            ) : null}
-                            ¥{Math.abs(item.change_amount).toLocaleString()}
-                          </span>
-                        </td>
-                        <td
-                          className={clsx(
-                            'text-right py-2 px-3',
-                            item.change_percent !== null && item.change_percent > 0
-                              ? 'text-red-600'
-                              : item.change_percent !== null && item.change_percent < 0
-                                ? 'text-green-600'
-                                : 'text-neutral-500'
-                          )}
-                        >
-                          {item.change_percent !== null
-                            ? `${item.change_percent.toFixed(1)}%`
-                            : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-neutral-500">
-              {comparison?.previous_period === 'N/A'
-                ? '第1期には前月比較データがありません'
-                : '比較データがありません'}
-            </div>
-          )}
+          <ComparisonTable
+            items={comparison?.items ?? []}
+            isLoading={comparisonLoading}
+            currentPeriod={comparison?.current_period}
+            previousPeriod={comparison?.previous_period}
+          />
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@
  * Department, vendor, and account flow analysis.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
@@ -12,11 +12,12 @@ import {
   Users,
   ArrowRightLeft,
   AlertTriangle,
-  Loader2,
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
+import { type ColumnDef } from '@tanstack/react-table';
 import { api, type DepartmentItem, type VendorItem, type AccountFlowItem } from '../lib/api';
+import { DataTable } from '@/components/ui/DataTable';
 
 type Tab = 'departments' | 'vendors' | 'account-flow';
 
@@ -51,13 +52,101 @@ function DepartmentsTab({ fiscalYear }: { fiscalYear: number }) {
     queryFn: () => api.getDepartments(fiscalYear, 50),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
-      </div>
-    );
-  }
+  const columns = useMemo<ColumnDef<DepartmentItem, any>[]>(
+    () => [
+      {
+        accessorKey: 'dept_code',
+        header: '部門コード',
+        cell: ({ getValue }) => (
+          <span className="font-medium text-gray-900 dark:text-white">{getValue<string>()}</span>
+        ),
+      },
+      {
+        accessorKey: 'entry_count',
+        header: () => <span className="flex justify-end">仕訳件数</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {getValue<number>().toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'total_debit',
+        header: () => <span className="flex justify-end">借方合計</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'total_credit',
+        header: () => <span className="flex justify-end">貸方合計</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'avg_risk_score',
+        header: () => <span className="flex justify-end">平均リスク</span>,
+        cell: ({ getValue }) => {
+          const score = getValue<number>();
+          return (
+            <span className="flex justify-end">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${riskBadge(score)}`}
+              >
+                {score.toFixed(1)}
+              </span>
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'high_risk_count',
+        header: () => <span className="flex justify-end">高リスク件数</span>,
+        cell: ({ getValue }) => {
+          const count = getValue<number>();
+          return (
+            <span className="flex justify-end">
+              {count > 0 ? (
+                <span className="text-red-600 dark:text-red-400 font-medium">{count}</span>
+              ) : (
+                <span className="text-gray-400">0</span>
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'self_approval_rate',
+        header: () => <span className="flex justify-end">自己承認率</span>,
+        cell: ({ getValue }) => {
+          const rate = getValue<number>();
+          return (
+            <span className="flex justify-end">
+              {rate > 0 ? (
+                <span
+                  className={
+                    rate > 10
+                      ? 'text-red-600 dark:text-red-400 font-medium'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }
+                >
+                  {rate.toFixed(1)}%
+                </span>
+              ) : (
+                <span className="text-gray-400">0%</span>
+              )}
+            </span>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   if (error) {
     return (
@@ -70,101 +159,16 @@ function DepartmentsTab({ fiscalYear }: { fiscalYear: number }) {
 
   const departments = data?.departments || [];
 
-  if (departments.length === 0) {
-    return (
-      <div className="card p-8 text-center">
-        <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 dark:text-gray-400">部門データがありません</p>
-      </div>
-    );
-  }
-
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700">
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                部門コード
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                仕訳件数
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                借方合計
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                貸方合計
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                平均リスク
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                高リスク件数
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                自己承認率
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-neutral-700">
-            {departments.map((dept: DepartmentItem) => (
-              <tr
-                key={dept.dept_code}
-                className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors"
-              >
-                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                  {dept.dept_code}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {dept.entry_count.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {formatAmount(dept.total_debit)}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {formatAmount(dept.total_credit)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${riskBadge(dept.avg_risk_score)}`}
-                  >
-                    {dept.avg_risk_score.toFixed(1)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {dept.high_risk_count > 0 ? (
-                    <span className="text-red-600 dark:text-red-400 font-medium">
-                      {dept.high_risk_count}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">0</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {dept.self_approval_rate > 0 ? (
-                    <span
-                      className={
-                        dept.self_approval_rate > 10
-                          ? 'text-red-600 dark:text-red-400 font-medium'
-                          : 'text-gray-700 dark:text-gray-300'
-                      }
-                    >
-                      {dept.self_approval_rate.toFixed(1)}%
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">0%</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-4 py-3 bg-gray-50 dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-sm text-gray-500">
-        {data?.total || 0} 部門
-      </div>
+      <DataTable
+        columns={columns}
+        data={departments}
+        isLoading={isLoading}
+        emptyIcon={<Building2 className="w-12 h-12 text-gray-300" />}
+        emptyTitle="部門データがありません"
+        footer={<>{data?.total || 0} 部門</>}
+      />
     </div>
   );
 }
@@ -179,13 +183,104 @@ function VendorsTab({ fiscalYear }: { fiscalYear: number }) {
     queryFn: () => api.getVendors(fiscalYear, 50),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
-      </div>
-    );
-  }
+  const columns = useMemo<ColumnDef<VendorItem, any>[]>(
+    () => [
+      {
+        accessorKey: 'vendor_code',
+        header: '取引先コード',
+        cell: ({ getValue }) => (
+          <span className="font-medium text-gray-900 dark:text-white">{getValue<string>()}</span>
+        ),
+      },
+      {
+        accessorKey: 'entry_count',
+        header: () => <span className="flex justify-end">取引件数</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {getValue<number>().toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'total_amount',
+        header: () => <span className="flex justify-end">取引金額</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'avg_amount',
+        header: () => <span className="flex justify-end">平均金額</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'max_amount',
+        header: () => <span className="flex justify-end">最大金額</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'avg_risk_score',
+        header: () => <span className="flex justify-end">平均リスク</span>,
+        cell: ({ getValue }) => {
+          const score = getValue<number>();
+          return (
+            <span className="flex justify-end">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${riskBadge(score)}`}
+              >
+                {score.toFixed(1)}
+              </span>
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'concentration_pct',
+        header: () => <span className="flex justify-end">集中度</span>,
+        cell: ({ getValue }) => {
+          const pct = getValue<number>();
+          return (
+            <div className="flex items-center justify-end gap-1.5">
+              <div className="w-16 h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 rounded-full"
+                  style={{ width: `${Math.min(pct, 100)}%` }}
+                />
+              </div>
+              <span className="text-xs text-gray-500 w-10 text-right">{pct.toFixed(1)}%</span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'high_risk_count',
+        header: () => <span className="flex justify-end">高リスク</span>,
+        cell: ({ getValue }) => {
+          const count = getValue<number>();
+          return (
+            <span className="flex justify-end">
+              {count > 0 ? (
+                <span className="text-red-600 dark:text-red-400 font-medium">{count}</span>
+              ) : (
+                <span className="text-gray-400">0</span>
+              )}
+            </span>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   if (error) {
     return (
@@ -198,105 +293,16 @@ function VendorsTab({ fiscalYear }: { fiscalYear: number }) {
 
   const vendors = data?.vendors || [];
 
-  if (vendors.length === 0) {
-    return (
-      <div className="card p-8 text-center">
-        <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 dark:text-gray-400">取引先データがありません</p>
-      </div>
-    );
-  }
-
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700">
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                取引先コード
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                取引件数
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                取引金額
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                平均金額
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                最大金額
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                平均リスク
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                集中度
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                高リスク
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-neutral-700">
-            {vendors.map((v: VendorItem) => (
-              <tr
-                key={v.vendor_code}
-                className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors"
-              >
-                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                  {v.vendor_code}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {v.entry_count.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {formatAmount(v.total_amount)}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {formatAmount(v.avg_amount)}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {formatAmount(v.max_amount)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${riskBadge(v.avg_risk_score)}`}
-                  >
-                    {v.avg_risk_score.toFixed(1)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    <div className="w-16 h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary-500 rounded-full"
-                        style={{ width: `${Math.min(v.concentration_pct, 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500 w-10 text-right">
-                      {v.concentration_pct.toFixed(1)}%
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {v.high_risk_count > 0 ? (
-                    <span className="text-red-600 dark:text-red-400 font-medium">
-                      {v.high_risk_count}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">0</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-4 py-3 bg-gray-50 dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-sm text-gray-500">
-        {data?.total || 0} 取引先
-      </div>
+      <DataTable
+        columns={columns}
+        data={vendors}
+        isLoading={isLoading}
+        emptyIcon={<Users className="w-12 h-12 text-gray-300" />}
+        emptyTitle="取引先データがありません"
+        footer={<>{data?.total || 0} 取引先</>}
+      />
     </div>
   );
 }
@@ -311,13 +317,93 @@ function AccountFlowTab({ fiscalYear }: { fiscalYear: number }) {
     queryFn: () => api.getAccountFlow(fiscalYear, 0, 50),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
-      </div>
-    );
-  }
+  const flows = data?.flows || [];
+  const maxAmount = useMemo(
+    () => (flows.length > 0 ? Math.max(...flows.map((f) => f.flow_amount)) : 0),
+    [flows]
+  );
+
+  const columns = useMemo<ColumnDef<AccountFlowItem, any>[]>(
+    () => [
+      {
+        accessorKey: 'source_account',
+        header: '借方勘定',
+        cell: ({ getValue }) => (
+          <span className="inline-flex items-center gap-1.5">
+            <TrendingDown className="w-3.5 h-3.5 text-blue-500" />
+            <span className="font-mono font-medium text-gray-900 dark:text-white">
+              {getValue<string>()}
+            </span>
+          </span>
+        ),
+        enableSorting: false,
+      },
+      {
+        id: 'arrow',
+        header: '',
+        cell: () => <ArrowRightLeft className="w-4 h-4 text-gray-400 mx-auto" />,
+        enableSorting: false,
+        size: 48,
+      },
+      {
+        accessorKey: 'target_account',
+        header: '貸方勘定',
+        cell: ({ getValue }) => (
+          <span className="inline-flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-green-500" />
+            <span className="font-mono font-medium text-gray-900 dark:text-white">
+              {getValue<string>()}
+            </span>
+          </span>
+        ),
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'transaction_count',
+        header: () => <span className="flex justify-end">取引件数</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {getValue<number>().toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'flow_amount',
+        header: () => <span className="flex justify-end">フロー金額</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end font-medium text-gray-900 dark:text-white">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'avg_amount',
+        header: () => <span className="flex justify-end">平均金額</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end text-gray-700 dark:text-gray-300">
+            {formatAmount(getValue<number>())}
+          </span>
+        ),
+      },
+      {
+        id: 'ratio',
+        header: '金額比率',
+        cell: ({ row }) => (
+          <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary-500 rounded-full transition-all"
+              style={{
+                width: `${maxAmount > 0 ? (row.original.flow_amount / maxAmount) * 100 : 0}%`,
+              }}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        size: 128,
+      },
+    ],
+    [maxAmount]
+  );
 
   if (error) {
     return (
@@ -328,100 +414,16 @@ function AccountFlowTab({ fiscalYear }: { fiscalYear: number }) {
     );
   }
 
-  const flows = data?.flows || [];
-
-  if (flows.length === 0) {
-    return (
-      <div className="card p-8 text-center">
-        <ArrowRightLeft className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500 dark:text-gray-400">勘定科目フローデータがありません</p>
-      </div>
-    );
-  }
-
-  const maxAmount = Math.max(...flows.map((f) => f.flow_amount));
-
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700">
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                借方勘定
-              </th>
-              <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                &nbsp;
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                貸方勘定
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                取引件数
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                フロー金額
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-300">
-                平均金額
-              </th>
-              <th className="px-4 py-3 font-medium text-gray-600 dark:text-gray-300 w-32">
-                金額比率
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-neutral-700">
-            {flows.map((f: AccountFlowItem, idx: number) => (
-              <tr
-                key={`${f.source_account}-${f.target_account}-${idx}`}
-                className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors"
-              >
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5">
-                    <TrendingDown className="w-3.5 h-3.5 text-blue-500" />
-                    <span className="font-mono font-medium text-gray-900 dark:text-white">
-                      {f.source_account}
-                    </span>
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <ArrowRightLeft className="w-4 h-4 text-gray-400 mx-auto" />
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-green-500" />
-                    <span className="font-mono font-medium text-gray-900 dark:text-white">
-                      {f.target_account}
-                    </span>
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {f.transaction_count.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
-                  {formatAmount(f.flow_amount)}
-                </td>
-                <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
-                  {formatAmount(f.avg_amount)}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary-500 rounded-full transition-all"
-                      style={{
-                        width: `${maxAmount > 0 ? (f.flow_amount / maxAmount) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-4 py-3 bg-gray-50 dark:bg-neutral-800 border-t border-gray-200 dark:border-neutral-700 text-sm text-gray-500">
-        {data?.total || 0} フロー
-      </div>
+      <DataTable
+        columns={columns}
+        data={flows}
+        isLoading={isLoading}
+        emptyIcon={<ArrowRightLeft className="w-12 h-12 text-gray-300" />}
+        emptyTitle="勘定科目フローデータがありません"
+        footer={<>{data?.total || 0} フロー</>}
+      />
     </div>
   );
 }

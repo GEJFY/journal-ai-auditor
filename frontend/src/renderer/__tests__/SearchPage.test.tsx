@@ -22,6 +22,10 @@ vi.mock('lucide-react', () => ({
   AlertTriangle: (props: Record<string, unknown>) => <span data-testid="icon-alert" {...props} />,
   FileText: (props: Record<string, unknown>) => <span data-testid="icon-file" {...props} />,
   Download: (props: Record<string, unknown>) => <span data-testid="icon-download" {...props} />,
+  ArrowUpDown: (props: Record<string, unknown>) => <span data-testid="icon-sort" {...props} />,
+  ArrowUp: (props: Record<string, unknown>) => <span data-testid="icon-arrow-up" {...props} />,
+  ArrowDown: (props: Record<string, unknown>) => <span data-testid="icon-arrow-down" {...props} />,
+  Loader2: (props: Record<string, unknown>) => <span data-testid="icon-loader2" {...props} />,
 }));
 
 // Mock API

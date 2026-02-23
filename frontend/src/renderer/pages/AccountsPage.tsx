@@ -4,29 +4,28 @@
  * Account-level analysis with debit/credit breakdown and drill-down.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFiscalYear } from '@/lib/useFiscalYear';
-import {
-  FileText,
-  RefreshCw,
-  ArrowUpDown,
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
-} from 'lucide-react';
+import { FileText, RefreshCw, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { type ColumnDef } from '@tanstack/react-table';
 import { api } from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader';
+import { DataTable } from '@/components/ui/DataTable';
 import clsx from 'clsx';
 
-type SortKey = 'net_amount' | 'entry_count' | 'debit_total' | 'credit_total';
-type SortDir = 'asc' | 'desc';
+interface AccountItem {
+  account_code: string;
+  account_name: string;
+  debit_total: number;
+  credit_total: number;
+  net_amount: number;
+  entry_count: number;
+}
 
 export default function AccountsPage() {
   const [fiscalYear] = useFiscalYear();
-  const [sortKey, setSortKey] = useState<SortKey>('net_amount');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
@@ -44,50 +43,100 @@ export default function AccountsPage() {
     setIsRefreshing(false);
   };
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
-      setSortDir('desc');
-    }
-  };
+  const accounts: AccountItem[] = accountsData?.accounts ?? [];
 
-  const sortedAccounts = (() => {
-    if (!accountsData?.accounts) return [];
-    return [...accountsData.accounts].sort((a, b) => {
-      const aVal = Math.abs(a[sortKey]);
-      const bVal = Math.abs(b[sortKey]);
-      return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
-    });
-  })();
+  const columns = useMemo<ColumnDef<AccountItem, any>[]>(
+    () => [
+      {
+        accessorKey: 'account_code',
+        header: '科目コード',
+        cell: ({ getValue }) => <span className="font-mono text-xs">{getValue<string>()}</span>,
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'account_name',
+        header: '科目名',
+        cell: ({ row }) => {
+          const name = row.original.account_name;
+          return name && name !== row.original.account_code ? name : '-';
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'debit_total',
+        header: () => <span className="flex justify-end">借方合計</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end font-mono text-blue-700">
+            ¥{getValue<number>().toLocaleString()}
+          </span>
+        ),
+        sortingFn: (a, b) => Math.abs(a.original.debit_total) - Math.abs(b.original.debit_total),
+      },
+      {
+        accessorKey: 'credit_total',
+        header: () => <span className="flex justify-end">貸方合計</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end font-mono text-red-700">
+            ¥{getValue<number>().toLocaleString()}
+          </span>
+        ),
+        sortingFn: (a, b) => Math.abs(a.original.credit_total) - Math.abs(b.original.credit_total),
+      },
+      {
+        accessorKey: 'net_amount',
+        header: () => <span className="flex justify-end">差引残高</span>,
+        cell: ({ row }) => (
+          <span className="flex items-center justify-end gap-1 font-mono font-medium">
+            {row.original.net_amount > 0 ? (
+              <TrendingUp className="w-3 h-3 text-blue-500" />
+            ) : row.original.net_amount < 0 ? (
+              <TrendingDown className="w-3 h-3 text-red-500" />
+            ) : null}
+            ¥{row.original.net_amount.toLocaleString()}
+          </span>
+        ),
+        sortingFn: (a, b) => Math.abs(a.original.net_amount) - Math.abs(b.original.net_amount),
+      },
+      {
+        accessorKey: 'entry_count',
+        header: () => <span className="flex justify-end">仕訳件数</span>,
+        cell: ({ getValue }) => (
+          <span className="flex justify-end">{getValue<number>().toLocaleString()}</span>
+        ),
+      },
+    ],
+    []
+  );
 
-  // Top 10 for chart
-  const chartData = sortedAccounts.slice(0, 10).map((a) => ({
-    code: a.account_code,
-    name: a.account_name || a.account_code,
-    label:
-      a.account_name && a.account_name !== a.account_code
-        ? `${a.account_code} ${a.account_name}`
-        : a.account_code,
-    debit: a.debit_total,
-    credit: a.credit_total,
-    net: a.net_amount,
-    count: a.entry_count,
-  }));
+  // Top 10 for chart (sort by net_amount desc)
+  const chartData = useMemo(() => {
+    return [...accounts]
+      .sort((a, b) => Math.abs(b.net_amount) - Math.abs(a.net_amount))
+      .slice(0, 10)
+      .map((a) => ({
+        code: a.account_code,
+        name: a.account_name || a.account_code,
+        label:
+          a.account_name && a.account_name !== a.account_code
+            ? `${a.account_code} ${a.account_name}`
+            : a.account_code,
+        debit: a.debit_total,
+        credit: a.credit_total,
+        net: a.net_amount,
+        count: a.entry_count,
+      }));
+  }, [accounts]);
 
   // Summary stats
-  const stats = accountsData?.accounts
-    ? {
-        totalAccounts: accountsData.total_accounts,
-        totalDebit: accountsData.accounts.reduce((s, a) => s + a.debit_total, 0),
-        totalCredit: accountsData.accounts.reduce((s, a) => s + a.credit_total, 0),
-        avgEntries: Math.round(
-          accountsData.accounts.reduce((s, a) => s + a.entry_count, 0) /
-            (accountsData.accounts.length || 1)
-        ),
-      }
-    : null;
+  const stats =
+    accounts.length > 0
+      ? {
+          totalAccounts: accountsData?.total_accounts ?? accounts.length,
+          totalDebit: accounts.reduce((s, a) => s + a.debit_total, 0),
+          totalCredit: accounts.reduce((s, a) => s + a.credit_total, 0),
+          avgEntries: Math.round(accounts.reduce((s, a) => s + a.entry_count, 0) / accounts.length),
+        }
+      : null;
 
   const formatAmount = (v: number) => {
     const abs = Math.abs(v);
@@ -95,15 +144,6 @@ export default function AccountsPage() {
     if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`;
     return `${(v / 1_000).toFixed(0)}K`;
   };
-
-  const SortIcon = ({ col }: { col: SortKey }) => (
-    <ArrowUpDown
-      className={clsx(
-        'w-3 h-3 ml-1 inline',
-        sortKey === col ? 'text-primary-600' : 'text-neutral-300'
-      )}
-    />
-  );
 
   return (
     <div className="space-y-6">
@@ -186,89 +226,13 @@ export default function AccountsPage() {
           <h3 className="font-semibold text-neutral-800">勘定科目一覧</h3>
         </div>
         <div className="card-body p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="spinner" />
-            </div>
-          ) : sortedAccounts.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-neutral-50 border-b border-neutral-200">
-                    <th className="text-left px-4 py-3 font-medium text-neutral-600">科目コード</th>
-                    <th className="text-left px-4 py-3 font-medium text-neutral-600">科目名</th>
-                    <th
-                      className="text-right px-4 py-3 font-medium text-neutral-600 cursor-pointer hover:text-primary-600"
-                      onClick={() => handleSort('debit_total')}
-                    >
-                      借方合計
-                      <SortIcon col="debit_total" />
-                    </th>
-                    <th
-                      className="text-right px-4 py-3 font-medium text-neutral-600 cursor-pointer hover:text-primary-600"
-                      onClick={() => handleSort('credit_total')}
-                    >
-                      貸方合計
-                      <SortIcon col="credit_total" />
-                    </th>
-                    <th
-                      className="text-right px-4 py-3 font-medium text-neutral-600 cursor-pointer hover:text-primary-600"
-                      onClick={() => handleSort('net_amount')}
-                    >
-                      差引残高
-                      <SortIcon col="net_amount" />
-                    </th>
-                    <th
-                      className="text-right px-4 py-3 font-medium text-neutral-600 cursor-pointer hover:text-primary-600"
-                      onClick={() => handleSort('entry_count')}
-                    >
-                      仕訳件数
-                      <SortIcon col="entry_count" />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {sortedAccounts.map((account) => (
-                    <tr
-                      key={account.account_code}
-                      className="hover:bg-neutral-50 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-mono text-xs">{account.account_code}</td>
-                      <td className="px-4 py-3">
-                        {account.account_name && account.account_name !== account.account_code
-                          ? account.account_name
-                          : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-blue-700">
-                        ¥{account.debit_total.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-red-700">
-                        ¥{account.credit_total.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-medium">
-                        <span className="flex items-center justify-end gap-1">
-                          {account.net_amount > 0 ? (
-                            <TrendingUp className="w-3 h-3 text-blue-500" />
-                          ) : account.net_amount < 0 ? (
-                            <TrendingDown className="w-3 h-3 text-red-500" />
-                          ) : null}
-                          ¥{account.net_amount.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {account.entry_count.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty-state py-12">
-              <FileText className="empty-state-icon" />
-              <p className="empty-state-title">勘定科目データがありません</p>
-            </div>
-          )}
+          <DataTable
+            columns={columns}
+            data={accounts}
+            isLoading={isLoading}
+            emptyIcon={<FileText className="w-12 h-12 text-neutral-300" />}
+            emptyTitle="勘定科目データがありません"
+          />
         </div>
       </div>
     </div>

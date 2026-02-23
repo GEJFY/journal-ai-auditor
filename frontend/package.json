@@ -1,18 +1,12 @@
 {
   "name": "jaia-frontend",
   "version": "0.2.0",
-  "description": "Journal entry AI Analyzer - Desktop Application",
-  "main": "dist/main/index.js",
+  "description": "Journal entry AI Analyzer - Web Application",
   "author": "JAIA Team",
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "npm run build:main && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
-    "dev:vite": "vite",
-    "dev:electron": "wait-on tcp:5290 && electron .",
-    "build:main": "tsc -p tsconfig.electron.json",
-    "build": "npm run build:main && vite build && electron-builder",
-    "build:vite": "vite build",
-    "build:electron": "electron-builder",
+    "dev": "vite",
+    "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
@@ -29,6 +23,7 @@
     "@radix-ui/react-tooltip": "^1.1.4",
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-table": "^8.20.0",
+    "@tanstack/react-virtual": "^3.13.18",
     "clsx": "^2.1.1",
     "d3-sankey": "^0.12.3",
     "date-fns": "^4.1.0",
@@ -55,9 +50,6 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.0",
     "autoprefixer": "^10.4.20",
-    "concurrently": "^9.1.0",
-    "electron": "^33.2.0",
-    "electron-builder": "^25.1.0",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react": "^7.37.0",
@@ -68,51 +60,6 @@
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.0",
     "vite": "^6.0.5",
-    "vitest": "^2.1.0",
-    "wait-on": "^8.0.0"
-  },
-  "build": {
-    "appId": "com.jaia.app",
-    "productName": "JAIA",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "assets/icon.ico"
-    },
-    "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "assets/icon.icns"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "vitest": "^2.1.0"
   }
 }
