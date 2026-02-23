@@ -14,6 +14,7 @@ JAIA（Journal entry AI Analyzer）は、仕訳データの自動分析と内部
 
 ### 主な特徴
 
+- **AI自律監査エージェント**: 5フェーズ分析ループ（Observe → Hypothesize → Explore → Verify → Synthesize）による完全自律型監査。13種の分析ツール、HITL（Human-in-the-Loop）チェックポイント、SSEリアルタイム進捗表示
 - **AI自律分析**: LangGraphベースのマルチエージェントが、探索→分析→検証→報告を自動実行
 - **58の監査ルール**: 金額・時間・勘定科目・承認・ML・Benfordの6カテゴリ
 - **5つのML異常検知**: Isolation Forest、LOF、One-Class SVM、Autoencoder、アンサンブル
@@ -190,6 +191,14 @@ journal-ai-auditor/
 | GET | `/api/v1/reports/templates` | レポートテンプレート |
 | POST | `/api/v1/reports/export/ppt` | PPTエクスポート |
 | POST | `/api/v1/reports/export/pdf` | PDFエクスポート |
+| POST | `/api/v1/autonomous-audit/start` | 自律型監査開始 |
+| POST | `/api/v1/autonomous-audit/start/stream` | SSEストリーミング付き監査開始 |
+| GET | `/api/v1/autonomous-audit/{session_id}/status` | セッション進捗取得 |
+| GET | `/api/v1/autonomous-audit/{session_id}/hypotheses` | 仮説一覧取得 |
+| POST | `/api/v1/autonomous-audit/{session_id}/approve` | 仮説承認（HITL） |
+| GET | `/api/v1/autonomous-audit/{session_id}/insights` | インサイト一覧取得 |
+| GET | `/api/v1/autonomous-audit/{session_id}/report` | レポート取得 |
+| GET | `/api/v1/autonomous-audit/sessions` | セッション履歴 |
 
 API仕様詳細: [docs/04_api_design.md](docs/04_api_design.md)
 
@@ -320,6 +329,22 @@ Proprietary License - Copyright (c) 2026 Go Yoshizawa. All rights reserved. 詳�
 ## 更新履歴
 
 詳細は [CHANGELOG.md](CHANGELOG.md) を参照してください。
+
+### v0.4.0 (2026-02-23)
+
+- AI自律監査エージェント（5フェーズ分析ループ）
+- 13種の分析ツール + AuditToolRegistry
+- HITL（Human-in-the-Loop）チェックポイント
+- SSEストリーミング対応
+- 8つの自律型監査APIエンドポイント
+- AutonomousAuditPage（フェーズ進捗、4タブUI）
+
+### v0.3.0 (2026-02-23)
+
+- カラムマッピングUI（自動提案付き）
+- マルチステップインポートフロー
+- 詳細分析ページ（部門・取引先・勘定フロー）
+- フロントエンドDocker対応
 
 ### v0.2.1 (2026-02-15)
 

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.agents.autonomous.agent import AutonomousAuditAgent, _extract_json
-from app.agents.autonomous.state import AuditPhase, AutonomousAuditState
+from app.agents.autonomous.state import AuditPhase
 from app.agents.autonomous.tool_registry import (
     AuditToolRegistry,
     ToolDefinition,

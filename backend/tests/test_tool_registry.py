@@ -1,7 +1,5 @@
 """AuditToolRegistry のユニットテスト。"""
 
-import pytest
-
 from app.agents.autonomous.tool_registry import (
     AuditToolRegistry,
     ToolDefinition,

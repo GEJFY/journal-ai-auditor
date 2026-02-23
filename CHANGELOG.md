@@ -4,6 +4,20 @@ All notable changes to JAIA (Journal entry AI Analyzer) will be documented in th
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-02-23
+
+### Added
+- Autonomous AI Audit Agent: 5-phase analysis loop (Observe → Hypothesize → Explore → Verify → Synthesize)
+- 13 specialized analysis tools for autonomous exploration (population statistics, account balance, financial ratios, T-account analysis, sankey flow data, time series trend, stratification, duplicate detection, round amount analysis, journal entry testing, correlation analysis, rule risk summary, ML anomaly summary)
+- AuditToolRegistry with JSON Schema for LLM tool selection
+- Human-in-the-Loop (HITL) checkpoint for hypothesis approval
+- SSE streaming for real-time phase progress monitoring
+- 8 new REST API endpoints under `/api/v1/autonomous-audit/`
+- AutonomousAuditPage with phase progress indicator, 4 tabs (log, hypotheses, insights, summary)
+- DuckDB tables for audit session persistence (autonomous_audit_sessions, audit_insights)
+- Brain icon navigation item in sidebar for AI自律監査
+- Comprehensive test suites for tool registry, autonomous agent, and API endpoints
+
 ## [0.3.0] - 2026-02-23
 
 ### Added
