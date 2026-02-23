@@ -232,9 +232,7 @@ export function DataTable<T>({
               前へ
             </button>
             <button
-              onClick={() =>
-                pagination.onPageChange(Math.min(totalPages - 1, pagination.page + 1))
-              }
+              onClick={() => pagination.onPageChange(Math.min(totalPages - 1, pagination.page + 1))}
               disabled={pagination.page >= totalPages - 1}
               className="btn btn-secondary btn-sm"
             >

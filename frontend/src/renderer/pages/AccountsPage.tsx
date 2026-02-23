@@ -70,8 +70,7 @@ export default function AccountsPage() {
             ¥{getValue<number>().toLocaleString()}
           </span>
         ),
-        sortingFn: (a, b) =>
-          Math.abs(a.original.debit_total) - Math.abs(b.original.debit_total),
+        sortingFn: (a, b) => Math.abs(a.original.debit_total) - Math.abs(b.original.debit_total),
       },
       {
         accessorKey: 'credit_total',
@@ -81,8 +80,7 @@ export default function AccountsPage() {
             ¥{getValue<number>().toLocaleString()}
           </span>
         ),
-        sortingFn: (a, b) =>
-          Math.abs(a.original.credit_total) - Math.abs(b.original.credit_total),
+        sortingFn: (a, b) => Math.abs(a.original.credit_total) - Math.abs(b.original.credit_total),
       },
       {
         accessorKey: 'net_amount',
@@ -97,8 +95,7 @@ export default function AccountsPage() {
             ¥{row.original.net_amount.toLocaleString()}
           </span>
         ),
-        sortingFn: (a, b) =>
-          Math.abs(a.original.net_amount) - Math.abs(b.original.net_amount),
+        sortingFn: (a, b) => Math.abs(a.original.net_amount) - Math.abs(b.original.net_amount),
       },
       {
         accessorKey: 'entry_count',
@@ -131,16 +128,15 @@ export default function AccountsPage() {
   }, [accounts]);
 
   // Summary stats
-  const stats = accounts.length > 0
-    ? {
-        totalAccounts: accountsData?.total_accounts ?? accounts.length,
-        totalDebit: accounts.reduce((s, a) => s + a.debit_total, 0),
-        totalCredit: accounts.reduce((s, a) => s + a.credit_total, 0),
-        avgEntries: Math.round(
-          accounts.reduce((s, a) => s + a.entry_count, 0) / accounts.length
-        ),
-      }
-    : null;
+  const stats =
+    accounts.length > 0
+      ? {
+          totalAccounts: accountsData?.total_accounts ?? accounts.length,
+          totalDebit: accounts.reduce((s, a) => s + a.debit_total, 0),
+          totalCredit: accounts.reduce((s, a) => s + a.credit_total, 0),
+          avgEntries: Math.round(accounts.reduce((s, a) => s + a.entry_count, 0) / accounts.length),
+        }
+      : null;
 
   const formatAmount = (v: number) => {
     const abs = Math.abs(v);

@@ -19,7 +19,9 @@ vi.mock('lucide-react', () => ({
   Calendar: (props: Record<string, unknown>) => <span data-testid="icon-calendar" {...props} />,
   BarChart3: (props: Record<string, unknown>) => <span data-testid="icon-bar-chart" {...props} />,
   RefreshCw: (props: Record<string, unknown>) => <span data-testid="icon-refresh" {...props} />,
-  ArrowUpRight: (props: Record<string, unknown>) => <span data-testid="icon-arrow-up-right" {...props} />,
+  ArrowUpRight: (props: Record<string, unknown>) => (
+    <span data-testid="icon-arrow-up-right" {...props} />
+  ),
   ArrowDownRight: (props: Record<string, unknown>) => (
     <span data-testid="icon-arrow-down-right" {...props} />
   ),
