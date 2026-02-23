@@ -482,7 +482,159 @@ async def add_tag(journal_id: str, tag: str) -> bool:
     pass
 ```
 
-### 2.4 バッチ処理モジュール
+### 2.4 自律型監査エージェントモジュール
+
+v0.4.0 で追加された自律型監査エージェントは、LangGraph StateGraph を用いた5フェーズ分析ループで完全自律型の監査を実行する。
+
+#### 2.4.1 アーキテクチャ概要
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 AutonomousAuditAgent                              │
+│                 (LangGraph StateGraph)                            │
+│                                                                   │
+│  ┌──────────┐   ┌────────────┐   ┌─────────┐                    │
+│  │ OBSERVE  │──>│HYPOTHESIZE │──>│ [HITL]  │                    │
+│  │ (観察)   │   │ (仮説生成) │   │チェック │                    │
+│  └──────────┘   └────────────┘   └────┬────┘                    │
+│                                       │                          │
+│  ┌──────────┐   ┌────────────┐       │                          │
+│  │SYNTHESIZE│<──│  VERIFY    │<──────┘                          │
+│  │ (統合)   │   │ (検証)     │   ┌─────────┐                    │
+│  └──────────┘   └────────────┘<──│ EXPLORE │                    │
+│                                   │ (探索)  │                    │
+│                                   └─────────┘                    │
+│                                                                   │
+│  ┌───────────────────────────────────────────────────────────┐   │
+│  │  AuditToolRegistry (13 tools)                              │   │
+│  │  population_statistics │ account_balance_summary           │   │
+│  │  financial_ratios      │ t_account_analysis                │   │
+│  │  sankey_flow_data      │ time_series_trend                 │   │
+│  │  stratification        │ duplicate_detection               │   │
+│  │  round_amount_analysis │ journal_entry_testing             │   │
+│  │  correlation_analysis  │ rule_risk_summary (wrapper)       │   │
+│  │  ml_anomaly_summary (wrapper)                              │   │
+│  └───────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 2.4.2 状態定義
+
+```python
+# agents/autonomous/state.py
+from enum import Enum
+from typing import TypedDict, Any
+
+class AuditPhase(str, Enum):
+    OBSERVE = "observe"
+    HYPOTHESIZE = "hypothesize"
+    EXPLORE = "explore"
+    VERIFY = "verify"
+    SYNTHESIZE = "synthesize"
+    COMPLETE = "complete"
+    ERROR = "error"
+
+class AutonomousAuditState(TypedDict):
+    session_id: str
+    fiscal_year: int
+    scope: dict[str, Any]
+    current_phase: AuditPhase
+    step_count: int
+    observation_summary: str         # Phase 1 出力
+    hypotheses: list[dict]           # Phase 2 出力
+    awaiting_approval: bool          # HITL フラグ
+    exploration_log: list[dict]      # Phase 3 ツール呼出ログ
+    verification_results: list[dict] # Phase 4 検証結果
+    insights: list[dict]             # Phase 5 インサイト
+    executive_summary: str           # Phase 5 最終サマリー
+    error: str | None
+    started_at: str | None
+    completed_at: str | None
+```
+
+#### 2.4.3 ツールレジストリ
+
+```python
+# agents/autonomous_tools/registry.py
+class AuditToolRegistry:
+    """13種の分析ツールを管理するレジストリ。
+    各ツールは JSON Schema を持ち、LLM がツール選択に利用する。"""
+
+    def register(self, name: str, func: Callable, schema: dict) -> None:
+        """ツールを登録する"""
+
+    def get_tool_schemas(self) -> list[dict]:
+        """LLM tool_choice 用の JSON Schema リストを返す"""
+
+    def execute(self, name: str, **kwargs) -> dict:
+        """ツールを名前で実行する"""
+
+    def list_tools(self) -> list[str]:
+        """登録済みツール名一覧を返す"""
+```
+
+#### 2.4.4 13種分析ツール一覧
+
+| ツール名 | 説明 | 主な入力 |
+|---------|------|---------|
+| population_statistics | 母集団統計量（件数・金額分布） | fiscal_year |
+| account_balance_summary | 勘定科目別残高集計 | fiscal_year |
+| financial_ratios | 財務比率計算 | fiscal_year |
+| t_account_analysis | T勘定分析（借方/貸方フロー） | account_code, fiscal_year |
+| sankey_flow_data | 勘定間資金フローデータ | fiscal_year, top_n |
+| time_series_trend | 時系列トレンド分析 | fiscal_year, granularity |
+| stratification | 金額層別分析 | fiscal_year, bins |
+| duplicate_detection | 重複仕訳検出 | fiscal_year, threshold |
+| round_amount_analysis | 丸め金額分析 | fiscal_year |
+| journal_entry_testing | 仕訳テスト（条件検索） | fiscal_year, filters |
+| correlation_analysis | 相関分析 | fiscal_year, columns |
+| rule_risk_summary | ルールリスクサマリー（既存バッチ連携） | fiscal_year |
+| ml_anomaly_summary | ML異常検知サマリー（既存バッチ連携） | fiscal_year |
+
+#### 2.4.5 5フェーズ処理フロー
+
+1. **OBSERVE（観察）**: `population_statistics`, `account_balance_summary`, `rule_risk_summary` を実行し、データ全体像を把握
+2. **HYPOTHESIZE（仮説生成）**: LLM が観察結果から3〜5件の監査仮説を生成。各仮説にはタイトル・根拠・テストアプローチ・使用ツールを含む
+3. **HITL チェックポイント**: `auto_approve=false` の場合、仮説承認を人間に委ねる。`awaiting_approval=true` で中断し、`POST /approve` で再開
+4. **EXPLORE（探索）**: 承認された仮説に対し、LLM が最適なツールを選択・実行して証拠を収集
+5. **VERIFY（検証）**: 収集した証拠を交差検証し、各仮説に `grounding_score`（0.0〜1.0）を付与
+6. **SYNTHESIZE（統合）**: 検証済みインサイトを生成し、エグゼクティブサマリーを作成。結果を DuckDB に永続化
+
+#### 2.4.6 データ永続化
+
+```sql
+-- セッション管理テーブル
+CREATE TABLE autonomous_audit_sessions (
+    session_id VARCHAR PRIMARY KEY,
+    fiscal_year INTEGER NOT NULL,
+    status VARCHAR DEFAULT 'running',
+    current_phase VARCHAR DEFAULT 'observe',
+    hypotheses JSON,
+    executive_summary TEXT,
+    total_hypotheses INTEGER DEFAULT 0,
+    total_insights INTEGER DEFAULT 0,
+    total_tool_calls INTEGER DEFAULT 0,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+);
+
+-- インサイトテーブル
+CREATE TABLE audit_insights (
+    insight_id VARCHAR PRIMARY KEY,
+    session_id VARCHAR NOT NULL,
+    title VARCHAR NOT NULL,
+    description TEXT,
+    category VARCHAR,
+    severity VARCHAR,
+    grounding_score DOUBLE DEFAULT 0.0,
+    affected_amount DOUBLE DEFAULT 0,
+    affected_count INTEGER DEFAULT 0,
+    recommendations JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 2.5 バッチ処理モジュール
 
 #### 2.4.1 ETLパイプライン
 
@@ -765,7 +917,7 @@ class IntegratedScorer:
         return df
 ```
 
-### 2.5 レポート生成モジュール
+### 2.6 レポート生成モジュール
 
 ```python
 # reports/ppt_generator.py
@@ -857,16 +1009,16 @@ class PPTGenerator:
 │  api/v1/* → services/* → repositories/*                        │
 └─────────────────────────────────────────────────────────────────┘
                               │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│     Agents      │ │     Batch       │ │    Reports      │
-│ orchestrator    │ │ etl, rules, ml  │ │ ppt, pdf        │
-│ specialists     │ │ aggregation     │ │ insights        │
-│ tools           │ │ financial       │ │                 │
-└─────────────────┘ └─────────────────┘ └─────────────────┘
-          │                   │                   │
-          └───────────────────┼───────────────────┘
+          ┌──────────┬────────┼────────┬──────────┐
+          ▼          ▼        ▼        ▼          ▼
+┌──────────────┐ ┌────────┐ ┌──────┐ ┌────────┐ ┌────────┐
+│   Agents     │ │Autonomo│ │Batch │ │Reports │ │        │
+│ orchestrator │ │usAudit │ │ etl  │ │ ppt    │ │        │
+│ specialists  │ │ Agent  │ │rules │ │ pdf    │ │        │
+│ tools        │ │13 tools│ │ ml   │ │insights│ │        │
+└──────────────┘ └────────┘ └──────┘ └────────┘ └────────┘
+          │          │         │         │
+          └──────────┴─────────┼─────────┘
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Data Layer                                 │

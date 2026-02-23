@@ -16,7 +16,7 @@
 
 ---
 
-## エンドポイント一覧（全41エンドポイント）
+## エンドポイント一覧（全49エンドポイント）
 
 ### システム（2）
 
@@ -99,6 +99,19 @@
 | GET | `/api/v1/reports/export/ppt` | PowerPointエクスポート |
 | GET | `/api/v1/reports/export/pdf` | PDFエクスポート |
 
+### 自律型監査（8）
+
+| メソッド | パス | 説明 |
+| ------- | ---- | ---- |
+| POST | `/api/v1/autonomous-audit/start` | 自律型監査を非同期で開始 → session_id 返却 |
+| POST | `/api/v1/autonomous-audit/start/stream` | SSEストリーミング付きで監査開始 |
+| GET | `/api/v1/autonomous-audit/{session_id}/status` | セッションのフェーズ進捗取得 |
+| GET | `/api/v1/autonomous-audit/{session_id}/hypotheses` | 仮説一覧取得（HITL用） |
+| POST | `/api/v1/autonomous-audit/{session_id}/approve` | 仮説承認しHITL中断から再開 |
+| GET | `/api/v1/autonomous-audit/{session_id}/insights` | インサイト一覧取得 |
+| GET | `/api/v1/autonomous-audit/{session_id}/report` | エグゼクティブサマリー・完全レポート取得 |
+| GET | `/api/v1/autonomous-audit/sessions` | セッション履歴一覧（fiscal_year フィルタ対応） |
+
 ---
 
 ## 共通クエリパラメータ
@@ -166,6 +179,45 @@ curl -X POST "http://localhost:8090/api/v1/agents/ask" \
 ```bash
 curl "http://localhost:8090/api/v1/reports/export/ppt?fiscal_year=2024" \
   --output report.pptx
+```
+
+### 自律型監査開始（非同期）
+
+```bash
+curl -X POST "http://localhost:8090/api/v1/autonomous-audit/start" \
+  -H "Content-Type: application/json" \
+  -d '{"fiscal_year": 2024, "scope": {}, "auto_approve": true}'
+```
+
+レスポンス:
+
+```json
+{
+  "session_id": "audit-20240215-abc123",
+  "status": "completed"
+}
+```
+
+### 自律型監査開始（SSEストリーミング）
+
+```bash
+curl -N -X POST "http://localhost:8090/api/v1/autonomous-audit/start/stream" \
+  -H "Content-Type: application/json" \
+  -d '{"fiscal_year": 2024, "scope": {}, "auto_approve": false}'
+```
+
+### セッション進捗取得
+
+```bash
+curl "http://localhost:8090/api/v1/autonomous-audit/{session_id}/status"
+```
+
+### 仮説承認（HITL）
+
+```bash
+curl -X POST "http://localhost:8090/api/v1/autonomous-audit/{session_id}/approve" \
+  -H "Content-Type: application/json" \
+  -d '{"hypothesis_ids": null, "feedback": "全仮説を承認します"}'
 ```
 
 ---

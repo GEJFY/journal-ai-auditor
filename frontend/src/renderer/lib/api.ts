@@ -387,6 +387,92 @@ export interface LLMDailyResponse {
 }
 
 // =============================================================================
+// Autonomous Audit Types
+// =============================================================================
+
+export interface AuditHypothesis {
+  id: string;
+  title: string;
+  description: string;
+  rationale: string;
+  test_approach: string;
+  tools_to_use: string[];
+  priority: number;
+  status: string;
+  grounding_score: number;
+  evidence_for: string[];
+  evidence_against: string[];
+}
+
+export interface AuditInsight {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  severity: string;
+  affected_amount: number;
+  affected_count: number;
+  recommendations: string[];
+  related_hypotheses: string[];
+  grounding_score: number;
+}
+
+export interface AuditReport {
+  session_id: string;
+  fiscal_year: number;
+  executive_summary: string;
+  insights: AuditInsight[];
+  hypotheses: AuditHypothesis[];
+  total_tool_calls: number;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface AuditSessionItem {
+  session_id: string;
+  fiscal_year: number;
+  status: string;
+  current_phase: string;
+  total_insights: number;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface AutonomousAuditSSEEvent {
+  type:
+    | 'start'
+    | 'phase_start'
+    | 'observation'
+    | 'hypothesis'
+    | 'awaiting_approval'
+    | 'tool_start'
+    | 'tool_complete'
+    | 'verification'
+    | 'insight'
+    | 'summary'
+    | 'complete'
+    | 'error';
+  phase?: string;
+  tool?: string;
+  summary?: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  hypothesis_id?: string;
+  verdict?: string;
+  grounding_score?: number;
+  severity?: string;
+  executive_summary?: string;
+  session_id?: string;
+  insights_count?: number;
+  hypotheses_count?: number;
+  message?: string;
+  success?: boolean;
+  fiscal_year?: number;
+  hypotheses?: AuditHypothesis[];
+}
+
+// =============================================================================
 // Fetch Wrapper
 // =============================================================================
 
@@ -814,6 +900,75 @@ export const api = {
   getLLMDailyUsage: (days?: number): Promise<LLMDailyResponse> => {
     const params = days ? `?days=${days}` : '';
     return fetchApi(`/llm-usage/daily${params}`);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Autonomous Audit
+  // ---------------------------------------------------------------------------
+  startAutonomousAudit: (
+    fiscalYear: number,
+    scope?: Record<string, unknown>,
+    autoApprove?: boolean
+  ): Promise<{ session_id: string; status: string }> => {
+    return fetchApi('/autonomous-audit/start', {
+      method: 'POST',
+      body: JSON.stringify({
+        fiscal_year: fiscalYear,
+        scope: scope || {},
+        auto_approve: autoApprove ?? true,
+      }),
+    });
+  },
+
+  getAuditStatus: (
+    sessionId: string
+  ): Promise<{
+    session_id: string;
+    fiscal_year: number;
+    current_phase: string;
+    status: string;
+    step_count: number;
+    hypotheses_count: number;
+    insights_count: number;
+    tool_calls_count: number;
+    started_at: string | null;
+    completed_at: string | null;
+    error: string | null;
+  }> => {
+    return fetchApi(`/autonomous-audit/${sessionId}/status`);
+  },
+
+  getAuditHypotheses: (sessionId: string): Promise<AuditHypothesis[]> => {
+    return fetchApi(`/autonomous-audit/${sessionId}/hypotheses`);
+  },
+
+  approveHypotheses: (
+    sessionId: string,
+    hypothesisIds?: string[],
+    feedback?: string
+  ): Promise<{ session_id: string; status: string }> => {
+    return fetchApi(`/autonomous-audit/${sessionId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({
+        hypothesis_ids: hypothesisIds || null,
+        feedback: feedback || null,
+      }),
+    });
+  },
+
+  getAuditInsights: (sessionId: string): Promise<AuditInsight[]> => {
+    return fetchApi(`/autonomous-audit/${sessionId}/insights`);
+  },
+
+  getAuditReport: (sessionId: string): Promise<AuditReport> => {
+    return fetchApi(`/autonomous-audit/${sessionId}/report`);
+  },
+
+  listAuditSessions: (fiscalYear?: number, limit?: number): Promise<AuditSessionItem[]> => {
+    const params = new URLSearchParams();
+    if (fiscalYear) params.append('fiscal_year', fiscalYear.toString());
+    if (limit) params.append('limit', limit.toString());
+    return fetchApi(`/autonomous-audit/sessions?${params}`);
   },
 
   // ---------------------------------------------------------------------------

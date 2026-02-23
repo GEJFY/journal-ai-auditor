@@ -976,7 +976,197 @@ GET /api/v1/master/users
 
 ---
 
-## 10. レート制限
+## 10. 自律型監査API
+
+### 10.1 監査開始
+
+```
+POST /api/v1/autonomous-audit/start
+```
+
+**リクエスト**
+```json
+{
+  "fiscal_year": 2024,
+  "scope": {
+    "focus_areas": ["risk", "trend"]
+  },
+  "auto_approve": true
+}
+```
+
+**レスポンス**
+```json
+{
+  "session_id": "sess_abc123",
+  "status": "completed"
+}
+```
+
+### 10.2 SSEストリーミング付き監査開始
+
+```
+POST /api/v1/autonomous-audit/start/stream
+```
+
+**リクエスト**: 10.1と同じ
+
+**SSEイベント**
+```
+data: {"type": "start", "fiscal_year": 2024}
+
+data: {"type": "phase_change", "phase": "observe", "step_count": 1}
+
+data: {"type": "tool_call", "tool": "population_statistics", "result": {...}}
+
+data: {"type": "hypothesis", "id": "hyp_001", "title": "売掛金回転期間の悪化"}
+
+data: {"type": "insight", "id": "ins_001", "title": "期末仕訳の集中", "severity": "high"}
+
+data: {"type": "complete", "session_id": "sess_abc123", "total_insights": 5}
+```
+
+### 10.3 セッション進捗取得
+
+```
+GET /api/v1/autonomous-audit/{session_id}/status
+```
+
+**レスポンス**
+```json
+{
+  "session_id": "sess_abc123",
+  "fiscal_year": 2024,
+  "current_phase": "synthesize",
+  "status": "completed",
+  "step_count": 15,
+  "hypotheses_count": 3,
+  "insights_count": 5,
+  "tool_calls_count": 12,
+  "started_at": "2026-02-23T10:00:00Z",
+  "completed_at": "2026-02-23T10:05:30Z"
+}
+```
+
+### 10.4 仮説一覧取得（HITL用）
+
+```
+GET /api/v1/autonomous-audit/{session_id}/hypotheses
+```
+
+**レスポンス**
+```json
+[
+  {
+    "id": "hyp_001",
+    "title": "売掛金回転期間の悪化",
+    "description": "売掛金回転期間が前年比で大幅に延長しており...",
+    "rationale": "期末時点の売掛金残高が前年比+45%増加",
+    "test_approach": "月次売掛金残高の推移と売上高との比率を検証",
+    "tools_to_use": ["account_balance", "financial_ratios", "time_series_trend"],
+    "priority": 1,
+    "status": "pending",
+    "grounding_score": 0.85,
+    "evidence_for": ["売掛金残高の急増", "回転日数の延長"],
+    "evidence_against": []
+  }
+]
+```
+
+### 10.5 仮説承認（HITL再開）
+
+```
+POST /api/v1/autonomous-audit/{session_id}/approve
+```
+
+**リクエスト**
+```json
+{
+  "hypothesis_ids": ["hyp_001", "hyp_003"],
+  "feedback": "hyp_002は対象外としてください"
+}
+```
+
+**レスポンス**
+```json
+{
+  "session_id": "sess_abc123",
+  "status": "completed"
+}
+```
+
+### 10.6 インサイト一覧取得
+
+```
+GET /api/v1/autonomous-audit/{session_id}/insights
+```
+
+**レスポンス**
+```json
+[
+  {
+    "id": "ins_001",
+    "title": "期末仕訳の異常集中",
+    "description": "3月25日-31日に全仕訳の35%が集中...",
+    "category": "timing",
+    "severity": "high",
+    "affected_amount": 5000000000,
+    "affected_count": 342,
+    "recommendations": ["期末仕訳の詳細レビュー", "入力者別の分析"],
+    "related_hypotheses": ["hyp_001"],
+    "grounding_score": 0.92
+  }
+]
+```
+
+### 10.7 レポート取得
+
+```
+GET /api/v1/autonomous-audit/{session_id}/report
+```
+
+**レスポンス**
+```json
+{
+  "session_id": "sess_abc123",
+  "fiscal_year": 2024,
+  "executive_summary": "2024年度の仕訳データ分析の結果、5件の重要な発見事項...",
+  "insights": [...],
+  "hypotheses": [...],
+  "total_tool_calls": 12,
+  "started_at": "2026-02-23T10:00:00Z",
+  "completed_at": "2026-02-23T10:05:30Z"
+}
+```
+
+### 10.8 セッション履歴
+
+```
+GET /api/v1/autonomous-audit/sessions
+```
+
+**クエリパラメータ**
+- `fiscal_year` (optional): 年度で絞り込み
+- `limit` (optional, default: 20): 取得件数上限
+
+**レスポンス**
+```json
+[
+  {
+    "session_id": "sess_abc123",
+    "fiscal_year": 2024,
+    "status": "completed",
+    "current_phase": "complete",
+    "total_insights": 5,
+    "started_at": "2026-02-23T10:00:00Z",
+    "completed_at": "2026-02-23T10:05:30Z"
+  }
+]
+```
+
+---
+
+## 11. レート制限
 
 | エンドポイント | 制限 |
 |---------------|------|

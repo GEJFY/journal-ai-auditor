@@ -22,6 +22,7 @@ from app.api.endpoints import (
     agents,
     analysis,
     audit,
+    autonomous_audit,
     batch,
     dashboard,
     health,
@@ -94,4 +95,9 @@ router.include_router(
     llm_usage.router,
     prefix="/llm-usage",
     tags=["LLM Usage"],
+)
+router.include_router(
+    autonomous_audit.router,
+    prefix="/autonomous-audit",
+    tags=["Autonomous Audit"],
 )

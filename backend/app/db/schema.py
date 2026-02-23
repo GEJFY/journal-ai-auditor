@@ -325,6 +325,73 @@ CREATE INDEX IF NOT EXISTS idx_af_fiscal_year ON audit_findings(fiscal_year);
 CREATE INDEX IF NOT EXISTS idx_af_severity ON audit_findings(severity);
 
 -- =========================================
+-- Autonomous Audit Sessions
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS autonomous_audit_sessions (
+    session_id VARCHAR PRIMARY KEY,
+    fiscal_year INTEGER NOT NULL,
+    scope TEXT,
+    current_phase VARCHAR(20) DEFAULT 'observe',
+    status VARCHAR(20) DEFAULT 'running',
+    observations TEXT,
+    notable_patterns TEXT,
+    hypotheses TEXT,
+    approved_hypotheses TEXT,
+    tool_results TEXT,
+    verified_hypotheses TEXT,
+    executive_summary TEXT,
+    total_hypotheses INTEGER DEFAULT 0,
+    supported_hypotheses INTEGER DEFAULT 0,
+    refuted_hypotheses INTEGER DEFAULT 0,
+    total_insights INTEGER DEFAULT 0,
+    total_tool_calls INTEGER DEFAULT 0,
+    total_llm_calls INTEGER DEFAULT 0,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    observe_completed_at TIMESTAMP,
+    hypothesize_completed_at TIMESTAMP,
+    explore_completed_at TIMESTAMP,
+    verify_completed_at TIMESTAMP,
+    synthesize_completed_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    execution_time_ms DECIMAL(10, 2) DEFAULT 0,
+    error TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_aas_fiscal_year ON autonomous_audit_sessions(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_aas_status ON autonomous_audit_sessions(status);
+
+-- =========================================
+-- Audit Insights (Autonomous Agent)
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS audit_insights (
+    insight_id VARCHAR PRIMARY KEY,
+    session_id VARCHAR NOT NULL,
+    fiscal_year INTEGER NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    category VARCHAR(50) NOT NULL,
+    severity VARCHAR(10) DEFAULT 'MEDIUM',
+    evidence TEXT,
+    grounding_score DECIMAL(3, 2) DEFAULT 0.0,
+    affected_amount DECIMAL(18, 2) DEFAULT 0,
+    affected_count INTEGER DEFAULT 0,
+    recommendations TEXT,
+    related_hypotheses TEXT,
+    supporting_data TEXT,
+    status VARCHAR(20) DEFAULT 'new',
+    reviewed_by VARCHAR(50),
+    reviewed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_session ON audit_insights(session_id);
+CREATE INDEX IF NOT EXISTS idx_ai_fiscal_year ON audit_insights(fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_ai_severity ON audit_insights(severity);
+CREATE INDEX IF NOT EXISTS idx_ai_category ON audit_insights(category);
+
+-- =========================================
 -- Indexes
 -- =========================================
 
