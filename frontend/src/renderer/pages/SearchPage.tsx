@@ -4,7 +4,7 @@
  * Journal entry search with filters for account, date, amount, user, and risk.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFiscalYear } from '@/lib/useFiscalYear';
 import {
@@ -16,7 +16,9 @@ import {
   FileText,
   Download,
 } from 'lucide-react';
+import { type ColumnDef } from '@tanstack/react-table';
 import { API_BASE } from '@/lib/api';
+import { DataTable } from '@/components/ui/DataTable';
 
 // =============================================================================
 // Types
@@ -144,7 +146,95 @@ export default function SearchPage() {
     return 'badge badge-success';
   };
 
-  const totalPages = data ? Math.ceil(data.total_count / pageSize) : 0;
+  const columns = useMemo<ColumnDef<JournalEntry, any>[]>(
+    () => [
+      {
+        accessorKey: 'journal_id',
+        header: '仕訳ID',
+        cell: ({ getValue }) => <span className="font-mono text-xs">{getValue<string>()}</span>,
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'effective_date',
+        header: '日付',
+        cell: ({ getValue }) => <span className="whitespace-nowrap">{getValue<string>()}</span>,
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'gl_account_number',
+        header: '勘定科目',
+        cell: ({ row }) => (
+          <>
+            <span className="font-mono text-xs">{row.original.gl_account_number}</span>
+            {row.original.account_name &&
+              row.original.account_name !== row.original.gl_account_number && (
+                <span className="ml-1 text-neutral-500">{row.original.account_name}</span>
+              )}
+          </>
+        ),
+        enableSorting: false,
+      },
+      {
+        id: 'debit',
+        header: () => <span className="flex justify-end">借方</span>,
+        cell: ({ row }) => (
+          <span className="flex justify-end font-mono">
+            {row.original.debit_credit_indicator === 'D'
+              ? `¥${row.original.amount.toLocaleString()}`
+              : ''}
+          </span>
+        ),
+        enableSorting: false,
+      },
+      {
+        id: 'credit',
+        header: () => <span className="flex justify-end">貸方</span>,
+        cell: ({ row }) => (
+          <span className="flex justify-end font-mono">
+            {row.original.debit_credit_indicator === 'C'
+              ? `¥${row.original.amount.toLocaleString()}`
+              : ''}
+          </span>
+        ),
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'description',
+        header: '摘要',
+        cell: ({ getValue }) => (
+          <span className="max-w-[200px] truncate block">{getValue<string>() || '-'}</span>
+        ),
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'prepared_by',
+        header: '起票者',
+        cell: ({ getValue }) => getValue<string>() || '-',
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'risk_score',
+        header: () => <span className="flex justify-center">リスク</span>,
+        cell: ({ getValue }) => {
+          const score = getValue<number>();
+          return (
+            <span className="flex justify-center">
+              {score > 0 ? (
+                <span className={riskBadge(score)}>
+                  {score >= 50 && <AlertTriangle className="w-3 h-3 inline mr-1" />}
+                  {score.toFixed(0)}
+                </span>
+              ) : (
+                <span className="text-neutral-300">-</span>
+              )}
+            </span>
+          );
+        },
+        enableSorting: false,
+      },
+    ],
+    []
+  );
 
   return (
     <div className="space-y-6">
@@ -294,110 +384,25 @@ export default function SearchPage() {
             )}
           </div>
           <div className="card-body p-0">
-            {isLoading || isFetching ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="spinner" />
-              </div>
-            ) : data && data.entries.length > 0 ? (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-neutral-50 border-b border-neutral-200">
-                        <th className="text-left px-4 py-3 font-medium text-neutral-600">仕訳ID</th>
-                        <th className="text-left px-4 py-3 font-medium text-neutral-600">日付</th>
-                        <th className="text-left px-4 py-3 font-medium text-neutral-600">
-                          勘定科目
-                        </th>
-                        <th className="text-right px-4 py-3 font-medium text-neutral-600">借方</th>
-                        <th className="text-right px-4 py-3 font-medium text-neutral-600">貸方</th>
-                        <th className="text-left px-4 py-3 font-medium text-neutral-600">摘要</th>
-                        <th className="text-left px-4 py-3 font-medium text-neutral-600">起票者</th>
-                        <th className="text-center px-4 py-3 font-medium text-neutral-600">
-                          リスク
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100">
-                      {data.entries.map((entry) => (
-                        <tr
-                          key={entry.gl_detail_id}
-                          className="hover:bg-neutral-50 transition-colors"
-                        >
-                          <td className="px-4 py-3 font-mono text-xs">{entry.journal_id}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{entry.effective_date}</td>
-                          <td className="px-4 py-3">
-                            <span className="font-mono text-xs">{entry.gl_account_number}</span>
-                            {entry.account_name &&
-                              entry.account_name !== entry.gl_account_number && (
-                                <span className="ml-1 text-neutral-500">{entry.account_name}</span>
-                              )}
-                          </td>
-                          <td className="px-4 py-3 text-right font-mono">
-                            {entry.debit_credit_indicator === 'D'
-                              ? `¥${entry.amount.toLocaleString()}`
-                              : ''}
-                          </td>
-                          <td className="px-4 py-3 text-right font-mono">
-                            {entry.debit_credit_indicator === 'C'
-                              ? `¥${entry.amount.toLocaleString()}`
-                              : ''}
-                          </td>
-                          <td className="px-4 py-3 max-w-[200px] truncate">
-                            {entry.description || '-'}
-                          </td>
-                          <td className="px-4 py-3">{entry.prepared_by || '-'}</td>
-                          <td className="px-4 py-3 text-center">
-                            {entry.risk_score > 0 ? (
-                              <span className={riskBadge(entry.risk_score)}>
-                                {entry.risk_score >= 50 && (
-                                  <AlertTriangle className="w-3 h-3 inline mr-1" />
-                                )}
-                                {entry.risk_score.toFixed(0)}
-                              </span>
-                            ) : (
-                              <span className="text-neutral-300">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200">
-                    <span className="text-sm text-neutral-500">
-                      {page * pageSize + 1} - {Math.min((page + 1) * pageSize, data.total_count)} /{' '}
-                      {data.total_count.toLocaleString()} 件
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        前へ
-                      </button>
-                      <button
-                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                        disabled={page >= totalPages - 1}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        次へ
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="empty-state py-12">
-                <Search className="empty-state-icon" />
-                <p className="empty-state-title">該当する仕訳がありません</p>
-                <p className="empty-state-description">検索条件を変更して再度お試しください</p>
-              </div>
-            )}
+            <DataTable
+              columns={columns}
+              data={data?.entries ?? []}
+              isLoading={isLoading || isFetching}
+              enableSorting={false}
+              emptyIcon={<Search className="w-12 h-12 text-neutral-300" />}
+              emptyTitle="該当する仕訳がありません"
+              emptyDescription="検索条件を変更して再度お試しください"
+              pagination={
+                data && data.total_count > pageSize
+                  ? {
+                      page,
+                      pageSize,
+                      totalCount: data.total_count,
+                      onPageChange: setPage,
+                    }
+                  : undefined
+              }
+            />
           </div>
         </div>
       )}

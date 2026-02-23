@@ -28,6 +28,9 @@ vi.mock('lucide-react', () => ({
   TrendingDown: (props: Record<string, unknown>) => (
     <span data-testid="icon-trending-down" {...props} />
   ),
+  ArrowUpDown: (props: Record<string, unknown>) => <span data-testid="icon-sort" {...props} />,
+  ArrowUp: (props: Record<string, unknown>) => <span data-testid="icon-arrow-up" {...props} />,
+  ArrowDown: (props: Record<string, unknown>) => <span data-testid="icon-arrow-down" {...props} />,
 }));
 
 // Mock API
