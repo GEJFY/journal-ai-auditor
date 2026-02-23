@@ -1,9 +1,10 @@
 """自律型監査 API エンドポイントのテスト。"""
 
-import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
+
+from app.agents.autonomous.state import AuditPhase
 
 
 class TestAutonomousAuditAPI:
@@ -68,14 +69,26 @@ class TestAutonomousAuditAPI:
         assert response.status_code == 422  # Validation error
 
     def test_start_request_with_valid_body(self, client: TestClient):
-        """正常なリクエストボディの形式検証（実行はLLM依存のため500も許容）。"""
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+        """正常なリクエストボディの形式検証。"""
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(
+            return_value={
+                "session_id": "test-session-123",
+                "current_phase": AuditPhase.COMPLETE,
+            }
+        )
+        with patch(
+            "app.api.endpoints.autonomous_audit._create_agent",
+            return_value=mock_agent,
+        ):
             response = client.post(
                 "/api/v1/autonomous-audit/start",
                 json={"fiscal_year": 2024, "scope": {}, "auto_approve": True},
             )
-        # LLM未設定の場合は500になるが、バリデーションは通過する
-        assert response.status_code in (200, 500)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["session_id"] == "test-session-123"
+        assert data["status"] == "completed"
 
     def test_start_stream_validation(self, client: TestClient):
         """SSEストリーミング開始のバリデーション。"""
