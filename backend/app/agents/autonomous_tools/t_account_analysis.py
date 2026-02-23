@@ -66,7 +66,9 @@ def execute_t_account_analysis(fiscal_year: int, gl_account_number: str) -> Tool
 
     counters = counter_result.to_dicts() if not counter_result.is_empty() else []
     for c in counters[:5]:
-        findings.append(f"相手先: {c['counter_name']}({c['counter_account']}) - {c['pair_count']}件、{c['pair_amount']:,.0f}円")
+        findings.append(
+            f"相手先: {c['counter_name']}({c['counter_account']}) - {c['pair_count']}件、{c['pair_amount']:,.0f}円"
+        )
 
     return ToolResult(
         tool_name="t_account_analysis",

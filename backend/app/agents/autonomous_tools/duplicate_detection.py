@@ -71,7 +71,11 @@ def execute_duplicate_detection(
         success=True,
         summary=f"重複候補{len(rows)}グループ検出。超過金額推定{total_dup_amount:,.0f}円。",
         key_findings=findings,
-        data={"clusters": clusters, "total_groups": len(rows), "total_excess_amount": total_dup_amount},
+        data={
+            "clusters": clusters,
+            "total_groups": len(rows),
+            "total_excess_amount": total_dup_amount,
+        },
     )
 
 
@@ -81,7 +85,10 @@ DUPLICATE_TOOL = ToolDefinition(
     category="anomaly",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "amount_tolerance": {"type": "number", "description": "金額許容誤差（デフォルト0=完全一致）"},
+        "amount_tolerance": {
+            "type": "number",
+            "description": "金額許容誤差（デフォルト0=完全一致）",
+        },
     },
     execute_fn=execute_duplicate_detection,
 )

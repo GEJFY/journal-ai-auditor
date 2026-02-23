@@ -49,7 +49,9 @@ class StartResponse(BaseModel):
 
 
 class ApproveRequest(BaseModel):
-    hypothesis_ids: list[str] | None = Field(None, description="承認する仮説 ID (null=全承認)")
+    hypothesis_ids: list[str] | None = Field(
+        None, description="承認する仮説 ID (null=全承認)"
+    )
     feedback: str | None = Field(None, description="人間からのフィードバック")
 
 
@@ -149,7 +151,11 @@ async def start_audit(request: StartRequest) -> StartResponse:
         session_id = final_state.get("session_id", "unknown")
         _active_sessions[session_id] = final_state
 
-        status = "completed" if final_state.get("current_phase") == AuditPhase.COMPLETE else "error"
+        status = (
+            "completed"
+            if final_state.get("current_phase") == AuditPhase.COMPLETE
+            else "error"
+        )
         return StartResponse(session_id=session_id, status=status)
 
     except Exception as e:
@@ -196,7 +202,9 @@ async def get_session_status(session_id: str) -> SessionStatusResponse:
             session_id=session_id,
             fiscal_year=state.get("fiscal_year", 0),
             current_phase=state.get("current_phase", "unknown"),
-            status="completed" if state.get("current_phase") == AuditPhase.COMPLETE else "running",
+            status="completed"
+            if state.get("current_phase") == AuditPhase.COMPLETE
+            else "running",
             step_count=state.get("step_count", 0),
             hypotheses_count=len(state.get("hypotheses", [])),
             insights_count=len(state.get("insights", [])),
@@ -219,7 +227,9 @@ async def get_session_status(session_id: str) -> SessionStatusResponse:
             [session_id],
         )
         if not rows:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
 
         row = rows[0]
         return SessionStatusResponse(
@@ -256,7 +266,9 @@ async def get_hypotheses(session_id: str) -> list[HypothesisResponse]:
             [session_id],
         )
         if not rows:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
 
         hypotheses = json.loads(rows[0][0]) if rows[0][0] else []
         return [HypothesisResponse(**h) for h in hypotheses]
@@ -270,7 +282,9 @@ async def get_hypotheses(session_id: str) -> list[HypothesisResponse]:
 async def approve_hypotheses(session_id: str, request: ApproveRequest) -> StartResponse:
     """仮説を承認し、HITL 中断から再開する。"""
     if session_id not in _active_sessions:
-        raise HTTPException(status_code=404, detail=f"Active session {session_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Active session {session_id} not found"
+        )
 
     state = _active_sessions[session_id]
     if not state.get("awaiting_approval"):
@@ -286,7 +300,11 @@ async def approve_hypotheses(session_id: str, request: ApproveRequest) -> StartR
         )
         _active_sessions[session_id] = final_state
 
-        status = "completed" if final_state.get("current_phase") == AuditPhase.COMPLETE else "error"
+        status = (
+            "completed"
+            if final_state.get("current_phase") == AuditPhase.COMPLETE
+            else "error"
+        )
         return StartResponse(session_id=session_id, status=status)
     except Exception as e:
         logger.error("Failed to resume session %s: %s", session_id, str(e))
@@ -363,7 +381,9 @@ async def get_report(session_id: str) -> ReportResponse:
             [session_id],
         )
         if not rows:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
 
         row = rows[0]
         hypotheses = json.loads(row[2]) if row[2] else []

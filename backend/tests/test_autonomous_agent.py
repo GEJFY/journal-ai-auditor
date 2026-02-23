@@ -315,9 +315,18 @@ class TestAutonomousAuditAgent:
         state = agent._create_initial_state(2024)
         state["hypotheses"] = [{"id": "H-001", "status": "supported"}]
         state["insights"] = [
-            {"id": "INS-001", "severity": "HIGH", "title": "t", "description": "d",
-             "category": "risk", "evidence": [], "grounding_score": 0.8,
-             "affected_amount": 0, "affected_count": 0, "recommendations": []}
+            {
+                "id": "INS-001",
+                "severity": "HIGH",
+                "title": "t",
+                "description": "d",
+                "category": "risk",
+                "evidence": [],
+                "grounding_score": 0.8,
+                "affected_amount": 0,
+                "affected_count": 0,
+                "recommendations": [],
+            }
         ]
         state["exploration_log"] = [{"tool": "t1"}]
         state["executive_summary"] = "summary"

@@ -7,7 +7,9 @@ from app.agents.autonomous.tool_registry import ToolDefinition, ToolResult
 from app.db import duckdb_manager
 
 
-def execute_population_statistics(fiscal_year: int, account_prefix: str | None = None) -> ToolResult:
+def execute_population_statistics(
+    fiscal_year: int, account_prefix: str | None = None
+) -> ToolResult:
     """母集団の統計情報を算出。"""
     db = duckdb_manager
     where = "WHERE fiscal_year = ?"
@@ -57,11 +59,19 @@ def execute_population_statistics(fiscal_year: int, account_prefix: str | None =
     findings = []
     total = row["total_count"]
     if total > 0:
-        findings.append(f"仕訳件数: {total:,}件、仕訳番号: {row['unique_journals']:,}件")
-        findings.append(f"金額範囲: {row['min_amount']:,.0f}〜{row['max_amount']:,.0f}円 (平均{row['avg_amount']:,.0f}円、中央値{row['median_amount']:,.0f}円)")
-        findings.append(f"借方合計: {row['total_debit']:,.0f}円、貸方合計: {row['total_credit']:,.0f}円")
+        findings.append(
+            f"仕訳件数: {total:,}件、仕訳番号: {row['unique_journals']:,}件"
+        )
+        findings.append(
+            f"金額範囲: {row['min_amount']:,.0f}〜{row['max_amount']:,.0f}円 (平均{row['avg_amount']:,.0f}円、中央値{row['median_amount']:,.0f}円)"
+        )
+        findings.append(
+            f"借方合計: {row['total_debit']:,.0f}円、貸方合計: {row['total_credit']:,.0f}円"
+        )
         if row["high_risk_count"] > 0:
-            findings.append(f"高リスク仕訳: {row['high_risk_count']:,}件 ({row['high_risk_count']/total*100:.1f}%)")
+            findings.append(
+                f"高リスク仕訳: {row['high_risk_count']:,}件 ({row['high_risk_count'] / total * 100:.1f}%)"
+            )
         if row["critical_risk_count"] > 0:
             findings.append(f"重要リスク仕訳: {row['critical_risk_count']:,}件")
 
@@ -70,7 +80,10 @@ def execute_population_statistics(fiscal_year: int, account_prefix: str | None =
         success=True,
         summary=f"{fiscal_year}年度の仕訳{total:,}件を分析。平均金額{row['avg_amount']:,.0f}円、高リスク{row['high_risk_count']:,}件。",
         key_findings=findings,
-        data={k: (float(v) if v is not None and not isinstance(v, str) else v) for k, v in row.items()},
+        data={
+            k: (float(v) if v is not None and not isinstance(v, str) else v)
+            for k, v in row.items()
+        },
     )
 
 
@@ -80,7 +93,10 @@ POPULATION_TOOL = ToolDefinition(
     category="population",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "account_prefix": {"type": "string", "description": "勘定科目プレフィックス（任意）"},
+        "account_prefix": {
+            "type": "string",
+            "description": "勘定科目プレフィックス（任意）",
+        },
     },
     execute_fn=execute_population_statistics,
 )

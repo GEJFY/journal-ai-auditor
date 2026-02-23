@@ -68,7 +68,9 @@ def execute_time_series_trend(
     max_idx = values.index(max_val) if values else 0
     min_idx = values.index(min_val) if values else 0
 
-    findings.append(f"期間数: {len(rows)}、平均: {avg_val:,.0f}、最大: {max_val:,.0f}、最小: {min_val:,.0f}")
+    findings.append(
+        f"期間数: {len(rows)}、平均: {avg_val:,.0f}、最大: {max_val:,.0f}、最小: {min_val:,.0f}"
+    )
     findings.append(f"ピーク期間: {rows[max_idx]['period_key']} ({max_val:,.0f})")
     findings.append(f"最少期間: {rows[min_idx]['period_key']} ({min_val:,.0f})")
 
@@ -91,10 +93,16 @@ def execute_time_series_trend(
             weekend_ratio = len(weekend_rows) / len(rows) * 100
             weekend_amount = sum(r["total_amount"] for r in weekend_rows)
             total_amount = sum(r["total_amount"] for r in rows)
-            weekend_amount_ratio = weekend_amount / total_amount * 100 if total_amount else 0
-            findings.append(f"週末入力: {len(weekend_rows)}日 ({weekend_ratio:.1f}%)、金額比率{weekend_amount_ratio:.1f}%")
+            weekend_amount_ratio = (
+                weekend_amount / total_amount * 100 if total_amount else 0
+            )
+            findings.append(
+                f"週末入力: {len(weekend_rows)}日 ({weekend_ratio:.1f}%)、金額比率{weekend_amount_ratio:.1f}%"
+            )
 
-    trend_data = [{"period": str(r["period_key"]), "value": values[i]} for i, r in enumerate(rows)]
+    trend_data = [
+        {"period": str(r["period_key"]), "value": values[i]} for i, r in enumerate(rows)
+    ]
 
     return ToolResult(
         tool_name="time_series_trend",
@@ -111,8 +119,16 @@ TIME_SERIES_TOOL = ToolDefinition(
     category="trend",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "metric": {"type": "string", "description": "分析指標（amount/count）", "enum": ["amount", "count"]},
-        "granularity": {"type": "string", "description": "粒度（daily/monthly）", "enum": ["daily", "monthly"]},
+        "metric": {
+            "type": "string",
+            "description": "分析指標（amount/count）",
+            "enum": ["amount", "count"],
+        },
+        "granularity": {
+            "type": "string",
+            "description": "粒度（daily/monthly）",
+            "enum": ["daily", "monthly"],
+        },
     },
     execute_fn=execute_time_series_trend,
 )

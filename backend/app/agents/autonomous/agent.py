@@ -153,7 +153,11 @@ class AutonomousAuditAgent:
         fiscal_year = state["fiscal_year"]
 
         # 基本統計ツールを実行して観察データを収集
-        stats_tools = ["population_statistics", "rule_risk_summary", "ml_anomaly_summary"]
+        stats_tools = [
+            "population_statistics",
+            "rule_risk_summary",
+            "ml_anomaly_summary",
+        ]
         observations: dict[str, Any] = {}
 
         for tool_name in stats_tools:
@@ -164,11 +168,13 @@ class AutonomousAuditAgent:
                     "key_findings": result.key_findings,
                     "data": result.data,
                 }
-                self._emit({
-                    "type": "observation",
-                    "tool": tool_name,
-                    "summary": result.summary,
-                })
+                self._emit(
+                    {
+                        "type": "observation",
+                        "tool": tool_name,
+                        "summary": result.summary,
+                    }
+                )
 
         # LLM で注目パターンを抽出
         stats_text = json.dumps(observations, ensure_ascii=False, default=str)
@@ -182,11 +188,13 @@ class AutonomousAuditAgent:
             logger.warning("Observe JSON parse failed, falling back to raw text")
             notable_patterns = [llm_response[:500]]
 
-        self._emit({
-            "type": "observation",
-            "tool": "llm_analysis",
-            "summary": f"{len(notable_patterns)}個の注目パターンを特定",
-        })
+        self._emit(
+            {
+                "type": "observation",
+                "tool": "llm_analysis",
+                "summary": f"{len(notable_patterns)}個の注目パターンを特定",
+            }
+        )
 
         phase_entry = {
             "phase": AuditPhase.OBSERVE,
@@ -216,9 +224,7 @@ class AutonomousAuditAgent:
         observations_text = json.dumps(
             state.get("observations", {}), ensure_ascii=False, default=str
         )
-        patterns_text = "\n".join(
-            f"- {p}" for p in state.get("notable_patterns", [])
-        )
+        patterns_text = "\n".join(f"- {p}" for p in state.get("notable_patterns", []))
 
         prompt = HYPOTHESIZE_PROMPT.format(
             observations=observations_text,
@@ -238,7 +244,7 @@ class AutonomousAuditAgent:
         hypotheses: list[dict[str, Any]] = []
         for h in raw_hypotheses[:max_h]:
             hyp = Hypothesis(
-                id=h.get("id", f"H-{len(hypotheses)+1:03d}"),
+                id=h.get("id", f"H-{len(hypotheses) + 1:03d}"),
                 title=h.get("title", ""),
                 description=h.get("description", ""),
                 rationale=h.get("rationale", ""),
@@ -247,12 +253,14 @@ class AutonomousAuditAgent:
                 priority=h.get("priority", len(hypotheses) + 1),
             )
             hypotheses.append(hyp.to_dict())
-            self._emit({
-                "type": "hypothesis",
-                "id": hyp.id,
-                "title": hyp.title,
-                "description": hyp.description,
-            })
+            self._emit(
+                {
+                    "type": "hypothesis",
+                    "id": hyp.id,
+                    "title": hyp.title,
+                    "description": hyp.description,
+                }
+            )
 
         phase_entry = {
             "phase": AuditPhase.HYPOTHESIZE,
@@ -270,7 +278,9 @@ class AutonomousAuditAgent:
     def _after_hypothesize(self, state: AutonomousAuditState) -> str:
         """HITL 分岐: awaiting_approval が True なら中断、そうでなければ探索へ。"""
         if state.get("awaiting_approval"):
-            self._emit({"type": "awaiting_approval", "hypotheses": state.get("hypotheses", [])})
+            self._emit(
+                {"type": "awaiting_approval", "hypotheses": state.get("hypotheses", [])}
+            )
             return "await"
         return "explore"
 
@@ -283,17 +293,22 @@ class AutonomousAuditAgent:
         self._emit({"type": "phase_start", "phase": "explore"})
 
         fiscal_year = state["fiscal_year"]
-        hypotheses_text = json.dumps(
-            state.get("hypotheses", []), ensure_ascii=False
-        )
+        hypotheses_text = json.dumps(state.get("hypotheses", []), ensure_ascii=False)
         tool_schemas = json.dumps(
             self.registry.get_all_schemas(), ensure_ascii=False, indent=2
         )
         prev_results = state.get("tool_results", [])
-        prev_results_text = json.dumps(
-            [{"tool_name": r["tool_name"], "summary": r["summary"]} for r in prev_results],
-            ensure_ascii=False,
-        ) if prev_results else "なし"
+        prev_results_text = (
+            json.dumps(
+                [
+                    {"tool_name": r["tool_name"], "summary": r["summary"]}
+                    for r in prev_results
+                ],
+                ensure_ascii=False,
+            )
+            if prev_results
+            else "なし"
+        )
 
         prompt = EXPLORE_PROMPT.format(
             hypotheses=hypotheses_text,
@@ -331,11 +346,13 @@ class AutonomousAuditAgent:
             params = call.get("parameters", {})
             params.setdefault("fiscal_year", fiscal_year)
 
-            self._emit({
-                "type": "tool_start",
-                "tool": tool_name,
-                "hypothesis_id": h_id,
-            })
+            self._emit(
+                {
+                    "type": "tool_start",
+                    "tool": tool_name,
+                    "hypothesis_id": h_id,
+                }
+            )
 
             result = self.registry.execute(tool_name, **params)
             result_dict = result.to_dict()
@@ -351,13 +368,15 @@ class AutonomousAuditAgent:
             exploration_log.append(log_entry)
             h_tool_counts[h_id] = h_tool_counts.get(h_id, 0) + 1
 
-            self._emit({
-                "type": "tool_complete",
-                "tool": tool_name,
-                "hypothesis_id": h_id,
-                "success": result.success,
-                "summary": result.summary,
-            })
+            self._emit(
+                {
+                    "type": "tool_complete",
+                    "tool": tool_name,
+                    "hypothesis_id": h_id,
+                    "success": result.success,
+                    "summary": result.summary,
+                }
+            )
 
         all_results = prev_results + new_results
 
@@ -379,7 +398,8 @@ class AutonomousAuditAgent:
     def _after_explore(self, state: AutonomousAuditState) -> str:
         """探索ループ判定: 探索回数上限チェック。"""
         explore_count = sum(
-            1 for p in state.get("phase_history", [])
+            1
+            for p in state.get("phase_history", [])
             if p.get("phase") == AuditPhase.EXPLORE
         )
         if explore_count >= _MAX_EXPLORE_ITERATIONS:
@@ -395,9 +415,7 @@ class AutonomousAuditAgent:
         logger.info("Phase: VERIFY (session=%s)", state.get("session_id"))
         self._emit({"type": "phase_start", "phase": "verify"})
 
-        hypotheses_text = json.dumps(
-            state.get("hypotheses", []), ensure_ascii=False
-        )
+        hypotheses_text = json.dumps(state.get("hypotheses", []), ensure_ascii=False)
         tool_results_text = json.dumps(
             [
                 {
@@ -439,12 +457,14 @@ class AutonomousAuditAgent:
                         needs_more = True
                     break
 
-            self._emit({
-                "type": "verification",
-                "hypothesis_id": h_id,
-                "verdict": v.get("verdict", "inconclusive"),
-                "grounding_score": v.get("grounding_score", 0.0),
-            })
+            self._emit(
+                {
+                    "type": "verification",
+                    "hypothesis_id": h_id,
+                    "verdict": v.get("verdict", "inconclusive"),
+                    "grounding_score": v.get("grounding_score", 0.0),
+                }
+            )
 
         phase_entry = {
             "phase": AuditPhase.VERIFY,
@@ -464,7 +484,8 @@ class AutonomousAuditAgent:
     def _after_verify(self, state: AutonomousAuditState) -> str:
         """検証後の分岐: エビデンス不足で追加探索が必要か判定。"""
         verify_count = sum(
-            1 for p in state.get("phase_history", [])
+            1
+            for p in state.get("phase_history", [])
             if p.get("phase") == AuditPhase.VERIFY
         )
         if verify_count > _MAX_VERIFY_FEEDBACK_LOOPS:
@@ -521,7 +542,7 @@ class AutonomousAuditAgent:
         insights: list[dict[str, Any]] = []
         for i, raw in enumerate(raw_insights):
             ins = AuditInsight(
-                id=raw.get("id", f"INS-{i+1:03d}"),
+                id=raw.get("id", f"INS-{i + 1:03d}"),
                 title=raw.get("title", ""),
                 description=raw.get("description", ""),
                 category=raw.get("category", "risk"),
@@ -533,17 +554,21 @@ class AutonomousAuditAgent:
                 grounding_score=raw.get("grounding_score", 0.0),
             )
             insights.append(ins.to_dict())
-            self._emit({
-                "type": "insight",
-                "id": ins.id,
-                "title": ins.title,
-                "severity": ins.severity,
-            })
+            self._emit(
+                {
+                    "type": "insight",
+                    "id": ins.id,
+                    "title": ins.title,
+                    "severity": ins.severity,
+                }
+            )
 
-        self._emit({
-            "type": "summary",
-            "executive_summary": executive_summary[:500],
-        })
+        self._emit(
+            {
+                "type": "summary",
+                "executive_summary": executive_summary[:500],
+            }
+        )
 
         phase_entry = {
             "phase": AuditPhase.SYNTHESIZE,
@@ -593,22 +618,33 @@ class AutonomousAuditAgent:
                         json.dumps(state.get("scope", {}), ensure_ascii=False),
                         AuditPhase.COMPLETE,
                         "completed",
-                        json.dumps(state.get("observations", {}), ensure_ascii=False, default=str),
+                        json.dumps(
+                            state.get("observations", {}),
+                            ensure_ascii=False,
+                            default=str,
+                        ),
                         json.dumps(state.get("hypotheses", []), ensure_ascii=False),
-                        json.dumps(state.get("tool_results", []), ensure_ascii=False, default=str),
+                        json.dumps(
+                            state.get("tool_results", []),
+                            ensure_ascii=False,
+                            default=str,
+                        ),
                         state.get("executive_summary", ""),
                         len(state.get("hypotheses", [])),
                         sum(
-                            1 for h in state.get("hypotheses", [])
+                            1
+                            for h in state.get("hypotheses", [])
                             if h.get("status") == "supported"
                         ),
                         len(state.get("insights", [])),
                         sum(
-                            1 for i in state.get("insights", [])
+                            1
+                            for i in state.get("insights", [])
                             if i.get("severity") == "CRITICAL"
                         ),
                         sum(
-                            1 for i in state.get("insights", [])
+                            1
+                            for i in state.get("insights", [])
                             if i.get("severity") == "HIGH"
                         ),
                         len(state.get("exploration_log", [])),
@@ -641,7 +677,9 @@ class AutonomousAuditAgent:
                             ins.get("grounding_score", 0.0),
                             ins.get("affected_amount", 0),
                             ins.get("affected_count", 0),
-                            json.dumps(ins.get("recommendations", []), ensure_ascii=False),
+                            json.dumps(
+                                ins.get("recommendations", []), ensure_ascii=False
+                            ),
                             "active",
                             now,
                         ],
@@ -650,12 +688,14 @@ class AutonomousAuditAgent:
         except Exception as e:
             logger.error("Failed to persist session %s: %s", session_id, str(e))
 
-        self._emit({
-            "type": "complete",
-            "session_id": session_id,
-            "insights_count": len(state.get("insights", [])),
-            "hypotheses_count": len(state.get("hypotheses", [])),
-        })
+        self._emit(
+            {
+                "type": "complete",
+                "session_id": session_id,
+                "insights_count": len(state.get("insights", [])),
+                "hypotheses_count": len(state.get("hypotheses", [])),
+            }
+        )
 
         return {
             "current_phase": AuditPhase.COMPLETE,
@@ -785,7 +825,8 @@ class AutonomousAuditAgent:
             state["approved_hypotheses"] = approved_hypothesis_ids
             # 未承認の仮説を除外
             state["hypotheses"] = [
-                h for h in state.get("hypotheses", [])
+                h
+                for h in state.get("hypotheses", [])
                 if h["id"] in approved_hypothesis_ids
             ]
         else:

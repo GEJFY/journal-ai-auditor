@@ -42,10 +42,10 @@ def execute_round_amount_analysis(fiscal_year: int) -> ToolResult:
         )
 
     findings = [
-        f"1万円単位の丸め金額: {row['round_10k']:,}件 ({row['round_10k']/total*100:.1f}%)",
-        f"10万円単位の丸め金額: {row['round_100k']:,}件 ({row['round_100k']/total*100:.1f}%)",
-        f"100万円単位の丸め金額: {row['round_1m']:,}件 ({row['round_1m']/total*100:.1f}%)",
-        f"1000万円単位の丸め金額: {row['round_10m']:,}件 ({row['round_10m']/total*100:.1f}%)",
+        f"1万円単位の丸め金額: {row['round_10k']:,}件 ({row['round_10k'] / total * 100:.1f}%)",
+        f"10万円単位の丸め金額: {row['round_100k']:,}件 ({row['round_100k'] / total * 100:.1f}%)",
+        f"100万円単位の丸め金額: {row['round_1m']:,}件 ({row['round_1m'] / total * 100:.1f}%)",
+        f"1000万円単位の丸め金額: {row['round_10m']:,}件 ({row['round_10m'] / total * 100:.1f}%)",
     ]
     if row["round_1m_amount"] > 0:
         findings.append(f"100万円単位丸め金額の合計: {row['round_1m_amount']:,.0f}円")
@@ -75,7 +75,11 @@ def execute_round_amount_analysis(fiscal_year: int) -> ToolResult:
             "top_round_entries": top_entries[:10],
         },
         evidence_refs=[
-            {"gl_detail_id": e["gl_detail_id"], "amount": e["amount"], "description": e.get("je_line_description", "")}
+            {
+                "gl_detail_id": e["gl_detail_id"],
+                "amount": e["amount"],
+                "description": e.get("je_line_description", ""),
+            }
             for e in top_entries[:5]
         ],
     )

@@ -56,7 +56,12 @@ def execute_sankey_flow_data(
 
     nodes = sorted(accounts)
     links = [
-        {"source": r["source_account"], "target": r["target_account"], "value": r["total_flow"], "count": r["total_count"]}
+        {
+            "source": r["source_account"],
+            "target": r["target_account"],
+            "value": r["total_flow"],
+            "count": r["total_count"],
+        }
         for r in rows
     ]
     total_flow = sum(r["total_flow"] for r in rows)
@@ -70,12 +75,14 @@ def execute_sankey_flow_data(
         f"最大フロー: {rows[0]['source_account']}→{rows[0]['target_account']} ({rows[0]['total_flow']:,.0f}円)",
     ]
     if circular:
-        findings.append(f"循環フロー検出: {len(circular)//2}ペア（例: {circular[0][0]}⇄{circular[0][1]}）")
+        findings.append(
+            f"循環フロー検出: {len(circular) // 2}ペア（例: {circular[0][0]}⇄{circular[0][1]}）"
+        )
 
     return ToolResult(
         tool_name="sankey_flow_data",
         success=True,
-        summary=f"{len(links)}経路の資金フロー。合計{total_flow:,.0f}円。循環{len(circular)//2}ペア。",
+        summary=f"{len(links)}経路の資金フロー。合計{total_flow:,.0f}円。循環{len(circular) // 2}ペア。",
         key_findings=findings,
         data={"nodes": nodes, "links": links, "circular_flows": circular[:10]},
     )
@@ -87,7 +94,10 @@ SANKEY_TOOL = ToolDefinition(
     category="flow",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "min_amount": {"type": "number", "description": "最小フロー金額（デフォルト10万円）"},
+        "min_amount": {
+            "type": "number",
+            "description": "最小フロー金額（デフォルト10万円）",
+        },
         "top_n": {"type": "integer", "description": "上位N経路（デフォルト30）"},
         "accounting_period": {"type": "integer", "description": "会計期間（任意）"},
     },

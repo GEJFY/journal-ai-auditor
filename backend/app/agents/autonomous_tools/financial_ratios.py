@@ -47,19 +47,25 @@ def execute_financial_ratio_analysis(
     current_assets = balances.get("current_asset", 0) or 0
     current_liab = balances.get("current_liability", 0) or 0
     total_assets = current_assets + (balances.get("fixed_asset", 0) or 0)
-    total_liab = (current_liab + (balances.get("fixed_liability", 0) or 0))
+    total_liab = current_liab + (balances.get("fixed_liability", 0) or 0)
     equity = balances.get("equity", 0) or 0
     revenue = abs(balances.get("revenue", 0) or 0)
     expenses = abs(balances.get("expense", 0) or 0)
 
-    ratios["current_ratio"] = (current_assets / current_liab * 100) if current_liab else None
+    ratios["current_ratio"] = (
+        (current_assets / current_liab * 100) if current_liab else None
+    )
     ratios["debt_to_equity"] = (total_liab / equity * 100) if equity else None
     ratios["expense_ratio"] = (expenses / revenue * 100) if revenue else None
     ratios["net_income"] = revenue - expenses
 
     findings = []
-    findings.append(f"総資産: {total_assets:,.0f}円、総負債: {total_liab:,.0f}円、純資産: {equity:,.0f}円")
-    findings.append(f"売上高: {revenue:,.0f}円、費用: {expenses:,.0f}円、純利益: {ratios['net_income']:,.0f}円")
+    findings.append(
+        f"総資産: {total_assets:,.0f}円、総負債: {total_liab:,.0f}円、純資産: {equity:,.0f}円"
+    )
+    findings.append(
+        f"売上高: {revenue:,.0f}円、費用: {expenses:,.0f}円、純利益: {ratios['net_income']:,.0f}円"
+    )
     if ratios["current_ratio"] is not None:
         findings.append(f"流動比率: {ratios['current_ratio']:.1f}%")
     if ratios["debt_to_equity"] is not None:
@@ -83,7 +89,10 @@ def execute_financial_ratio_analysis(
         success=True,
         summary=f"{fiscal_year}年度の財務指標。売上{revenue:,.0f}円、純利益{ratios['net_income']:,.0f}円。",
         key_findings=findings,
-        data={"ratios": {k: v for k, v in ratios.items() if v is not None}, "balances": balances},
+        data={
+            "ratios": {k: v for k, v in ratios.items() if v is not None},
+            "balances": balances,
+        },
     )
 
 

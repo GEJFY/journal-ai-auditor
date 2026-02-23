@@ -7,7 +7,14 @@ from app.agents.autonomous.tool_registry import ToolDefinition, ToolResult
 from app.db import duckdb_manager
 
 DEFAULT_BOUNDARIES = [10000, 100000, 1000000, 10000000, 100000000]
-LABELS = ["〜1万円", "1万〜10万円", "10万〜100万円", "100万〜1000万円", "1000万〜1億円", "1億円〜"]
+LABELS = [
+    "〜1万円",
+    "1万〜10万円",
+    "10万〜100万円",
+    "100万〜1000万円",
+    "1000万〜1億円",
+    "1億円〜",
+]
 
 
 def execute_stratification_analysis(
@@ -51,7 +58,9 @@ def execute_stratification_analysis(
         )
 
     rows = result.to_dicts()
-    labels = LABELS if not strata_boundaries else [f"層{i}" for i in range(len(bounds) + 1)]
+    labels = (
+        LABELS if not strata_boundaries else [f"層{i}" for i in range(len(bounds) + 1)]
+    )
     grand_total_count = sum(r["entry_count"] for r in rows)
     grand_total_amount = sum(r["total_amount"] for r in rows)
 
@@ -60,29 +69,39 @@ def execute_stratification_analysis(
     for r in rows:
         idx = r["stratum"]
         label = labels[idx] if idx < len(labels) else f"層{idx}"
-        pct_count = r["entry_count"] / grand_total_count * 100 if grand_total_count else 0
-        pct_amount = r["total_amount"] / grand_total_amount * 100 if grand_total_amount else 0
+        pct_count = (
+            r["entry_count"] / grand_total_count * 100 if grand_total_count else 0
+        )
+        pct_amount = (
+            r["total_amount"] / grand_total_amount * 100 if grand_total_amount else 0
+        )
         findings.append(
             f"{label}: {r['entry_count']:,}件({pct_count:.1f}%)、"
             f"{r['total_amount']:,.0f}円({pct_amount:.1f}%)、"
             f"高リスク{r['high_risk_count']}件"
         )
-        strata_data.append({
-            "label": label,
-            "count": r["entry_count"],
-            "amount": r["total_amount"],
-            "pct_count": round(pct_count, 1),
-            "pct_amount": round(pct_amount, 1),
-            "avg_risk": round(r["avg_risk"] or 0, 1),
-            "high_risk_count": r["high_risk_count"],
-        })
+        strata_data.append(
+            {
+                "label": label,
+                "count": r["entry_count"],
+                "amount": r["total_amount"],
+                "pct_count": round(pct_count, 1),
+                "pct_amount": round(pct_amount, 1),
+                "avg_risk": round(r["avg_risk"] or 0, 1),
+                "high_risk_count": r["high_risk_count"],
+            }
+        )
 
     return ToolResult(
         tool_name="stratification_analysis",
         success=True,
         summary=f"{fiscal_year}年度の金額層別分析。{len(rows)}層、全{grand_total_count:,}件。",
         key_findings=findings,
-        data={"strata": strata_data, "total_count": grand_total_count, "total_amount": grand_total_amount},
+        data={
+            "strata": strata_data,
+            "total_count": grand_total_count,
+            "total_amount": grand_total_amount,
+        },
     )
 
 

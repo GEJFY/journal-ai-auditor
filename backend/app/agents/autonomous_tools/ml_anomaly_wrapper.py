@@ -48,7 +48,9 @@ def execute_ml_anomaly_summary(
 
     findings = [f"ML手法数: {len(rows)}、異常検知合計: {total_anomalies:,}件"]
     for r in rows:
-        rate = r["anomaly_count"] / r["total_checked"] * 100 if r["total_checked"] else 0
+        rate = (
+            r["anomaly_count"] / r["total_checked"] * 100 if r["total_checked"] else 0
+        )
         findings.append(
             f"{r['detection_method']}: {r['anomaly_count']:,}件/{r['total_checked']:,}件 "
             f"({rate:.1f}%)、平均スコア{r['avg_score']:.2f}"
@@ -76,7 +78,11 @@ def execute_ml_anomaly_summary(
         success=True,
         summary=f"ML異常検知: {len(rows)}手法で{total_anomalies:,}件検出。複数手法合致{len(overlaps)}件。",
         key_findings=findings,
-        data={"by_method": rows, "overlaps": overlaps, "total_anomalies": total_anomalies},
+        data={
+            "by_method": rows,
+            "overlaps": overlaps,
+            "total_anomalies": total_anomalies,
+        },
     )
 
 
@@ -86,7 +92,10 @@ ML_ANOMALY_TOOL = ToolDefinition(
     category="anomaly",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "method": {"type": "string", "description": "検出手法名（任意。isolation_forest/lof/svm/autoencoder/ensemble）"},
+        "method": {
+            "type": "string",
+            "description": "検出手法名（任意。isolation_forest/lof/svm/autoencoder/ensemble）",
+        },
     },
     execute_fn=execute_ml_anomaly_summary,
 )

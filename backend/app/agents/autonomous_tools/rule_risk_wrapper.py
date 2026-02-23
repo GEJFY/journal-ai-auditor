@@ -58,7 +58,9 @@ def execute_rule_risk_summary(
     total_violations = sum(r["violation_count"] for r in rows)
     total_affected = sum(r["affected_entries"] for r in rows)
 
-    findings = [f"ルール違反合計: {total_violations:,}件、影響仕訳: {total_affected:,}件"]
+    findings = [
+        f"ルール違反合計: {total_violations:,}件、影響仕訳: {total_affected:,}件"
+    ]
 
     # 重篤度別
     by_severity: dict[str, int] = {}
@@ -96,7 +98,11 @@ def execute_rule_risk_summary(
         success=True,
         summary=f"ルール違反{total_violations:,}件。CRITICAL: {by_severity.get('CRITICAL', 0)}、HIGH: {by_severity.get('HIGH', 0)}。",
         key_findings=findings,
-        data={"by_severity": by_severity, "by_category": by_cat, "top_rules": top_rules},
+        data={
+            "by_severity": by_severity,
+            "by_category": by_cat,
+            "top_rules": top_rules,
+        },
     )
 
 
@@ -106,7 +112,10 @@ RULE_RISK_TOOL = ToolDefinition(
     category="compliance",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "category": {"type": "string", "description": "ルールカテゴリ（AMOUNT/TIME/APPROVAL等、任意）"},
+        "category": {
+            "type": "string",
+            "description": "ルールカテゴリ（AMOUNT/TIME/APPROVAL等、任意）",
+        },
     },
     execute_fn=execute_rule_risk_summary,
 )

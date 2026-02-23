@@ -57,15 +57,17 @@ def execute_journal_entry_testing(fiscal_year: int) -> ToolResult:
 
     findings = [
         f"総仕訳数: {total:,}件",
-        f"手動仕訳: {r['manual_count']:,}件 ({r['manual_count']/total*100:.1f}%)、自動仕訳: {r['auto_count']:,}件 ({r['auto_count']/total*100:.1f}%)",
-        f"未承認仕訳: {r['unapproved_count']:,}件 ({r['unapproved_count']/total*100:.1f}%)",
-        f"自己承認: {r['self_approved']:,}件 ({r['self_approved']/total*100:.1f}%)",
-        f"摘要欠損: {r['no_description']:,}件 ({r['no_description']/total*100:.1f}%)",
+        f"手動仕訳: {r['manual_count']:,}件 ({r['manual_count'] / total * 100:.1f}%)、自動仕訳: {r['auto_count']:,}件 ({r['auto_count'] / total * 100:.1f}%)",
+        f"未承認仕訳: {r['unapproved_count']:,}件 ({r['unapproved_count'] / total * 100:.1f}%)",
+        f"自己承認: {r['self_approved']:,}件 ({r['self_approved'] / total * 100:.1f}%)",
+        f"摘要欠損: {r['no_description']:,}件 ({r['no_description'] / total * 100:.1f}%)",
     ]
     if r["backdated"] > 0:
         findings.append(f"バックデート（30日超）: {r['backdated']:,}件")
     if r["manual_avg_risk"] and r["auto_avg_risk"]:
-        findings.append(f"平均リスク — 手動: {r['manual_avg_risk']:.1f}、自動: {r['auto_avg_risk']:.1f}")
+        findings.append(
+            f"平均リスク — 手動: {r['manual_avg_risk']:.1f}、自動: {r['auto_avg_risk']:.1f}"
+        )
 
     return ToolResult(
         tool_name="journal_entry_testing",

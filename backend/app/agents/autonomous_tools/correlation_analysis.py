@@ -75,12 +75,14 @@ def execute_correlation_analysis(
 
     correlations = []
     for i, a1 in enumerate(acct_list):
-        for a2 in acct_list[i + 1:]:
+        for a2 in acct_list[i + 1 :]:
             x = [accounts[a1].get(p, 0.0) for p in periods]
             y = [accounts[a2].get(p, 0.0) for p in periods]
             corr = pearson(x, y)
             if abs(corr) >= 0.5:
-                correlations.append({"account1": a1, "account2": a2, "correlation": round(corr, 3)})
+                correlations.append(
+                    {"account1": a1, "account2": a2, "correlation": round(corr, 3)}
+                )
 
     correlations.sort(key=lambda c: abs(c["correlation"]), reverse=True)
 
@@ -96,9 +98,13 @@ def execute_correlation_analysis(
     return ToolResult(
         tool_name="correlation_analysis",
         success=True,
-        summary=f"勘定間相関分析。{len(correlations)}ペアで|r|≥0.5。強相関{len(strong_pos)+len(strong_neg)}ペア。",
+        summary=f"勘定間相関分析。{len(correlations)}ペアで|r|≥0.5。強相関{len(strong_pos) + len(strong_neg)}ペア。",
         key_findings=findings,
-        data={"correlations": correlations[:50], "accounts_analyzed": len(acct_list), "periods": len(periods)},
+        data={
+            "correlations": correlations[:50],
+            "accounts_analyzed": len(acct_list),
+            "periods": len(periods),
+        },
     )
 
 
@@ -108,7 +114,10 @@ CORRELATION_TOOL = ToolDefinition(
     category="pattern",
     parameters={
         "fiscal_year": {"type": "integer", "description": "対象年度"},
-        "top_accounts": {"type": "integer", "description": "分析対象の上位勘定数（デフォルト20）"},
+        "top_accounts": {
+            "type": "integer",
+            "description": "分析対象の上位勘定数（デフォルト20）",
+        },
     },
     execute_fn=execute_correlation_analysis,
 )
