@@ -1,5 +1,8 @@
 """自律型監査 API エンドポイントのテスト。"""
 
+import os
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
 
 
@@ -66,10 +69,11 @@ class TestAutonomousAuditAPI:
 
     def test_start_request_with_valid_body(self, client: TestClient):
         """正常なリクエストボディの形式検証（実行はLLM依存のため500も許容）。"""
-        response = client.post(
-            "/api/v1/autonomous-audit/start",
-            json={"fiscal_year": 2024, "scope": {}, "auto_approve": True},
-        )
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
+            response = client.post(
+                "/api/v1/autonomous-audit/start",
+                json={"fiscal_year": 2024, "scope": {}, "auto_approve": True},
+            )
         # LLM未設定の場合は500になるが、バリデーションは通過する
         assert response.status_code in (200, 500)
 

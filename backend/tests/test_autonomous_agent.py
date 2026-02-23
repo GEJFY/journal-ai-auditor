@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.agents.autonomous.agent import AutonomousAuditAgent, _extract_json
 from app.agents.autonomous.state import AuditPhase
 from app.agents.autonomous.tool_registry import (
     AuditToolRegistry,
@@ -75,34 +74,51 @@ def _mock_registry() -> AuditToolRegistry:
     return registry
 
 
+def _create_agent():
+    """create_llm をモックしてエージェントを生成。"""
+    with patch("app.agents.autonomous.agent.create_llm") as mock_create:
+        mock_create.return_value = MagicMock()
+        from app.agents.autonomous.agent import AutonomousAuditAgent
+
+        registry = _mock_registry()
+        agent = AutonomousAuditAgent(registry=registry)
+    return agent
+
+
 class TestExtractJson:
     def test_plain_json(self):
+        from app.agents.autonomous.agent import _extract_json
+
         text = '{"key": "value"}'
         assert _extract_json(text) == {"key": "value"}
 
     def test_json_in_code_block(self):
+        from app.agents.autonomous.agent import _extract_json
+
         text = 'Some text\n```json\n{"a": 1}\n```\nmore text'
         assert _extract_json(text) == {"a": 1}
 
     def test_json_in_generic_block(self):
+        from app.agents.autonomous.agent import _extract_json
+
         text = '```\n{"b": 2}\n```'
         assert _extract_json(text) == {"b": 2}
 
     def test_invalid_json_raises(self):
+        from app.agents.autonomous.agent import _extract_json
+
         with pytest.raises(json.JSONDecodeError):
             _extract_json("not json")
 
 
 class TestAutonomousAuditAgent:
     def test_init(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
-        assert agent.registry is registry
+        agent = _create_agent()
+        assert agent.registry is not None
         assert agent.config is not None
 
     def test_create_initial_state(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024, auto_approve=True)
         assert state["fiscal_year"] == 2024
         assert state["current_phase"] == AuditPhase.OBSERVE
@@ -111,14 +127,12 @@ class TestAutonomousAuditAgent:
         assert len(state["hypotheses"]) == 0
 
     def test_create_initial_state_hitl(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024, auto_approve=False)
         assert state["awaiting_approval"] is True
 
     def test_observe_node(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024)
 
         # LLM をモック
@@ -136,8 +150,7 @@ class TestAutonomousAuditAgent:
         assert "population_statistics" in result["observations"]
 
     def test_hypothesize_node(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024)
         state["observations"] = {"pop": {"summary": "test"}}
         state["notable_patterns"] = ["pattern1"]
@@ -168,20 +181,17 @@ class TestAutonomousAuditAgent:
         assert result["hypotheses"][0]["id"] == "H-001"
 
     def test_after_hypothesize_auto_approve(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024, auto_approve=True)
         assert agent._after_hypothesize(state) == "explore"
 
     def test_after_hypothesize_hitl(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024, auto_approve=False)
         assert agent._after_hypothesize(state) == "await"
 
     def test_explore_node(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024)
         state["hypotheses"] = [
             {
@@ -222,8 +232,7 @@ class TestAutonomousAuditAgent:
         assert result["tool_results"][0]["tool_name"] == "stratification_analysis"
 
     def test_verify_node(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024)
         state["hypotheses"] = [
             {
@@ -270,8 +279,7 @@ class TestAutonomousAuditAgent:
         assert hyp["grounding_score"] == 0.85
 
     def test_synthesize_node(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024)
         state["verified_hypotheses"] = [
             {"id": "H-001", "title": "t", "status": "supported"}
@@ -310,8 +318,7 @@ class TestAutonomousAuditAgent:
         assert result["executive_summary"] == "テストサマリー"
 
     def test_finalize_node(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         state = agent._create_initial_state(2024)
         state["hypotheses"] = [{"id": "H-001", "status": "supported"}]
         state["insights"] = [
@@ -343,8 +350,7 @@ class TestAutonomousAuditAgent:
         assert result["completed_at"] is not None
 
     def test_graph_structure(self):
-        registry = _mock_registry()
-        agent = AutonomousAuditAgent(registry=registry)
+        agent = _create_agent()
         graph = agent.graph
         assert graph is not None
         # 2回目はキャッシュ
