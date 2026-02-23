@@ -84,11 +84,22 @@ def execute_correlation_analysis(
                     {"account1": a1, "account2": a2, "correlation": round(corr, 3)}
                 )
 
-    correlations.sort(key=lambda c: abs(c["correlation"]), reverse=True)
+    correlations.sort(
+        key=lambda c: abs(float(c["correlation"])),  # type: ignore[arg-type]
+        reverse=True,
+    )
 
     findings = [f"分析対象: {len(acct_list)}勘定 × {len(periods)}期間"]
-    strong_pos = [c for c in correlations if c["correlation"] >= 0.8]
-    strong_neg = [c for c in correlations if c["correlation"] <= -0.8]
+    strong_pos = [
+        c
+        for c in correlations
+        if float(c["correlation"]) >= 0.8  # type: ignore[arg-type]
+    ]
+    strong_neg = [
+        c
+        for c in correlations
+        if float(c["correlation"]) <= -0.8  # type: ignore[arg-type]
+    ]
     findings.append(f"強い正の相関(≥0.8): {len(strong_pos)}ペア")
     findings.append(f"強い負の相関(≤-0.8): {len(strong_neg)}ペア")
 

@@ -10,7 +10,7 @@ import logging
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
@@ -140,7 +140,10 @@ class AutonomousAuditAgent:
             HumanMessage(content=user_prompt),
         ]
         response = self.llm.invoke(messages)
-        return response.content
+        content = response.content
+        if isinstance(content, list):
+            return " ".join(str(c) for c in content)
+        return str(content)
 
     # ------------------------------------------------------------------
     # Phase 1: Observe
@@ -760,8 +763,11 @@ class AutonomousAuditAgent:
         compiled = self.graph.compile()
 
         try:
-            final_state = await asyncio.to_thread(compiled.invoke, state)
-            return final_state
+            final_state: dict[str, Any] = await asyncio.to_thread(
+                compiled.invoke,
+                dict(state),  # type: ignore[arg-type]
+            )
+            return cast(AutonomousAuditState, final_state)
         except Exception as e:
             logger.error("Autonomous audit failed: %s", str(e))
             state["current_phase"] = AuditPhase.ERROR
@@ -783,14 +789,15 @@ class AutonomousAuditAgent:
         self._event_queue = asyncio.Queue()
         state = self._create_initial_state(fiscal_year, scope, auto_approve)
         compiled = self.graph.compile()
+        eq = self._event_queue
 
         async def _run_graph() -> None:
             try:
-                await asyncio.to_thread(compiled.invoke, state)
+                await asyncio.to_thread(compiled.invoke, dict(state))  # type: ignore[arg-type]
             except Exception as e:
-                self._event_queue.put_nowait({"type": "error", "message": str(e)})
+                eq.put_nowait({"type": "error", "message": str(e)})
             finally:
-                self._event_queue.put_nowait({"type": "_done"})
+                eq.put_nowait({"type": "_done"})
 
         task = asyncio.create_task(_run_graph())
 
@@ -861,8 +868,11 @@ class AutonomousAuditAgent:
         compiled = resume_graph.compile()
 
         try:
-            final_state = await asyncio.to_thread(compiled.invoke, state)
-            return final_state
+            final_state: dict[str, Any] = await asyncio.to_thread(
+                compiled.invoke,
+                dict(state),  # type: ignore[arg-type]
+            )
+            return cast(AutonomousAuditState, final_state)
         except Exception as e:
             logger.error("Resume failed: %s", str(e))
             state["current_phase"] = AuditPhase.ERROR
